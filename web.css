@@ -1,0 +1,248 @@
+/* web.css — Cappa Health Landing Page Styles (WCAG 2.1 AA compliant) */
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background-color: #ffffff;
+}
+
+/* ===== Skip Navigation (WCAG 2.4.1) ===== */
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: 0;
+  background: #005a9c;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  font-weight: 700;
+  z-index: 100;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ===== Focus Indicator (WCAG 2.4.7) ===== */
+:focus-visible {
+  outline: 3px solid #005a9c;
+  outline-offset: 2px;
+}
+
+/* ===== Header / Navigation ===== */
+header {
+  background-color: #005a9c;
+  color: #ffffff;
+  padding: 1rem 2rem;
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.site-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.site-logo:focus-visible {
+  outline-color: #ffffff;
+}
+
+nav[aria-label="Main navigation"] ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+nav[aria-label="Main navigation"] a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+  transition: border-color 0.2s ease;
+}
+
+nav[aria-label="Main navigation"] a:hover,
+nav[aria-label="Main navigation"] a:focus-visible {
+  border-bottom-color: #ffffff;
+}
+
+/* ===== Hero Section ===== */
+.hero {
+  background-color: #e8f4fd;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.hero-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #003366;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.125rem;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+}
+
+.btn-primary {
+  display: inline-block;
+  background-color: #005a9c;
+  color: #ffffff;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #003f6e;
+}
+
+/* ===== Main Content ===== */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+/* ===== Services Section ===== */
+.services h2,
+.about h2,
+.contact h2 {
+  font-size: 1.75rem;
+  color: #003366;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.service-card {
+  background-color: #f4f8fb;
+  border: 1px solid #cce0f0;
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.service-card h3 {
+  font-size: 1.1rem;
+  color: #003366;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.service-card p {
+  font-size: 0.95rem;
+  color: #333333;
+}
+
+/* ===== About Section ===== */
+.about {
+  margin-bottom: 3rem;
+}
+
+.about p {
+  font-size: 1rem;
+  color: #1a1a1a;
+  max-width: 720px;
+}
+
+/* ===== Contact Section ===== */
+.contact {
+  margin-bottom: 3rem;
+}
+
+.contact address {
+  font-style: normal;
+  font-size: 1rem;
+  color: #1a1a1a;
+  line-height: 1.8;
+}
+
+.contact a {
+  color: #005a9c;
+  font-weight: 600;
+}
+
+.contact a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Footer ===== */
+footer {
+  background-color: #003366;
+  color: #e0eaf5;
+  text-align: center;
+  padding: 1.5rem 2rem;
+  font-size: 0.875rem;
+}
+
+footer a {
+  color: #aad4f5;
+  text-decoration: underline;
+}
+
+footer a:hover {
+  color: #ffffff;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .hero h1 {
+    font-size: 1.75rem;
+  }
+
+  .services h2,
+  .about h2,
+  .contact h2 {
+    font-size: 1.4rem;
+  }
+
+  nav[aria-label="Main navigation"] ul {
+    gap: 1rem;
+  }
+}
