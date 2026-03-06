@@ -4,17 +4,211 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lower Blood Sugar</title>
-    <link rel="stylesheet" href="../web.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to main content</a>
-    <main id="main-content">
-      <h1>Lower Blood Sugar</h1>
-      <p><a href="../index.html">Back to Home</a></p>
-      <p>
-        Accessibility support:
-        <a href="mailto:support@cappahealth.com">support@cappahealth.com</a>
-      </p>
+    <main>
+      <div class="container" style="padding-top: 30px; padding-bottom: 20px">
+        <p><a href="../index.html">Back to Home</a></p>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-7 col-md-5">
+            <div
+              style="
+                font-size: xx-large;
+                padding-top: 50px;
+                padding-bottom: 10px;
+              "
+            >
+              Ready to lower your blood sugar?
+            </div>
+            <div style="padding-top: 30px; padding-bottom: 30px">
+              <span data-config-text="departmentName"></span> is working with
+              <span data-config-text="partnerName"></span> to help
+              <span data-config-text="stateResidents"></span> join programs that
+              support blood sugar management and diabetes prevention.
+            </div>
+          </div>
+          <div class="col-xs-5 col-md-5" style="padding: 15px">
+            <img
+              src="/assets/images/alaska-devices.png"
+              class="img-responsive"
+              style="width: 100%; height: auto; margin: 0 0 0 auto"
+              alt="Alaska devices"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-md-2"></div>
+          <div class="col-md-8">
+            <div class="row">
+              <div style="padding: 15px">
+                <div style="font-size: x-large">
+                  Find the right blood sugar program for you
+                </div>
+                <p style="padding-top: 15px">
+                  Explore online and community-based options focused on healthy
+                  eating, activity, and coaching to manage blood sugar and
+                  reduce diabetes risk.
+                </p>
+                <button
+                  id="get-started"
+                  class="btn btn-success"
+                  style="color: white; height: 50px; width: 130px"
+                  data-target="#inquiry-form"
+                  data-toggle="modal"
+                  type="button"
+                >
+                  Get Started
+                </button>
+              </div>
+            </div>
+
+            <div class="row" style="padding: 15px">
+              <p>
+                Want to learn more? Visit the
+                <a
+                  data-config-href="departmentWebUrl"
+                  href="https://health.alaska.gov/en/services/diabetes-prevention/"
+                >
+                  <span data-config-text="departmentName"></span> webpage
+                </a>
+                or browse
+                <a
+                  data-config-href="campaignWebUrl"
+                  href="https://health.alaska.gov/en/services/fresh-start/"
+                >
+                  <span data-config-text="campaignName"></span> </a
+                >.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
+
+    <div
+      class="modal fade"
+      id="inquiry-form"
+      aria-hidden="true"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button
+              class="close"
+              aria-label="Close button"
+              data-dismiss="modal"
+              type="button"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div style="font-size: x-large">
+              Welcome to <span data-config-text="departmentName"></span>'s Blood
+              Sugar Programs.
+            </div>
+            <p style="padding-top: 15px">
+              In partnership with <span data-config-text="partnerName"></span>,
+              we offer guided coaching programs to help
+              <span data-config-text="stateResidents"></span>
+              improve blood sugar and metabolic health.
+            </p>
+
+            <form action="/program-intake" accept-charset="UTF-8" method="post">
+              <label for="program_intake_name">Name:</label>
+              <input
+                type="text"
+                name="program_intake[name]"
+                id="program_intake_name"
+              />
+
+              <label for="program_intake_email">Email:</label>
+              <input
+                type="text"
+                name="program_intake[email]"
+                id="program_intake_email"
+              />
+
+              <label for="program_intake_phone">Phone:</label>
+              <input
+                type="text"
+                name="program_intake[phone]"
+                id="program_intake_phone"
+              />
+
+              <label for="program_intake_zipcode">Zipcode:</label>
+              <input
+                type="text"
+                name="program_intake[zipcode]"
+                id="program_intake_zipcode"
+              />
+
+              <label for="program_intake_motivation"
+                >Reason or motivation to join program:</label
+              >
+              <input
+                type="text"
+                name="program_intake[motivation]"
+                id="program_intake_motivation"
+              />
+
+              <input
+                type="hidden"
+                name="program_intake[landing_page]"
+                value="Lower Blood Sugar"
+              />
+
+              <p style="padding-top: 15px">
+                Questions? Email
+                <a
+                  data-config-mailto="supportEmail"
+                  href="mailto:support@HALT360.org"
+                  data-config-text="supportEmail"
+                  >support@HALT360.org</a
+                >
+              </p>
+
+              <input
+                type="submit"
+                value="Submit"
+                class="btn btn-success"
+                style="color: white; padding: 15px 20px"
+              />
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      Optional white-label override example (set before landing-config.js):
+      <script>
+        window.LANDING_CONFIG = {
+          stateName: "Arkansas",
+          stateResidents: "Arkansans",
+          departmentName: "Arkansas Department of Health",
+          partnerName: "Healthy Lifestyle Training Team",
+          campaignName: "Arkansas Fresh Start website",
+          departmentWebUrl: "https://example.gov/diabetes-prevention",
+          campaignWebUrl: "https://example.gov/fresh-start",
+          supportEmail: "support@example.org"
+        };
+      </script>
+    -->
+    <script src="./landing-config.js"></script>
   </body>
 </html>
