@@ -7,7 +7,12 @@
     campaignName: "Alaska's Fresh Start campaign website",
     departmentWebUrl:
       "https://health.alaska.gov/en/services/diabetes-prevention/",
+    bloodPressureDepartmentWebUrl:
+      "https://health.alaska.gov/en/services/self-measured-blood-pressure/",
     campaignWebUrl: "https://health.alaska.gov/en/services/fresh-start/",
+    bloodPressureCampaignWebUrl:
+      "https://health.alaska.gov/en/services/fresh-start/",
+    bloodPressureCommunityProgramsHtml: "",
     supportEmail: "support@HALT360.org",
   };
 
@@ -36,6 +41,13 @@
     if (cfg[key]) {
       el.setAttribute("href", "mailto:" + cfg[key]);
       el.textContent = cfg[key];
+    }
+  });
+
+  document.querySelectorAll("[data-config-html]").forEach(function (el) {
+    var key = el.getAttribute("data-config-html");
+    if (cfg[key]) {
+      el.innerHTML = cfg[key];
     }
   });
 
