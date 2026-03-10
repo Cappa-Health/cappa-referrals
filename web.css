@@ -44,6 +44,21 @@ body {
   outline-offset: 2px;
 }
 
+/* ===== State Badge ===== */
+.state-badge {
+  display: inline-block;
+  background-color: #ffffff;
+  color: #003366;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  vertical-align: middle;
+  cursor: default;
+  user-select: none;
+}
+
 /* ===== Header / Navigation ===== */
 header {
   background-color: #005a9c;

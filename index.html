@@ -6,6 +6,8 @@
     <meta name="description" content="Cappa Health — WCAG-compliant healthcare services and resources for patients and providers." />
     <title>Cappa Health</title>
     <link rel="stylesheet" href="web.css" />
+    <!-- Landing configuration — load before page scripts -->
+    <script src="landing-config.js"></script>
   </head>
   <body>
 
@@ -16,6 +18,7 @@
     <header role="banner">
       <div class="header-inner">
         <a class="site-logo" href="/" aria-label="Cappa Health home">Cappa Health</a>
+        <span id="state-badge" class="state-badge" aria-label="State: California" title="California" data-config="stateSymbol">CA</span>
         <nav aria-label="Main navigation">
           <ul>
             <li><a href="#services">Services</a></li>
@@ -81,8 +84,8 @@
         <h2 id="contact-heading">Contact Us</h2>
         <address>
           <strong>Cappa Health</strong><br />
-          Email: <a href="mailto:info@cappahealth.com">info@cappahealth.com</a><br />
-          Phone: <a href="tel:+18005550100">1-800-555-0100</a>
+          Email: <a id="contact-email" href="mailto:info@cappahealth.com">info@cappahealth.com</a><br />
+          Phone: <a id="contact-phone" href="tel:+18005550100">1-800-555-0100</a>
         </address>
       </section>
 
@@ -91,14 +94,58 @@
     <!-- ===== Footer ===== -->
     <footer role="contentinfo">
       <p>
-        &copy; <span id="year"></span> Cappa Health. All rights reserved.
+        &copy; <span id="year"></span> <span id="footer-org">Cappa Health</span>. All rights reserved.
+        &nbsp;|&nbsp;
+        <span id="state-notice">Licensed to operate in California (CA).</span>
         &nbsp;|&nbsp;
         <a href="#main-content">Back to top</a>
       </p>
     </footer>
 
     <script>
-      document.getElementById('year').textContent = new Date().getFullYear();
+      // Apply landing configuration values to the page.
+      (function applyConfig(cfg) {
+        // Year in footer copyright
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Page <title> with state symbol
+        document.title = cfg.orgName + ' — ' + cfg.stateSymbol;
+
+        // Header logo text
+        var logo = document.querySelector('.site-logo');
+        if (logo) logo.textContent = cfg.orgName;
+
+        // State badge in header
+        var stateBadge = document.getElementById('state-badge');
+        if (stateBadge) {
+          stateBadge.textContent = cfg.stateSymbol;
+          stateBadge.setAttribute('title', cfg.stateName);
+          stateBadge.setAttribute('aria-label', 'State: ' + cfg.stateName);
+        }
+
+        // Contact section
+        var emailLink = document.getElementById('contact-email');
+        if (emailLink) {
+          emailLink.href = 'mailto:' + cfg.contactEmail;
+          emailLink.textContent = cfg.contactEmail;
+        }
+        var phoneLink = document.getElementById('contact-phone');
+        if (phoneLink) {
+          phoneLink.href = 'tel:' + cfg.contactPhoneHref;
+          phoneLink.textContent = cfg.contactPhone;
+        }
+
+        // Footer state licensing notice
+        var stateNotice = document.getElementById('state-notice');
+        if (stateNotice) {
+          stateNotice.textContent =
+            'Licensed to operate in ' + cfg.stateName + ' (' + cfg.stateSymbol + ').';
+        }
+
+        // Footer org name
+        var footerOrg = document.getElementById('footer-org');
+        if (footerOrg) footerOrg.textContent = cfg.orgName;
+      }(LANDING_CONFIG));
     </script>
 
   </body>
