@@ -3,51 +3,411 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home</title>
+    <title>Cappa Health Program Landing Pages</title>
     <link rel="stylesheet" href="web.css" />
+    <style>
+      :root {
+        --page-bg: #f3f5ef;
+        --panel-bg: rgba(255, 255, 255, 0.92);
+        --panel-border: rgba(21, 55, 44, 0.12);
+        --ink: #193126;
+        --muted: #53645c;
+        --accent: #0d7a5f;
+        --accent-deep: #0b5e49;
+        --accent-soft: #dcefe6;
+        --shadow: 0 24px 60px rgba(25, 49, 38, 0.12);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(13, 122, 95, 0.16),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at top right,
+            rgba(182, 214, 199, 0.5),
+            transparent 24%
+          ),
+          linear-gradient(180deg, #f8faf6 0%, var(--page-bg) 100%);
+      }
+
+      .skip-link {
+        z-index: 20;
+      }
+
+      .page-shell {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+
+      .masthead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 36px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent) 0%, #83c5a2 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .brand-copy {
+        display: grid;
+        gap: 2px;
+      }
+
+      .brand-name {
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .brand-note {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .status-pill {
+        padding: 10px 14px;
+        border: 1px solid rgba(13, 122, 95, 0.16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--accent-deep);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 40px;
+        border: 1px solid var(--panel-border);
+        border-radius: 30px;
+        background: var(--panel-bg);
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -40px -60px auto;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(13, 122, 95, 0.18) 0%,
+          rgba(13, 122, 95, 0) 72%
+        );
+        pointer-events: none;
+      }
+
+      .hero-grid {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
+        gap: 28px;
+        align-items: end;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 14px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-deep);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-size: clamp(2.6rem, 6vw, 4.8rem);
+        line-height: 0.96;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-copy p {
+        max-width: 58ch;
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .hero-panel {
+        padding: 22px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, #ffffff 0%, #f6faf8 100%);
+        border: 1px solid rgba(13, 122, 95, 0.1);
+      }
+
+      .hero-panel h2 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        color: var(--accent-deep);
+      }
+
+      .hero-panel p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .hero-panel strong {
+        color: var(--ink);
+      }
+
+      .programs {
+        margin-top: 28px;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--ink);
+      }
+
+      .section-heading p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .program-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .program-card {
+        display: grid;
+        gap: 18px;
+        padding: 24px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(21, 55, 44, 0.09);
+        box-shadow: 0 14px 36px rgba(25, 49, 38, 0.08);
+        text-decoration: none;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease,
+          border-color 0.18s ease;
+      }
+
+      .program-card:hover,
+      .program-card:focus-visible {
+        transform: translateY(-4px);
+        border-color: rgba(13, 122, 95, 0.28);
+        box-shadow: 0 20px 44px rgba(25, 49, 38, 0.12);
+        text-decoration: none;
+      }
+
+      .program-index {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        color: var(--accent-deep);
+        font-size: 0.9rem;
+        font-weight: 800;
+      }
+
+      .program-card h3 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 1.25rem;
+      }
+
+      .program-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.98rem;
+      }
+
+      .program-cta {
+        color: var(--accent-deep);
+        font-weight: 700;
+      }
+
+      .notes {
+        margin-top: 22px;
+        padding: 18px 22px;
+        border-left: 4px solid var(--accent);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+      }
+
+      .notes strong {
+        color: var(--ink);
+      }
+
+      @media (max-width: 900px) {
+        .hero-grid,
+        .program-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          padding: 28px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page-shell {
+          width: min(100% - 20px, 1120px);
+          padding-top: 18px;
+        }
+
+        .masthead,
+        .section-heading {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .hero {
+          border-radius: 24px;
+          padding: 22px;
+        }
+      }
+    </style>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <main id="main-content">
-      <h1>WCAG Compliant Landing Pages</h1>
-      <nav aria-label="Program landing pages">
-        <ul>
-          <li>
-            <a href="program_landings/lose_weight.html">Lose Weight</a>
-          </li>
-          <li>
-            <a href="program_landings/lower_blood_pressure.html"
-              >Lower Blood Pressure</a
-            >
-          </li>
-          <li>
-            <a href="program_landings/lower_blood_sugar.html"
-              >Lower Blood Sugar</a
-            >
-          </li>
-        </ul>
-      </nav>
+    <div class="page-shell">
+      <header class="masthead" aria-label="Page header">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div class="brand-copy">
+            <span class="brand-name">Cappa Health</span>
+            <span class="brand-note">Program landing page directory</span>
+          </div>
+        </div>
+        <div class="status-pill">Updated for review</div>
+      </header>
 
-      <section aria-labelledby="accessibility-statement-title">
-        <h2 id="accessibility-statement-title">Accessibility Statement</h2>
-        <p>
-          These pages are designed to meet WCAG 2.1 Level AA for keyboard
-          access, semantic structure, and visible focus indicators.
-        </p>
-        <h3>Testing Checklist</h3>
-        <ul>
-          <li>Keyboard-only navigation across all links and controls</li>
-          <li>Visible focus indicator on every interactive element</li>
-          <li>Skip link moves focus to main content</li>
-          <li>Automated scan with Lighthouse or axe for each page</li>
-          <li>Manual screen reader smoke test on each page</li>
-        </ul>
-        <p>Last reviewed: March 6, 2026.</p>
-        <p>
-          If you find an accessibility issue, email
-          <a href="mailto:support@cappahealth.com">support@cappahealth.com</a>.
-        </p>
-      </section>
-    </main>
+      <main id="main-content">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <span class="eyebrow">Resource hub</span>
+              <h1 id="hero-title">
+                Three focused pathways. One clean starting point.
+              </h1>
+              <p>
+                Use this page as the main launch surface for Cappa Health
+                program campaigns. Each destination below routes directly to a
+                dedicated landing experience for weight management, blood
+                pressure support, or blood sugar education.
+              </p>
+            </div>
+
+            <aside class="hero-panel" aria-label="Publishing note">
+              <h2>What this index does well</h2>
+              <p>
+                <strong>Fast to scan.</strong> Clear labels, strong contrast,
+                and a simple visual hierarchy make it easier to reach the
+                correct page without friction.
+              </p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="programs" aria-labelledby="programs-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="programs-title">Program landing pages</h2>
+              <p>Select a destination to preview or share.</p>
+            </div>
+          </div>
+
+          <nav aria-label="Program landing pages">
+            <div class="program-grid">
+              <a class="program-card" href="program_landings/lose_weight.html">
+                <span class="program-index">01</span>
+                <div>
+                  <h3>Lose Weight</h3>
+                  <p>
+                    Directs visitors to the weight management and diabetes
+                    prevention landing page.
+                  </p>
+                </div>
+                <span class="program-cta">Open page</span>
+              </a>
+
+              <a
+                class="program-card"
+                href="program_landings/lower_blood_pressure.html"
+              >
+                <span class="program-index">02</span>
+                <div>
+                  <h3>Lower Blood Pressure</h3>
+                  <p>
+                    Opens the blood pressure support page for patients seeking
+                    guided management resources.
+                  </p>
+                </div>
+                <span class="program-cta">Open page</span>
+              </a>
+
+              <a
+                class="program-card"
+                href="program_landings/lower_blood_sugar.html"
+              >
+                <span class="program-index">03</span>
+                <div>
+                  <h3>Lower Blood Sugar</h3>
+                  <p>
+                    Links to the diabetes education and coaching page focused on
+                    blood sugar improvement.
+                  </p>
+                </div>
+                <span class="program-cta">Open page</span>
+              </a>
+            </div>
+          </nav>
+
+          <div class="notes">
+            <strong>Accessibility note:</strong> This page keeps a skip link,
+            semantic landmarks, visible focus states, and card links with clear
+            destination text.
+          </div>
+        </section>
+      </main>
+    </div>
   </body>
 </html>
