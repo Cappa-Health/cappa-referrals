@@ -1,152 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Cappa Health — WCAG-compliant healthcare services and resources for patients and providers." />
-    <title>Cappa Health</title>
+    <title>Home</title>
     <link rel="stylesheet" href="web.css" />
-    <!-- Landing configuration — load before page scripts -->
-    <script src="landing-config.js"></script>
   </head>
   <body>
-
-    <!-- Skip navigation link (WCAG 2.4.1) -->
     <a class="skip-link" href="#main-content">Skip to main content</a>
-
-    <!-- ===== Header ===== -->
-    <header role="banner">
-      <div class="header-inner">
-        <a class="site-logo" href="/" aria-label="Cappa Health home">Cappa Health</a>
-        <span id="state-badge" class="state-badge" aria-label="State: California" title="California" data-config="stateSymbol">CA</span>
-        <nav aria-label="Main navigation">
-          <ul>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-
-    <!-- ===== Hero ===== -->
-    <section class="hero" aria-labelledby="hero-heading">
-      <div class="hero-inner">
-        <h1 id="hero-heading">Accessible Healthcare for Everyone</h1>
-        <p>
-          Cappa Health is committed to providing inclusive, patient-centered care
-          and resources — meeting you where you are, in ways that work for you.
-        </p>
-        <a class="btn-primary" href="#services">Explore Our Services</a>
-      </div>
-    </section>
-
-    <!-- ===== Main Content ===== -->
     <main id="main-content">
+      <h1>WCAG Compliant Landing Pages</h1>
+      <nav aria-label="Program landing pages">
+        <ul>
+          <li>
+            <a href="program_landings/lose_weight.html">Lose Weight</a>
+          </li>
+          <li>
+            <a href="program_landings/lower_blood_pressure.html"
+              >Lower Blood Pressure</a
+            >
+          </li>
+          <li>
+            <a href="program_landings/lower_blood_sugar.html"
+              >Lower Blood Sugar</a
+            >
+          </li>
+        </ul>
+      </nav>
 
-      <!-- Services -->
-      <section id="services" class="services" aria-labelledby="services-heading">
-        <h2 id="services-heading">Our Services</h2>
-        <div class="services-grid">
-          <article class="service-card">
-            <h3>Primary Care</h3>
-            <p>Comprehensive, ongoing healthcare management for patients of all ages, focused on prevention and well-being.</p>
-          </article>
-          <article class="service-card">
-            <h3>Telehealth</h3>
-            <p>Connect with licensed providers from the comfort of your home through secure, accessible virtual visits.</p>
-          </article>
-          <article class="service-card">
-            <h3>Mental Health</h3>
-            <p>Compassionate mental health support, including counseling and therapy, available in person and online.</p>
-          </article>
-          <article class="service-card">
-            <h3>Chronic Disease Management</h3>
-            <p>Personalized programs to help patients manage long-term conditions and improve quality of life.</p>
-          </article>
-        </div>
-      </section>
-
-      <!-- About -->
-      <section id="about" class="about" aria-labelledby="about-heading">
-        <h2 id="about-heading">About Cappa Health</h2>
+      <section aria-labelledby="accessibility-statement-title">
+        <h2 id="accessibility-statement-title">Accessibility Statement</h2>
         <p>
-          Cappa Health was founded on the belief that everyone deserves access to
-          high-quality, equitable healthcare. Our team of dedicated professionals
-          works to ensure that our digital presence and services meet the highest
-          accessibility standards, including WCAG 2.1 Level AA, so no one is left
-          behind.
+          These pages are designed to meet WCAG 2.1 Level AA for keyboard
+          access, semantic structure, and visible focus indicators.
+        </p>
+        <h3>Testing Checklist</h3>
+        <ul>
+          <li>Keyboard-only navigation across all links and controls</li>
+          <li>Visible focus indicator on every interactive element</li>
+          <li>Skip link moves focus to main content</li>
+          <li>Automated scan with Lighthouse or axe for each page</li>
+          <li>Manual screen reader smoke test on each page</li>
+        </ul>
+        <p>Last reviewed: March 6, 2026.</p>
+        <p>
+          If you find an accessibility issue, email
+          <a href="mailto:support@cappahealth.com">support@cappahealth.com</a>.
         </p>
       </section>
-
-      <!-- Contact -->
-      <section id="contact" class="contact" aria-labelledby="contact-heading">
-        <h2 id="contact-heading">Contact Us</h2>
-        <address>
-          <strong>Cappa Health</strong><br />
-          Email: <a id="contact-email" href="mailto:info@cappahealth.com">info@cappahealth.com</a><br />
-          Phone: <a id="contact-phone" href="tel:+18005550100">1-800-555-0100</a>
-        </address>
-      </section>
-
     </main>
-
-    <!-- ===== Footer ===== -->
-    <footer role="contentinfo">
-      <p>
-        &copy; <span id="year"></span> <span id="footer-org">Cappa Health</span>. All rights reserved.
-        &nbsp;|&nbsp;
-        <span id="state-notice">Licensed to operate in California (CA).</span>
-        &nbsp;|&nbsp;
-        <a href="#main-content">Back to top</a>
-      </p>
-    </footer>
-
-    <script>
-      // Apply landing configuration values to the page.
-      (function applyConfig(cfg) {
-        // Year in footer copyright
-        document.getElementById('year').textContent = new Date().getFullYear();
-
-        // Page <title> with state symbol
-        document.title = cfg.orgName + ' — ' + cfg.stateSymbol;
-
-        // Header logo text
-        var logo = document.querySelector('.site-logo');
-        if (logo) logo.textContent = cfg.orgName;
-
-        // State badge in header
-        var stateBadge = document.getElementById('state-badge');
-        if (stateBadge) {
-          stateBadge.textContent = cfg.stateSymbol;
-          stateBadge.setAttribute('title', cfg.stateName);
-          stateBadge.setAttribute('aria-label', 'State: ' + cfg.stateName);
-        }
-
-        // Contact section
-        var emailLink = document.getElementById('contact-email');
-        if (emailLink) {
-          emailLink.href = 'mailto:' + cfg.contactEmail;
-          emailLink.textContent = cfg.contactEmail;
-        }
-        var phoneLink = document.getElementById('contact-phone');
-        if (phoneLink) {
-          phoneLink.href = 'tel:' + cfg.contactPhoneHref;
-          phoneLink.textContent = cfg.contactPhone;
-        }
-
-        // Footer state licensing notice
-        var stateNotice = document.getElementById('state-notice');
-        if (stateNotice) {
-          stateNotice.textContent =
-            'Licensed to operate in ' + cfg.stateName + ' (' + cfg.stateSymbol + ').';
-        }
-
-        // Footer org name
-        var footerOrg = document.getElementById('footer-org');
-        if (footerOrg) footerOrg.textContent = cfg.orgName;
-      }(LANDING_CONFIG));
-    </script>
-
   </body>
 </html>
