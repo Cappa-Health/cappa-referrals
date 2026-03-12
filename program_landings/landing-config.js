@@ -14,6 +14,9 @@
       "https://health.alaska.gov/en/services/fresh-start/",
     bloodPressureCommunityProgramsHtml: "",
     supportEmail: "support@HALT360.org",
+    sealImageSrc: "../assets/images/alaska-doh-fresh-start.png",
+    sealImageAlt:
+      "Alaska Department of Health seal and Fresh Start campaign logos",
   };
 
   var cfg = Object.assign(
@@ -33,6 +36,20 @@
     var key = el.getAttribute("data-config-href");
     if (cfg[key]) {
       el.setAttribute("href", cfg[key]);
+    }
+  });
+
+  document.querySelectorAll("[data-config-src]").forEach(function (el) {
+    var key = el.getAttribute("data-config-src");
+    if (cfg[key]) {
+      el.setAttribute("src", cfg[key]);
+    }
+  });
+
+  document.querySelectorAll("[data-config-alt]").forEach(function (el) {
+    var key = el.getAttribute("data-config-alt");
+    if (cfg[key]) {
+      el.setAttribute("alt", cfg[key]);
     }
   });
 
