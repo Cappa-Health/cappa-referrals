@@ -863,10 +863,15 @@
       </div>
     </div>
 
-    <!-- To use a different state, replace alaska.js with the appropriate state config file:
-         <script src="./configs/arkansas.js"></script>
-    -->
-    <script src="./configs/alaska.js"></script>
+    <!-- Config is selected by the ?state= URL parameter (e.g. ?state=alaska). -->
+    <script>
+      (function () {
+        var state = (
+          new URLSearchParams(location.search).get("state") || "alaska"
+        ).replace(/[^a-z0-9_-]/g, "");
+        document.write('<script src="./configs/' + state + '.js"><\/script>');
+      })();
+    </script>
     <script src="./landing-config.js"></script>
   </body>
 </html>
