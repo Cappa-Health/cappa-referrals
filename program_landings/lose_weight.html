@@ -96,6 +96,80 @@
         font-weight: 700;
         text-decoration: none;
       }
+
+      /* ── Modal layout ── */
+      .modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 20px 24px 16px;
+        border-bottom: 2px solid #e0e0e0;
+        gap: 12px;
+      }
+
+      .modal-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.35;
+        color: #1a1a1a;
+        flex: 1;
+      }
+
+      .modal-header .close {
+        flex-shrink: 0;
+        float: none;
+        font-size: 1.6rem;
+        line-height: 1;
+        padding: 0 4px;
+        margin: 0;
+        opacity: 0.5;
+      }
+
+      .modal-header .close:hover,
+      .modal-header .close:focus {
+        opacity: 1;
+      }
+
+      .modal-body {
+        padding: 20px 24px 24px;
+      }
+
+      /* ── Modal form fields ── */
+      .modal-body form label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.9em;
+        margin-top: 14px;
+        margin-bottom: 4px;
+        color: #1a1a1a;
+      }
+
+      .modal-body form input[type="text"],
+      .modal-body form input[type="email"],
+      .modal-body form input[type="tel"] {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      .modal-body form input[type="submit"] {
+        display: block;
+        width: 100%;
+        margin-top: 20px;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 4px;
+      }
+
+      .modal-support {
+        margin-top: 16px;
+        font-size: 0.9em;
+        color: #444;
+      }
     </style>
   </head>
   <body>
@@ -645,14 +719,19 @@
       id="inquiry-form"
       aria-hidden="true"
       role="dialog"
+      aria-labelledby="modal-title"
       tabindex="-1"
     >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
+            <h2 class="modal-title" id="modal-title">
+              Welcome to <span data-config-text="departmentName"></span>'s
+              Diabetes Prevention and Healthy Lifestyle Programs.
+            </h2>
             <button
               class="close"
-              aria-label="Close button"
+              aria-label="Close"
               data-dismiss="modal"
               type="button"
             >
@@ -660,11 +739,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <div style="font-size: x-large">
-              Welcome to <span data-config-text="departmentName"></span>'s
-              Diabetes Prevention and Healthy Lifestyle Programs.
-            </div>
-            <p style="padding-top: 15px">
+            <p>
               In partnership with <span data-config-text="partnerName"></span>,
               we offer professionally guided coaching programs to help
               <span data-config-text="stateResidents"></span> live healthier
@@ -678,6 +753,7 @@
                 type="text"
                 name="program_intake[name]"
                 id="program_intake_name"
+                autocomplete="name"
               />
 
               <label for="program_intake_email">Email address:</label>
@@ -701,6 +777,7 @@
                 type="text"
                 name="program_intake[zipcode]"
                 id="program_intake_zipcode"
+                autocomplete="postal-code"
               />
 
               <label for="program_intake_motivation"
@@ -718,12 +795,11 @@
                 value="Lose Weight"
               />
 
-              <p style="padding-top: 15px">
+              <p class="modal-support">
                 Questions? Email
                 <a
                   data-config-mailto="supportEmail"
                   href="mailto:support@HALT360.org"
-                  data-config-text="supportEmail"
                   >support@HALT360.org</a
                 >
               </p>
@@ -732,7 +808,6 @@
                 type="submit"
                 value="Submit"
                 class="btn btn-success"
-                style="padding: 15px 20px"
               />
             </form>
           </div>
