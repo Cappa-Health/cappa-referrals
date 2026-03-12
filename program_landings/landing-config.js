@@ -9,10 +9,20 @@
       "https://health.alaska.gov/en/services/diabetes-prevention/",
     bloodPressureDepartmentWebUrl:
       "https://health.alaska.gov/en/services/self-measured-blood-pressure/",
+    weightLossDepartmentWebUrl:
+      "https://health.alaska.gov/en/services/diabetes-prevention/",
+    bloodSugarDepartmentWebUrl:
+      "https://health.alaska.gov/en/services/diabetes-education-support/",
     campaignWebUrl: "https://health.alaska.gov/en/services/fresh-start/",
     bloodPressureCampaignWebUrl:
       "https://health.alaska.gov/en/services/fresh-start/",
+    weightLossCampaignWebUrl:
+      "https://health.alaska.gov/en/services/fresh-start/",
+    bloodSugarCampaignWebUrl:
+      "https://health.alaska.gov/en/services/fresh-start/",
     bloodPressureCommunityProgramsHtml: "",
+    weightLossCommunityProgramsHtml: "",
+    bloodSugarCommunityProgramsHtml: "",
     supportEmail: "support@HALT360.org",
     sealImageSrc: "../assets/images/alaska-doh-fresh-start.png",
     sealImageAlt:
