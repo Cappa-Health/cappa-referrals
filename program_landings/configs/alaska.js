@@ -441,7 +441,7 @@ window.LANDING_CONFIG = {
     },
   ],
   supportEmail: "support@HALT360.org",
-  sealImageSrc: "../assets/images/alaska-doh-fresh-start.png",
+  sealImageSrc: "./assets/images/alaska-doh-fresh-start.png",
   sealImageAlt:
     "Alaska Department of Health seal and Fresh Start campaign logos",
 };
