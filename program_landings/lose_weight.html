@@ -170,6 +170,12 @@
         font-size: 0.9em;
         color: #444;
       }
+
+      @media (max-width: 767px) {
+        .hero-image {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -187,7 +193,7 @@
     <main>
       <div class="container">
         <div class="row">
-          <div class="col-sm-7 col-md-5" style="background-color: #ffffff">
+          <div class="col-xs-12 col-sm-7 col-md-5" style="background-color: #ffffff">
             <div style="text-align: left; padding-bottom: 0">
               <img
                 src="./assets/images/alaska-doh-fresh-start.png"
@@ -198,7 +204,7 @@
             </div>
             <h1
               style="
-                font-size: xx-large;
+                font-size: clamp(1.4rem, 5vw, 2rem);
                 padding-top: 20px;
                 padding-bottom: 10px;
                 margin: 0;
@@ -214,11 +220,11 @@
               program for them to lose weight or prevent diabetes.
             </div>
           </div>
-          <div class="col-sm-5 col-md-5" style="padding: 15px">
+          <div class="col-xs-12 col-sm-5 col-md-5" style="padding: 15px">
             <img
               src="./assets/images/alaska-devices.png"
-              class="img-responsive"
-              style="width: 100%; height: auto; margin: 75px 0 0 auto"
+              class="img-responsive hero-image"
+              style="width: 100%; height: auto; margin: clamp(16px, 5vw, 75px) 0 0 auto"
               alt="Phone and laptop showing a weight-loss coaching dashboard"
             />
           </div>
@@ -227,7 +233,7 @@
 
       <div class="container">
         <div class="row">
-          <div class="col-xs-offset-2 col-xs-10 col-md-offset-1 col-md-10">
+          <div class="col-xs-12 col-md-offset-1 col-md-10">
             <div class="row">
               <div style="padding: 15px">
                 <h2 style="font-size: x-large; margin: 0">
@@ -250,7 +256,7 @@
                 <button
                   id="get-started"
                   class="btn btn-success"
-                  style="height: 50px; width: 130px"
+                  style="min-height: 44px; width: auto; padding: 10px 24px"
                   type="button"
                 >
                   Get Started
@@ -279,8 +285,8 @@
                 <iframe
                   src="https://player.vimeo.com/video/1111456184?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
                   class="landing-video embed-responsive-item"
-                  width="560"
-                  height="315"
+                  width="100%"
+                  height="100%"
                   allow="autoplay; fullscreen"
                   allowfullscreen
                   title="Program overview"
@@ -306,7 +312,7 @@
 
             <div class="row">
               <div style="padding: 15px">
-                <h3 style="font-size: large; margin: 0 0 10px 0">
+                <h3 style="font-size: clamp(1rem, 3vw, 1.2rem); margin: 0 0 10px 0">
                   Community program locations
                 </h3>
                 <div
