@@ -193,8 +193,6 @@
             <div style="text-align: left; padding-bottom: 0">
               <img
                 src="./assets/images/alaska-doh-fresh-start.png"
-                data-config-src="sealImageSrc"
-                data-config-alt="sealImageAlt"
                 class="img-responsive"
                 style="display: inline-block; max-width: 100%; height: 70px"
                 alt="Alaska Department of Health seal and Fresh Start campaign logos"
@@ -219,8 +217,8 @@
                 color: black;
               "
             >
-              <span data-config-text="departmentName"></span> can connect
-              <span data-config-text="stateResidents"></span> living with
+              Alaska Department of Health can connect
+              Alaskans living with
               diabetes with personalized education, nutrition, and coaching
               support — no matter where they live or whether they have health
               insurance coverage.
@@ -247,7 +245,7 @@
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="stateName"></span>'s health
+                    Alaska's health
                     department supports many great options. You can join a
                     Diabetes Self-Management Education and Support (DSMES)
                     program to lower blood sugar, manage diabetes, and make
@@ -257,9 +255,9 @@
                   <p style="padding-top: 15px">
                     Participants in online programs track progress and work with
                     assigned coaches through
-                    <span data-config-text="departmentName"></span>'s
+                    Alaska Department of Health's
                     partnership with
-                    <span data-config-text="partnerName"></span>.
+                    HALT (Health and Lifestyle Training).
                   </p>
 
                   <p style="padding-top: 15px">
@@ -276,9 +274,9 @@
                 </button>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="departmentName"></span> is able to
+                    Alaska Department of Health is able to
                     support hundreds of
-                    <span data-config-text="stateResidents"></span> to join
+                    Alaskans to join
                     online programs at no cost to them.
                   </p>
                 </div>
@@ -311,8 +309,7 @@
             <div id="state-based-programs" class="row">
               <div style="padding: 15px">
                 <h2 style="font-size: x-large; margin: 0">
-                  Find a <span data-config-text="stateName"></span>-based
-                  program near you
+                  Find an Alaska-based program near you
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
@@ -332,7 +329,6 @@
                 <div
                   class="panel-group"
                   id="accordion"
-                  data-config-locations="bloodSugarCommunityLocations"
                 >
                   <div class="panel panel-default">
                     <div class="panel-heading" id="headingAnchorage">
@@ -742,20 +738,13 @@
                 <p style="padding-top: 15px">
                   Want to learn more about Diabetes Self-Management Education
                   and Support programs? Visit the
-                  <a
-                    data-config-href="bloodSugarDepartmentWebUrl"
-                    href="https://health.alaska.gov/en/services/diabetes-education-support/"
-                  >
-                    <span data-config-text="departmentName"></span> webpage </a
-                  >.
+                  <a href="https://health.alaska.gov/en/services/diabetes-education-support/">
+                    Alaska Department of Health webpage</a>.
                 </p>
                 <p style="padding-top: 15px">
                   Visit
-                  <a
-                    data-config-href="bloodSugarCampaignWebUrl"
-                    href="https://health.alaska.gov/en/services/fresh-start/"
-                  >
-                    <span data-config-text="campaignName"></span>
+                  <a href="https://health.alaska.gov/en/services/fresh-start/">
+                    Alaska's Fresh Start campaign website
                   </a>
                   to explore more programs to meet other health goals, including
                   managing blood pressure and stopping tobacco use.
@@ -779,7 +768,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h2 class="modal-title" id="modal-title">
-              Welcome to <span data-config-text="departmentName"></span>'s Blood
+              Welcome to Alaska Department of Health's Blood
               Sugar Programs.
             </h2>
             <button
@@ -793,9 +782,9 @@
           </div>
           <div class="modal-body">
             <p>
-              In partnership with <span data-config-text="partnerName"></span>,
+              In partnership with HALT (Health and Lifestyle Training),
               we offer guided coaching programs to help
-              <span data-config-text="stateResidents"></span>
+              Alaskans
               improve blood sugar and metabolic health.
             </p>
 
@@ -849,11 +838,7 @@
 
               <p class="modal-support">
                 Questions? Email
-                <a
-                  data-config-mailto="supportEmail"
-                  href="mailto:support@HALT360.org"
-                  >support@HALT360.org</a
-                >
+                <a href="mailto:support@HALT360.org">support@HALT360.org</a>
               </p>
 
               <input type="submit" value="Submit" class="btn btn-success" />
@@ -863,15 +848,10 @@
       </div>
     </div>
 
-    <!-- Config is selected by the ?state= URL parameter (e.g. ?state=alaska). -->
-    <script>
-      (function () {
-        var state = (
-          new URLSearchParams(location.search).get("state") || "alaska"
-        ).replace(/[^a-z0-9_-]/g, "");
-        document.write('<script src="./configs/' + state + '.js"><\/script>');
-      })();
-    </script>
-    <script src="./landing-config.js"></script>
+  <script>
+    document.getElementById("get-started").addEventListener("click", function () {
+      window.jQuery("#inquiry-form").modal("show");
+    });
+  </script>
   </body>
 </html>

@@ -191,8 +191,6 @@
             <div style="text-align: left; padding-bottom: 0">
               <img
                 src="./assets/images/alaska-doh-fresh-start.png"
-                data-config-src="sealImageSrc"
-                data-config-alt="sealImageAlt"
                 class="img-responsive"
                 style="display: inline-block; max-width: 100%; height: 70px"
                 alt="Alaska Department of Health seal and Fresh Start campaign logos"
@@ -210,9 +208,9 @@
               Lose Weight
             </h1>
             <div style="padding-top: 20px; padding-bottom: 30px; font-size: 0.95em; color: black">
-              <span data-config-text="departmentName"></span> is working with
-              <span data-config-text="partnerName"></span> to help
-              <span data-config-text="stateResidents"></span> join the right
+              Alaska Department of Health is working with
+              HALT (Health and Lifestyle Training) to help
+              Alaskans join the right
               program for them to lose weight or prevent diabetes.
             </div>
           </div>
@@ -237,7 +235,7 @@
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="stateName"></span>'s health
+                    Alaska’s health
                     department supports many great options. Want to join an
                     online program focused on losing weight and preventing
                     diabetes? That’s called a Diabetes Prevention Program (DPP).
@@ -259,9 +257,9 @@
                 </button>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="departmentName"></span> is able to
+                    Alaska Department of Health is able to
                     support hundreds of
-                    <span data-config-text="stateResidents"></span> to join
+                    Alaskans to join
                     online programs at no cost to them.
                   </p>
                 </div>
@@ -294,8 +292,7 @@
             <div id="state-based-programs" class="row">
               <div style="padding: 15px">
                 <h2 style="font-size: x-large; margin: 0">
-                  Find a <span data-config-text="stateName"></span>-based
-                  program near you
+                  Find an Alaska-based program near you
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
@@ -315,7 +312,6 @@
                 <div
                   class="panel-group"
                   id="accordion"
-                  data-config-locations="weightLossCommunityLocations"
                 >
                   <div class="panel panel-default">
                     <div class="panel-heading" id="headingAnchorage">
@@ -693,20 +689,13 @@
                 <p style="padding-top: 15px">
                   Want to learn more about Diabetes Prevention Programs? Visit
                   the
-                  <a
-                    data-config-href="weightLossDepartmentWebUrl"
-                    href="https://health.alaska.gov/en/services/diabetes-prevention/"
-                  >
-                    <span data-config-text="departmentName"></span> webpage </a
-                  >.
+                  <a href="https://health.alaska.gov/en/services/diabetes-prevention/">
+                    Alaska Department of Health webpage</a>.
                 </p>
                 <p style="padding-top: 15px">
                   Visit
-                  <a
-                    data-config-href="weightLossCampaignWebUrl"
-                    href="https://health.alaska.gov/en/services/fresh-start/"
-                  >
-                    <span data-config-text="campaignName"></span>
+                  <a href="https://health.alaska.gov/en/services/fresh-start/">
+                    Alaska's Fresh Start campaign website
                   </a>
                   to explore more programs.
                 </p>
@@ -729,7 +718,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h2 class="modal-title" id="modal-title">
-              Welcome to <span data-config-text="departmentName"></span>'s
+              Welcome to Alaska Department of Health's
               Diabetes Prevention and Healthy Lifestyle Programs.
             </h2>
             <button
@@ -743,9 +732,9 @@
           </div>
           <div class="modal-body">
             <p>
-              In partnership with <span data-config-text="partnerName"></span>,
+              In partnership with HALT (Health and Lifestyle Training),
               we offer professionally guided coaching programs to help
-              <span data-config-text="stateResidents"></span> live healthier
+              Alaskans live healthier
               lives. Please provide your contact information and a team member
               will follow up.
             </p>
@@ -800,11 +789,7 @@
 
               <p class="modal-support">
                 Questions? Email
-                <a
-                  data-config-mailto="supportEmail"
-                  href="mailto:support@HALT360.org"
-                  >support@HALT360.org</a
-                >
+                <a href="mailto:support@HALT360.org">support@HALT360.org</a>
               </p>
 
               <input
@@ -818,13 +803,10 @@
       </div>
     </div>
 
-    <!-- Config is selected by the ?state= URL parameter (e.g. ?state=alaska). -->
-    <script>
-      (function () {
-        var state = (new URLSearchParams(location.search).get("state") || "alaska").replace(/[^a-z0-9_-]/g, "");
-        document.write('<script src="./configs/' + state + '.js"><\/script>');
-      })();
-    </script>
-    <script src="./landing-config.js"></script>
+  <script>
+    document.getElementById("get-started").addEventListener("click", function () {
+      window.jQuery("#inquiry-form").modal("show");
+    });
+  </script>
   </body>
 </html>
