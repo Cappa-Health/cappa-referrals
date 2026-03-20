@@ -104,26 +104,23 @@
       /* ── Modal layout ── */
       .modal-header {
         display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: flex-end;
         padding: 20px 24px 16px;
         border-bottom: 2px solid #e0e0e0;
-        gap: 12px;
       }
 
       .modal-title {
-        font-size: 1.2rem;
+        font-size: 2.0rem;
         font-weight: 700;
         margin: 0;
         line-height: 1.35;
         color: #1a1a1a;
-        flex: 1;
+        width: 100%;
       }
 
       .modal-header .close {
-        flex-shrink: 0;
-        float: none;
-        font-size: 1.6rem;
+        font-size: 2.4rem;
         line-height: 1;
         padding: 0 4px;
         margin: 0;
@@ -210,7 +207,7 @@
             </div>
             <h1
               style="
-                font-size: clamp(1.4rem, 5vw, 2rem);
+                font-size: x-large;
                 padding-top: 20px;
                 padding-bottom: 10px;
                 margin: 0;
@@ -838,10 +835,6 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h2 class="modal-title" id="modal-title">
-              Welcome to Alaska Department of Health's Blood
-              Sugar Programs.
-            </h2>
             <button
               class="close"
               aria-label="Close"
@@ -850,13 +843,13 @@
             >
               <span aria-hidden="true">&times;</span>
             </button>
+            <h2 class="modal-title" id="modal-title">
+              Welcome to the Alaska Department of Health's Diabetes Prevention and Healthy Lifestyle Programs.
+            </h2>
           </div>
           <div class="modal-body">
             <p>
-              In partnership with HALT (Health and Lifestyle Training),
-              we offer guided coaching programs to help
-              Alaskans
-              improve blood sugar and metabolic health.
+              In partnership with the HALT (Health and Lifestyle Training) team, we offer professionally guided coaching programs to help Alaskan residents live healthier lives. The Alaska Department of Health is able to support hundreds of Alaskans to join online programs. Please provide your contact information, and a team member will follow up with program details and your potential start date.
             </p>
 
             <form action="/program-intake" accept-charset="UTF-8" method="post">
@@ -892,14 +885,20 @@
                 autocomplete="postal-code"
               />
 
-              <label for="program_intake_motivation"
-                >What is your reason for joining this program?</label
-              >
+              <label for="program_intake_motivation">Reason or motivation to join program:</label>
               <input
                 type="text"
                 name="program_intake[motivation]"
                 id="program_intake_motivation"
               />
+
+              <p>
+                You will be contacted by one of our team members to provide details and complete your registration. We look forward to working with you!
+              </p>
+
+              <p>
+                All information you enter on an application form is confidential. It will not be shared with anyone outside the health program, including with State of Alaska staff. After you enroll, Alaska public health staff may receive some information strictly to evaluate and improve the program. <u>None of this information includes details that could be used to identify you or other specific program participants.</u>
+              </p>
 
               <input
                 type="hidden"
