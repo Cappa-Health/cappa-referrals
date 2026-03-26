@@ -48,7 +48,9 @@
         border: 2px solid #ffffff !important;
       }
 
-      input[type="text"] {
+      input[type="text"],
+      input[type="email"],
+      input[type="tel"] {
         border: 2px solid #595959;
       }
 
@@ -58,6 +60,10 @@
       .panel-title > a:focus {
         outline: 3px solid #1a1a1a;
         outline-offset: 2px;
+      }
+
+      .panel-body {
+        text-align: left;
       }
 
       #get-started {
@@ -94,6 +100,83 @@
         font-weight: 700;
         text-decoration: none;
       }
+
+      /* ── Modal layout ── */
+      .modal-header {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 20px 24px 16px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .modal-title {
+        font-size: 2.0rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.35;
+        color: #1a1a1a;
+        width: 100%;
+      }
+
+      .modal-header .close {
+        font-size: 2.4rem;
+        line-height: 1;
+        padding: 0 4px;
+        margin: 0;
+        opacity: 0.5;
+      }
+
+      .modal-header .close:hover,
+      .modal-header .close:focus {
+        opacity: 1;
+      }
+
+      .modal-body {
+        padding: 20px 24px 24px;
+      }
+
+      /* ── Modal form fields ── */
+      .modal-body form label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.9em;
+        margin-top: 14px;
+        margin-bottom: 4px;
+        color: #1a1a1a;
+      }
+
+      .modal-body form input[type="text"],
+      .modal-body form input[type="email"],
+      .modal-body form input[type="tel"] {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      .modal-body form input[type="submit"] {
+        display: block;
+        width: 100%;
+        margin-top: 20px;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 4px;
+      }
+
+      .modal-support {
+        margin-top: 16px;
+        font-size: 0.9em;
+        color: #444;
+      }
+
+      @media (max-width: 767px) {
+        .hero-image {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -113,10 +196,10 @@
     <main>
       <div class="container">
         <div class="row">
-          <div class="col-sm-7 col-md-5" style="background-color: #ffffff">
+          <div class="col-xs-12 col-sm-7 col-md-5" style="background-color: #ffffff">
             <div style="text-align: left; padding-bottom: 0">
               <img
-                src="../assets/images/alaska-doh-fresh-start.png"
+                src="./assets/images/alaska-doh-fresh-start.png"
                 class="img-responsive"
                 style="display: inline-block; max-width: 100%; height: 70px"
                 alt="Alaska Department of Health seal and Fresh Start campaign logos"
@@ -131,7 +214,7 @@
                 text-align: left;
               "
             >
-              Lower Blood Pressure
+              Ready for a fresh start?
             </h1>
             <div
               style="
@@ -141,17 +224,17 @@
                 color: black;
               "
             >
-              <span data-config-text="departmentName"></span> is working with
-              <span data-config-text="partnerName"></span> to help
-              <span data-config-text="stateResidents"></span> join the right
+              Alaska Department of Health is working with
+              HALT (Health and Lifestyle Training) to help
+              Alaskans join the right
               program for them to manage their blood pressure.
             </div>
           </div>
-          <div class="col-sm-5 col-md-5" style="padding: 15px">
+          <div class="col-xs-12 col-sm-5 col-md-5" style="padding: 15px">
             <img
-              src="../assets/images/alaska-devices.png"
-              class="img-responsive"
-              style="width: 100%; height: auto; margin: 75px 0 0 auto"
+              src="./assets/images/alaska-devices.png"
+              class="img-responsive hero-image"
+              style="width: 100%; height: auto; margin: clamp(16px, 5vw, 75px) 0 0 auto"
               alt="Phone and laptop showing a blood pressure coaching dashboard"
             />
           </div>
@@ -160,7 +243,7 @@
 
       <div class="container">
         <div class="row">
-          <div class="col-xs-offset-2 col-xs-10 col-md-offset-1 col-md-10">
+          <div class="col-xs-12 col-md-offset-1 col-md-10">
             <div class="row">
               <div style="padding: 15px">
                 <h2 style="font-size: x-large; margin: 0">
@@ -168,7 +251,7 @@
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="stateName"></span>'s health
+                    Alaska's health
                     department supports many great options. You can join a
                     Self-Measured Blood Pressure Program (SMBP) for 4–6 months
                     to learn how to manage your blood pressure and make other
@@ -186,18 +269,16 @@
                 <button
                   id="get-started"
                   class="btn btn-success"
-                  style="height: 50px; width: 130px"
-                  data-target="#inquiry-form"
-                  data-toggle="modal"
+                  style="min-height: 44px; width: auto; padding: 10px 24px"
                   type="button"
                 >
                   Get Started
                 </button>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="departmentName"></span> is able to
+                    Alaska Department of Health is able to
                     support hundreds of
-                    <span data-config-text="stateResidents"></span> to join
+                    Alaskans to join
                     online programs at no cost to them.
                   </p>
                 </div>
@@ -217,8 +298,8 @@
                 <iframe
                   src="https://player.vimeo.com/video/1089120239?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
                   class="landing-video embed-responsive-item"
-                  width="560"
-                  height="315"
+                  width="100%"
+                  height="100%"
                   allow="autoplay; fullscreen"
                   allowfullscreen
                   title="Lower blood pressure program overview"
@@ -230,14 +311,11 @@
             <div id="state-based-programs" class="row">
               <div style="padding: 15px">
                 <h2 style="font-size: x-large; margin: 0">
-                  Find a <span data-config-text="stateName"></span>-based
-                  program near you
+                  Find an Alaska-based program near you
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
-                    Reach out to the organizations below to learn how to enroll
-                    in community-based blood pressure programs. Many are free or
-                    low-cost.
+                    Are you interested in finding a community-based program near you? Reach out to the following organizations to learn about how to enroll in a community-based program to manage blood pressure. Many of these programs are free or low-cost.
                   </p>
                 </div>
               </div>
@@ -245,11 +323,14 @@
 
             <div class="row">
               <div style="padding: 15px">
-                <div data-config-html="bloodPressureCommunityProgramsHtml">
-                  <h3 style="font-size: large; margin: 0 0 10px 0">
+                <div>
+                  <h3 style="font-size: clamp(1rem, 3vw, 1.2rem); margin: 0 0 10px 0">
                     Community program locations
                   </h3>
-                  <div class="panel-group" id="accordion">
+                  <div
+                    class="panel-group"
+                    id="accordion"
+                  >
                     <div class="panel panel-default">
                       <div class="panel-heading" id="headingAnchorageBP">
                         <h4 class="panel-title">
@@ -271,26 +352,34 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingAnchorageBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Anchorage Neighborhood Health Center</strong>
-                          Valerie Bixler, PharmD, BC-ADM, Clinical Pharmacist
-                          Phone: 907-743-7203 Spanish: Yes Programs: SMBP,
-                          DSMES, DPP
-
-                          <strong>Pacific Community of Alaska</strong>
-                          Designed for Native Hawaiian Pacific Islander
-                          population Mavis Boone Phone: 907-891-9996 Program:
-                          SMBP
-
-                          <b
-                            >Providence Medical Center Community Health
-                            Workers</b
-                          >
-                          Cynthia Lyell Phone: 907-201-0182 Program: SMBP
-
-                          <strong>YMCA Anchorage</strong>
-                          Erin Widener Phone: 907-563-3211 ext. 104 Spanish: Yes
-                          Program: SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Anchorage Neighborhood Health Center</strong><br>
+                            Valerie Bixler, PharmD, BC-ADM, Clinical Pharmacist<br>
+                            Phone: 907-743-7203<br>
+                            Spanish: Yes<br>
+                            Programs: SMBP, DSMES, DPP
+                          </p>
+                          <p>
+                            <strong>Pacific Community of Alaska</strong><br>
+                            Designed for Native Hawaiian Pacific Islander population<br>
+                            Mavis Boone<br>
+                            Phone: 907-891-9996<br>
+                            Program: SMBP
+                          </p>
+                          <p>
+                            <strong>Providence Medical Center Community Health Workers</strong><br>
+                            Cynthia Lyell<br>
+                            Phone: 907-201-0182<br>
+                            Program: SMBP
+                          </p>
+                          <p>
+                            <strong>YMCA Anchorage</strong><br>
+                            Erin Widener<br>
+                            Phone: 907-563-3211 ext. 104<br>
+                            Spanish: Yes<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -316,10 +405,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingCordovaBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Ilanka Community Health Center</strong>
-                          Ellen Sheridan RN, CCM Phone: 907-424-8257 Program:
-                          SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Ilanka Community Health Center</strong><br>
+                            Ellen Sheridan RN, CCM<br>
+                            Phone: 907-424-8257<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -345,12 +437,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingHainesBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong
-                            >Southeast Alaska Regional Health Consortium</strong
-                          >
-                          Genevieve Schmidt Phone: 907-463-7507 Programs: SMBP,
-                          DPP, DSMES
+                        <div class="panel-body">
+                          <p>
+                            <strong>Southeast Alaska Regional Health Consortium</strong><br>
+                            Genevieve Schmidt<br>
+                            Phone: 907-463-7507<br>
+                            Programs: SMBP, DPP, DSMES
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -376,13 +469,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingJuneauBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <b
-                            >Southeast Alaska Regional Health Consortium
-                            (SEARHC)</b
-                          >
-                          Genevieve Schmidt Phone: 907-463-7507 Programs: SMBP,
-                          DPP, DSMES
+                        <div class="panel-body">
+                          <p>
+                            <strong>Southeast Alaska Regional Health Consortium (SEARHC)</strong><br>
+                            Genevieve Schmidt<br>
+                            Phone: 907-463-7507<br>
+                            Programs: SMBP, DPP, DSMES
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -408,10 +501,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingNomeBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Norton Sound Health Corporation</strong>
-                          Megan C. Mackiernan, PA-C Phone: 907-443-4501 Program:
-                          SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Norton Sound Health Corporation</strong><br>
+                            Megan C. Mackiernan, PA-C<br>
+                            Phone: 907-443-4501<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -437,10 +533,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingMatSuBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Sunshine Community Health Center</strong>
-                          Duronda Twigg, BSN, RN Phone: 907-733-2273 ext. 2830
-                          Program: SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Sunshine Community Health Center</strong><br>
+                            Duronda Twigg, BSN, RN<br>
+                            Phone: 907-733-2273 ext. 2830<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -466,12 +565,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingSitkaBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong
-                            >Southeast Alaska Regional Health Consortium</strong
-                          >
-                          Genevieve Schmidt Phone: 907-463-7507 Programs: SMBP,
-                          DPP, DSMES
+                        <div class="panel-body">
+                          <p>
+                            <strong>Southeast Alaska Regional Health Consortium</strong><br>
+                            Genevieve Schmidt<br>
+                            Phone: 907-463-7507<br>
+                            Programs: SMBP, DPP, DSMES
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -497,10 +597,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingTalkeetnaBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Sunshine Community Health Center</strong>
-                          Duronda Twigg, BSN, RN Phone: 907-733-2273 ext. 2830
-                          Program: SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Sunshine Community Health Center</strong><br>
+                            Duronda Twigg, BSN, RN<br>
+                            Phone: 907-733-2273 ext. 2830<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -526,10 +629,14 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingTyonekBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Native Village of Tyonek</strong>
-                          Administered through EMS department Justin Trenton
-                          Phone: 907-583-2201 Program: SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Native Village of Tyonek</strong><br>
+                            Administered through EMS department<br>
+                            Justin Trenton<br>
+                            Phone: 907-583-2201<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -555,9 +662,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingUnalaskaBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Qawalangin Tribe of Unalaska</strong>
-                          Kate Arduser Phone: 907-581-2920 Program: SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Qawalangin Tribe of Unalaska</strong><br>
+                            Kate Arduser<br>
+                            Phone: 907-581-2920<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -583,10 +694,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingWillowBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong>Sunshine Community Health Center</strong>
-                          Duronda Twigg, BSN, RN Phone: 907-733-2273 ext. 2830
-                          Program: SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Sunshine Community Health Center</strong><br>
+                            Duronda Twigg, BSN, RN<br>
+                            Phone: 907-733-2273 ext. 2830<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -612,11 +726,13 @@
                         class="panel-collapse collapse"
                         aria-labelledby="headingWrangellBP"
                       >
-                        <div class="panel-body" style="white-space: pre-wrap">
-                          <strong
-                            >Southeast Alaska Regional Health Consortium</strong
-                          >
-                          Genevieve Schmidt Phone: 907-463-7507 Program: SMBP
+                        <div class="panel-body">
+                          <p>
+                            <strong>Southeast Alaska Regional Health Consortium</strong><br>
+                            Genevieve Schmidt<br>
+                            Phone: 907-463-7507<br>
+                            Program: SMBP
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -631,22 +747,15 @@
                 <p style="padding-top: 15px">
                   Want to learn more about Self-Measured Blood Pressure
                   Programs? Visit the
-                  <a
-                    data-config-href="bloodPressureDepartmentWebUrl"
-                    href="https://health.alaska.gov/en/services/self-measured-blood-pressure/"
-                  >
-                    <span data-config-text="departmentName"></span> webpage </a
-                  >.
+                  <a href="https://health.alaska.gov/en/services/self-measured-blood-pressure/">
+                    Alaska Department of Health webpage</a>.
                 </p>
                 <p style="padding-top: 15px">
                   Visit
-                  <a
-                    data-config-href="bloodPressureCampaignWebUrl"
-                    href="https://health.alaska.gov/en/services/fresh-start/"
-                  >
-                    <span data-config-text="campaignName"></span>
+                  <a href="https://health.alaska.gov/en/services/fresh-start/">
+                    Alaska's Fresh Start campaign website
                   </a>
-                  to explore more programs.
+                  to explore more programs to meet other health goals. These goals include managing diabetes and stopping smoking, vaping, or chewing tobacco.
                 </p>
               </div>
             </div>
@@ -660,6 +769,7 @@
       id="inquiry-form"
       aria-hidden="true"
       role="dialog"
+      aria-labelledby="modal-title"
       tabindex="-1"
     >
       <div class="modal-dialog">
@@ -667,24 +777,20 @@
           <div class="modal-header">
             <button
               class="close"
-              aria-label="Close button"
+              aria-label="Close"
               data-dismiss="modal"
               type="button"
             >
               <span aria-hidden="true">&times;</span>
             </button>
+            <h2 class="modal-title" id="modal-title">
+              Welcome to Alaska Department of Health's
+              Self-Measured Blood Pressure Program.
+            </h2>
           </div>
           <div class="modal-body">
-            <div style="font-size: x-large">
-              Welcome to <span data-config-text="departmentName"></span>'s
-              Self-Measured Blood Pressure Program.
-            </div>
-            <p style="padding-top: 15px">
-              In partnership with <span data-config-text="partnerName"></span>,
-              we offer professionally guided coaching programs to help
-              <span data-config-text="stateResidents"></span> live healthier
-              lives. Please provide your contact information and a team member
-              will follow up.
+            <p>
+              In partnership with the HALT (Health and Lifestyle Training) team, we offer professionally guided coaching programs to help Alaskan residents live healthier lives. The Alaska Department of Health is able to support hundreds of Alaskans to join online programs. Please provide your contact information, and a team member will follow up with program details and your potential start date.
             </p>
 
             <form action="/program-intake" accept-charset="UTF-8" method="post">
@@ -693,20 +799,23 @@
                 type="text"
                 name="program_intake[name]"
                 id="program_intake_name"
+                autocomplete="name"
               />
 
               <label for="program_intake_email">Email address:</label>
               <input
-                type="text"
+                type="email"
                 name="program_intake[email]"
                 id="program_intake_email"
+                autocomplete="email"
               />
 
               <label for="program_intake_phone">Phone number:</label>
               <input
-                type="text"
+                type="tel"
                 name="program_intake[phone]"
                 id="program_intake_phone"
+                autocomplete="tel"
               />
 
               <label for="program_intake_zipcode">ZIP code:</label>
@@ -714,16 +823,23 @@
                 type="text"
                 name="program_intake[zipcode]"
                 id="program_intake_zipcode"
+                autocomplete="postal-code"
               />
 
-              <label for="program_intake_motivation"
-                >What is your reason for joining this program?</label
-              >
+              <label for="program_intake_motivation">Reason or motivation to join program:</label>
               <input
                 type="text"
                 name="program_intake[motivation]"
                 id="program_intake_motivation"
               />
+
+              <p>
+                You will be contacted by one of our team members to provide details and complete your registration. We look forward to working with you!
+              </p>
+
+              <p>
+                All information you enter on an application form is confidential. It will not be shared with anyone outside the health program, including with State of Alaska staff. After you enroll, Alaska public health staff may receive some information strictly to evaluate and improve the program. <strong>None of this information includes details that could be used to identify you or other specific program participants.</strong>
+              </p>
 
               <input
                 type="hidden"
@@ -731,45 +847,22 @@
                 value="Lower Blood Pressure"
               />
 
-              <p style="padding-top: 15px">
+              <p class="modal-support">
                 Questions? Email
-                <a
-                  data-config-mailto="supportEmail"
-                  href="mailto:support@HALT360.org"
-                  data-config-text="supportEmail"
-                  >support@HALT360.org</a
-                >
+                <a href="mailto:support@HALT360.org">support@HALT360.org</a>
               </p>
 
-              <input
-                type="submit"
-                value="Submit"
-                class="btn btn-success"
-                style="padding: 15px 20px"
-              />
+              <input type="submit" value="Submit" class="btn btn-success" />
             </form>
           </div>
         </div>
       </div>
     </div>
 
-    <!--
-      Optional white-label override example (set before landing-config.js):
-      <script>
-        window.LANDING_CONFIG = {
-          stateName: "Arkansas",
-          stateResidents: "Arkansans",
-          departmentName: "Arkansas Department of Health",
-          partnerName: "Healthy Lifestyle Training Team",
-          campaignName: "Arkansas Fresh Start website",
-          bloodPressureDepartmentWebUrl:
-            "https://example.gov/self-measured-blood-pressure",
-          bloodPressureCampaignWebUrl: "https://example.gov/fresh-start",
-          bloodPressureCommunityProgramsHtml: "",
-          supportEmail: "support@example.org"
-        };
-      </script>
-    -->
-    <script src="./landing-config.js"></script>
+  <script>
+    document.getElementById("get-started").addEventListener("click", function () {
+      window.jQuery("#inquiry-form").modal("show");
+    });
+  </script>
   </body>
 </html>

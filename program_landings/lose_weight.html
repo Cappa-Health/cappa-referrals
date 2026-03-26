@@ -48,7 +48,9 @@
         border: 2px solid #ffffff !important;
       }
 
-      input[type="text"] {
+      input[type="text"],
+      input[type="email"],
+      input[type="tel"] {
         border: 2px solid #595959;
       }
 
@@ -58,6 +60,10 @@
       .panel-title > a:focus {
         outline: 3px solid #1a1a1a;
         outline-offset: 2px;
+      }
+
+      .panel-body {
+        text-align: left;
       }
 
       #get-started {
@@ -94,6 +100,83 @@
         font-weight: 700;
         text-decoration: none;
       }
+
+      /* ── Modal layout ── */
+      .modal-header {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 20px 24px 16px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .modal-title {
+        font-size: 2.0rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.35;
+        color: #1a1a1a;
+        width: 100%;
+      }
+
+      .modal-header .close {
+        font-size: 2.4rem;
+        line-height: 1;
+        padding: 0 4px;
+        margin: 0;
+        opacity: 0.5;
+      }
+
+      .modal-header .close:hover,
+      .modal-header .close:focus {
+        opacity: 1;
+      }
+
+      .modal-body {
+        padding: 20px 24px 24px;
+      }
+
+      /* ── Modal form fields ── */
+      .modal-body form label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.9em;
+        margin-top: 14px;
+        margin-bottom: 4px;
+        color: #1a1a1a;
+      }
+
+      .modal-body form input[type="text"],
+      .modal-body form input[type="email"],
+      .modal-body form input[type="tel"] {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      .modal-body form input[type="submit"] {
+        display: block;
+        width: 100%;
+        margin-top: 20px;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 4px;
+      }
+
+      .modal-support {
+        margin-top: 16px;
+        font-size: 0.9em;
+        color: #444;
+      }
+
+      @media (max-width: 767px) {
+        .hero-image {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -111,10 +194,10 @@
     <main>
       <div class="container">
         <div class="row">
-          <div class="col-sm-7 col-md-5" style="background-color: #ffffff">
+          <div class="col-xs-12 col-sm-7 col-md-5" style="background-color: #ffffff">
             <div style="text-align: left; padding-bottom: 0">
               <img
-                src="../assets/images/alaska-doh-fresh-start.png"
+                src="./assets/images/alaska-doh-fresh-start.png"
                 class="img-responsive"
                 style="display: inline-block; max-width: 100%; height: 70px"
                 alt="Alaska Department of Health seal and Fresh Start campaign logos"
@@ -129,20 +212,20 @@
                 text-align: left;
               "
             >
-              Lose Weight
+              Ready for a fresh start?
             </h1>
             <div style="padding-top: 20px; padding-bottom: 30px; font-size: 0.95em; color: black">
-              <span data-config-text="departmentName"></span> is working with
-              <span data-config-text="partnerName"></span> to help
-              <span data-config-text="stateResidents"></span> join the right
+              Alaska Department of Health is working with
+              HALT (Health and Lifestyle Training) to help
+              Alaskans join the right
               program for them to lose weight or prevent diabetes.
             </div>
           </div>
-          <div class="col-sm-5 col-md-5" style="padding: 15px">
+          <div class="col-xs-12 col-sm-5 col-md-5" style="padding: 15px">
             <img
-              src="../assets/images/alaska-devices.png"
-              class="img-responsive"
-              style="width: 100%; height: auto; margin: 75px 0 0 auto"
+              src="./assets/images/alaska-devices.png"
+              class="img-responsive hero-image"
+              style="width: 100%; height: auto; margin: clamp(16px, 5vw, 75px) 0 0 auto"
               alt="Phone and laptop showing a weight-loss coaching dashboard"
             />
           </div>
@@ -151,7 +234,7 @@
 
       <div class="container">
         <div class="row">
-          <div class="col-xs-offset-2 col-xs-10 col-md-offset-1 col-md-10">
+          <div class="col-xs-12 col-md-offset-1 col-md-10">
             <div class="row">
               <div style="padding: 15px">
                 <h2 style="font-size: x-large; margin: 0">
@@ -159,12 +242,7 @@
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="stateName"></span>'s health
-                    department supports many great options. Want to join an
-                    online program focused on losing weight and preventing
-                    diabetes? That’s called a Diabetes Prevention Program (DPP).
-                    If you don’t meet DPP eligibility requirements, you may
-                    still qualify for a Healthy Lifestyle Program.
+                    Alaska’s health department supports many great options. Want to join an online program focused on losing weight AND preventing diabetes? That’s called a Diabetes Prevention Program (DPP). If you don’t meet the eligibility requirements for the DPP, you’re likely eligible for another option. That’s called a Healthy Lifestyle Program to lose weight and make other healthy changes. We will match you with the best program for you. Participants in online programs track progress and work with assigned coaches using the mobile app or computer.
                   </p>
 
                   <p style="padding-top: 15px">
@@ -174,18 +252,16 @@
                 <button
                   id="get-started"
                   class="btn btn-success"
-                  style="height: 50px; width: 130px"
-                  data-target="#inquiry-form"
-                  data-toggle="modal"
+                  style="min-height: 44px; width: auto; padding: 10px 24px"
                   type="button"
                 >
                   Get Started
                 </button>
                 <div>
                   <p style="padding-top: 15px">
-                    <span data-config-text="departmentName"></span> is able to
+                    Alaska Department of Health is able to
                     support hundreds of
-                    <span data-config-text="stateResidents"></span> to join
+                    Alaskans to join
                     online programs at no cost to them.
                   </p>
                 </div>
@@ -205,8 +281,8 @@
                 <iframe
                   src="https://player.vimeo.com/video/1111456184?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
                   class="landing-video embed-responsive-item"
-                  width="560"
-                  height="315"
+                  width="100%"
+                  height="100%"
                   allow="autoplay; fullscreen"
                   allowfullscreen
                   title="Program overview"
@@ -218,14 +294,11 @@
             <div id="state-based-programs" class="row">
               <div style="padding: 15px">
                 <h2 style="font-size: x-large; margin: 0">
-                  Find a <span data-config-text="stateName"></span>-based
-                  program near you
+                  Find an Alaska-based program near you
                 </h2>
                 <div>
                   <p style="padding-top: 15px">
-                    Reach out to the organizations below to learn how to enroll
-                    in community-based diabetes prevention or healthy lifestyle
-                    programs. Many are free or low-cost.
+                    Are you interested in finding a community-based program near you? Reach out to the following organizations to learn how to enroll in a community-based program focused on diabetes prevention or healthy lifestyles changes. Many of these programs are free or low-cost.
                   </p>
                 </div>
               </div>
@@ -233,7 +306,7 @@
 
             <div class="row">
               <div style="padding: 15px">
-                <h3 style="font-size: large; margin: 0 0 10px 0">
+                <h3 style="font-size: clamp(1rem, 3vw, 1.2rem); margin: 0 0 10px 0">
                   Community program locations
                 </h3>
                 <div
@@ -261,19 +334,30 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingAnchorage"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Anchorage Neighborhood Health Center</strong>
-                        4951 Business Park Blvd. Anchorage, AK 99503 Phone:
-                        907-743-7200 Spanish: Yes Programs: DPP, DSMES, SMBP
-
-                        <strong>Southcentral Foundation</strong>
-                        Diabetes Education Program 4320 Diplomacy Drive, Suite
-                        1121 Anchorage, AK 99508 Phone: 907-729-4380 Programs:
-                        DPP, DSMES
-
-                        <strong>YMCA of Anchorage</strong>
-                        5323 Lake Otis Parkway Anchorage, AK 99507 Phone:
-                        907-563-3211 Ext: 104 Program: DPP
+                      <div class="panel-body">
+                        <p>
+                          <strong>Anchorage Neighborhood Health Center</strong><br>
+                          4951 Business Park Blvd.<br>
+                          Anchorage, AK 99503<br>
+                          Phone: 907-743-7200<br>
+                          Spanish: Yes<br>
+                          Programs: DPP, DSMES, SMBP
+                        </p>
+                        <p>
+                          <strong>Southcentral Foundation</strong><br>
+                          Diabetes Education Program<br>
+                          4320 Diplomacy Drive, Suite 1121<br>
+                          Anchorage, AK 99508<br>
+                          Phone: 907-729-4380<br>
+                          Programs: DPP, DSMES
+                        </p>
+                        <p>
+                          <strong>YMCA of Anchorage</strong><br>
+                          5323 Lake Otis Parkway<br>
+                          Anchorage, AK 99507<br>
+                          Phone: 907-563-3211 Ext: 104<br>
+                          Program: DPP
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -299,11 +383,15 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingBethel"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Yukon Kuskokwim Health Corporation</strong>
-                        Diabetes Prevention and Control Program PO Box 528
-                        Bethel, AK 99559 Phone: 907-543-6049 Programs: DPP,
-                        Healthy Living, DSMES
+                      <div class="panel-body">
+                        <p>
+                          <strong>Yukon Kuskokwim Health Corporation</strong><br>
+                          Diabetes Prevention and Control Program<br>
+                          PO Box 528<br>
+                          Bethel, AK 99559<br>
+                          Phone: 907-543-6049<br>
+                          Programs: DPP, Healthy Living, DSMES
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -329,19 +417,23 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingFairbanks"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Tanana Chiefs Conference</strong>
-                        Chief Andrew Isaac Health Center 1717 West Cowles Street
-                        Fairbanks, AK 99701 Phone: 907-451-6682, Ext: 3768
-                        Program: DPP
-
-                        <b
-                          >University of Alaska Fairbanks Cooperative Extension
-                          Service</strong
-                        >
-                        Tanana District Office Diabetes Prevention Program 1000
-                        University Avenue Fairbanks, AK 99709 Phone:
-                        907-474-2426 Program: DPP
+                      <div class="panel-body">
+                        <p>
+                          <strong>Tanana Chiefs Conference</strong><br>
+                          Chief Andrew Isaac Health Center<br>
+                          1717 West Cowles Street<br>
+                          Fairbanks, AK 99701<br>
+                          Phone: 907-451-6682, Ext: 3768<br>
+                          Program: DPP
+                        </p>
+                        <p>
+                          <strong>University of Alaska Fairbanks Cooperative Extension Service</strong><br>
+                          Tanana District Office Diabetes Prevention Program<br>
+                          1000 University Avenue<br>
+                          Fairbanks, AK 99709<br>
+                          Phone: 907-474-2426<br>
+                          Program: DPP
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -367,10 +459,15 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingHaines"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Southeast Regional Health Consortium (SEARHC)</strong>
-                        Haines Health Center 131 1st Avenue, Haines, AK 99827
-                        Phone: 907-766-6300 Programs: DPP, DSMES, SMBP
+                      <div class="panel-body">
+                        <p>
+                          <strong>Southeast Regional Health Consortium (SEARHC)</strong><br>
+                          Haines Health Center<br>
+                          131 1st Avenue<br>
+                          Haines, AK 99827<br>
+                          Phone: 907-766-6300<br>
+                          Programs: DPP, DSMES, SMBP
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -396,10 +493,14 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingHomer"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Seldovia Village Tribe</strong>
-                        880 East End Road Homer, AK 99603 Phone: 907-226-2228
-                        Programs: DPP, SMBP
+                      <div class="panel-body">
+                        <p>
+                          <strong>Seldovia Village Tribe</strong><br>
+                          880 East End Road<br>
+                          Homer, AK 99603<br>
+                          Phone: 907-226-2228<br>
+                          Programs: DPP, SMBP
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -425,10 +526,15 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingJuneau"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Southeast Regional Health Consortium (SEARHC)</strong>
-                        Ethel Lund Medical Center 1200 Salmon Creek Lane Juneau,
-                        AK 99801 Phone: 907-463-4040 Programs: DPP, DSMES, SMBP
+                      <div class="panel-body">
+                        <p>
+                          <strong>Southeast Regional Health Consortium (SEARHC)</strong><br>
+                          Ethel Lund Medical Center<br>
+                          1200 Salmon Creek Lane<br>
+                          Juneau, AK 99801<br>
+                          Phone: 907-463-4040<br>
+                          Programs: DPP, DSMES, SMBP
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -454,10 +560,14 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingKenai"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Kenaitze Indian Tribe</strong>
-                        508 Upland Street Kenai, AK 99611 Phone: 907-335-7582
-                        Program: Healthy Living
+                      <div class="panel-body">
+                        <p>
+                          <strong>Kenaitze Indian Tribe</strong><br>
+                          508 Upland Street<br>
+                          Kenai, AK 99611<br>
+                          Phone: 907-335-7582<br>
+                          Program: Healthy Living
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -483,10 +593,14 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingKetchikan"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Ketchikan Indian Community</strong>
-                        2960 Tongass Ave. Ketchikan, AK 99901 Phone:
-                        907-228-9428 Programs: Healthy Living, DSMES
+                      <div class="panel-body">
+                        <p>
+                          <strong>Ketchikan Indian Community</strong><br>
+                          2960 Tongass Ave.<br>
+                          Ketchikan, AK 99901<br>
+                          Phone: 907-228-9428<br>
+                          Programs: Healthy Living, DSMES
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -512,10 +626,14 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingKotzebue"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Maniilaq Association</strong>
-                        733 2nd Avenue Kotzebue, AK 99752 Phone: 907-442-7455
-                        Program: DPP
+                      <div class="panel-body">
+                        <p>
+                          <strong>Maniilaq Association</strong><br>
+                          733 2nd Avenue<br>
+                          Kotzebue, AK 99752<br>
+                          Phone: 907-442-7455<br>
+                          Program: DPP
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -541,10 +659,15 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingSitka"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Southeast Regional Health Consortium (SEARHC)</strong>
-                        Mt. Edgecumbe Medical Center 222 Tongass Drive Sitka, AK
-                        99835 Phone: 907-966-2411 Programs: DPP, DSMES, SMBP
+                      <div class="panel-body">
+                        <p>
+                          <strong>Southeast Regional Health Consortium (SEARHC)</strong><br>
+                          Mt. Edgecumbe Medical Center<br>
+                          222 Tongass Drive<br>
+                          Sitka, AK 99835<br>
+                          Phone: 907-966-2411<br>
+                          Programs: DPP, DSMES, SMBP
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -570,10 +693,14 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingSoldotna"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Central Peninsula Hospital</strong>
-                        250 Hospital Place Soldotna, AK 99669 Phone:
-                        907-714-4404 Programs: Healthy Living, DSMES
+                      <div class="panel-body">
+                        <p>
+                          <strong>Central Peninsula Hospital</strong><br>
+                          250 Hospital Place<br>
+                          Soldotna, AK 99669<br>
+                          Phone: 907-714-4404<br>
+                          Programs: Healthy Living, DSMES
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -599,10 +726,14 @@
                       class="panel-collapse collapse"
                       aria-labelledby="headingWasilla"
                     >
-                      <div class="panel-body" style="white-space: pre-wrap">
-                        <strong>Capstone Clinic</strong>
-                        3122 E Meridian Park Loop Wasilla, AK 99654 Phone:
-                        907-357-9590 Programs: Healthy Living, DSMES
+                      <div class="panel-body">
+                        <p>
+                          <strong>Capstone Clinic</strong><br>
+                          3122 E Meridian Park Loop<br>
+                          Wasilla, AK 99654<br>
+                          Phone: 907-357-9590<br>
+                          Programs: Healthy Living, DSMES
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -616,22 +747,15 @@
                 <p style="padding-top: 15px">
                   Want to learn more about Diabetes Prevention Programs? Visit
                   the
-                  <a
-                    data-config-href="departmentWebUrl"
-                    href="https://health.alaska.gov/en/services/diabetes-prevention/"
-                  >
-                    <span data-config-text="departmentName"></span> webpage </a
-                  >.
+                  <a href="https://health.alaska.gov/en/services/diabetes-prevention/">
+                    Alaska Department of Health webpage</a>.
                 </p>
                 <p style="padding-top: 15px">
                   Visit
-                  <a
-                    data-config-href="campaignWebUrl"
-                    href="https://health.alaska.gov/en/services/fresh-start/"
-                  >
-                    <span data-config-text="campaignName"></span>
+                  <a href="https://health.alaska.gov/en/services/fresh-start/">
+                    Alaska's Fresh Start campaign website
                   </a>
-                  to explore more programs.
+                  to explore more programs to meet other health goals. These goals include managing diabetes and stopping smoking, vaping, or chewing tobacco.
                 </p>
               </div>
             </div>
@@ -645,6 +769,7 @@
       id="inquiry-form"
       aria-hidden="true"
       role="dialog"
+      aria-labelledby="modal-title"
       tabindex="-1"
     >
       <div class="modal-dialog">
@@ -652,24 +777,20 @@
           <div class="modal-header">
             <button
               class="close"
-              aria-label="Close button"
+              aria-label="Close"
               data-dismiss="modal"
               type="button"
             >
               <span aria-hidden="true">&times;</span>
             </button>
+            <h2 class="modal-title" id="modal-title">
+              Welcome to Alaska Department of Health's
+              Diabetes Prevention and Healthy Lifestyle Programs.
+            </h2>
           </div>
           <div class="modal-body">
-            <div style="font-size: x-large">
-              Welcome to <span data-config-text="departmentName"></span>'s
-              Diabetes Prevention and Healthy Lifestyle Programs.
-            </div>
-            <p style="padding-top: 15px">
-              In partnership with <span data-config-text="partnerName"></span>,
-              we offer professionally guided coaching programs to help
-              <span data-config-text="stateResidents"></span> live healthier
-              lives. Please provide your contact information and a team member
-              will follow up.
+            <p>
+              In partnership with the HALT (Health and Lifestyle Training) team, we offer professionally guided coaching programs to help Alaskan residents live healthier lives. The Alaska Department of Health is able to support hundreds of Alaskans to join online programs. Please provide your contact information, and a team member will follow up with program details and your potential start date.
             </p>
 
             <form action="/program-intake" accept-charset="UTF-8" method="post">
@@ -678,20 +799,23 @@
                 type="text"
                 name="program_intake[name]"
                 id="program_intake_name"
+                autocomplete="name"
               />
 
               <label for="program_intake_email">Email address:</label>
               <input
-                type="text"
+                type="email"
                 name="program_intake[email]"
                 id="program_intake_email"
+                autocomplete="email"
               />
 
               <label for="program_intake_phone">Phone number:</label>
               <input
-                type="text"
+                type="tel"
                 name="program_intake[phone]"
                 id="program_intake_phone"
+                autocomplete="tel"
               />
 
               <label for="program_intake_zipcode">ZIP code:</label>
@@ -699,16 +823,23 @@
                 type="text"
                 name="program_intake[zipcode]"
                 id="program_intake_zipcode"
+                autocomplete="postal-code"
               />
 
-              <label for="program_intake_motivation"
-                >What is your reason for joining this program?</label
-              >
+              <label for="program_intake_motivation">Reason or motivation to join program:</label>
               <input
                 type="text"
                 name="program_intake[motivation]"
                 id="program_intake_motivation"
               />
+
+              <p>
+                You will be contacted by one of our team members to provide details and complete your registration. We look forward to working with you!
+              </p>
+
+              <p>
+                All information you enter on an application form is confidential. It will not be shared with anyone outside the health program, including with State of Alaska staff. After you enroll, Alaska public health staff may receive some information strictly to evaluate and improve the program. <strong>None of this information includes details that could be used to identify you or other specific program participants.</strong>
+              </p>
 
               <input
                 type="hidden"
@@ -716,21 +847,15 @@
                 value="Lose Weight"
               />
 
-              <p style="padding-top: 15px">
+              <p class="modal-support">
                 Questions? Email
-                <a
-                  data-config-mailto="supportEmail"
-                  href="mailto:support@HALT360.org"
-                  data-config-text="supportEmail"
-                  >support@HALT360.org</a
-                >
+                <a href="mailto:support@HALT360.org">support@HALT360.org</a>
               </p>
 
               <input
                 type="submit"
                 value="Submit"
                 class="btn btn-success"
-                style="padding: 15px 20px"
               />
             </form>
           </div>
@@ -738,21 +863,10 @@
       </div>
     </div>
 
-    <!--
-      Optional white-label override example (set before landing-config.js):
-      <script>
-        window.LANDING_CONFIG = {
-          stateName: "Arkansas",
-          stateResidents: "Arkansans",
-          departmentName: "Arkansas Department of Health",
-          partnerName: "Healthy Lifestyle Training Team",
-          campaignName: "Arkansas Fresh Start website",
-          departmentWebUrl: "https://example.gov/diabetes-prevention",
-          campaignWebUrl: "https://example.gov/fresh-start",
-          supportEmail: "support@example.org"
-        };
-      </script>
-    -->
-    <script src="./landing-config.js"></script>
+  <script>
+    document.getElementById("get-started").addEventListener("click", function () {
+      window.jQuery("#inquiry-form").modal("show");
+    });
+  </script>
   </body>
 </html>
