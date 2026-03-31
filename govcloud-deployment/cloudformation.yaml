@@ -1,0 +1,207 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  HALT Program Landing Pages – AWS GovCloud Hosting
+  Resources: S3 static site bucket, HTTP API Gateway,
+  Lambda form handler, SES email notifications.
+  Note: CloudFront is created separately through the console
+  (CloudFront CloudFormation resources are not supported in us-gov-west-1).
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Parameters
+# ─────────────────────────────────────────────────────────────────────────────
+Parameters:
+
+  ProjectName:
+    Type: String
+    Default: halt-landing
+    Description: Short name used as a prefix for all resource names/IDs.
+
+  SenderEmail:
+    Type: String
+    Description: >
+      SES-verified "From" address for intake emails (e.g. no-reply@yourdomain.gov).
+      This address MUST be verified in SES before the stack is deployed.
+
+  RecipientEmail:
+    Type: String
+    Description: >
+      Comma-separated list of addresses that receive intake notifications
+      (e.g. team@yourdomain.gov or team@yourdomain.gov,backup@yourdomain.gov).
+
+  LambdaZipS3Bucket:
+    Type: String
+    Description: >
+      Name of the S3 bucket (in the same GovCloud region) that holds the
+      Lambda deployment package ZIP. Upload handler.zip here first.
+
+  LambdaZipS3Key:
+    Type: String
+    Default: handler.zip
+    Description: S3 key (path) of the Lambda ZIP file.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Resources
+# ─────────────────────────────────────────────────────────────────────────────
+Resources:
+
+  # ── S3 Bucket for static site ─────────────────────────────────────────────
+  # Private bucket – content is served through CloudFront (created manually).
+  # Block all public access; CloudFront will be granted read access via OAI.
+
+  StaticSiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-static-site-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ── Lambda Execution Role ─────────────────────────────────────────────────
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws-us-gov:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SesSendEmail
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: "*"
+
+  # ── Lambda Function ───────────────────────────────────────────────────────
+
+  ProgramIntakeLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-intake-handler"
+      Runtime: python3.12
+      Handler: handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 15
+      MemorySize: 128
+      Code:
+        S3Bucket: !Ref LambdaZipS3Bucket
+        S3Key: !Ref LambdaZipS3Key
+      Environment:
+        Variables:
+          SENDER_EMAIL:    !Ref SenderEmail
+          RECIPIENT_EMAIL: !Ref RecipientEmail
+          # Update ALLOWED_ORIGIN to your CloudFront domain after creating
+          # the distribution manually (e.g. https://d1abc.cloudfront.net).
+          ALLOWED_ORIGIN:  "*"
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ── API Gateway HTTP API ──────────────────────────────────────────────────
+
+  ProgramIntakeApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub "${ProjectName}-api"
+      ProtocolType: HTTP
+      CorsConfiguration:
+        # Update AllowOrigins to your CloudFront domain after creating
+        # the distribution manually (e.g. https://d1abc.cloudfront.net).
+        AllowOrigins:
+          - "*"
+        AllowMethods: [POST, OPTIONS]
+        AllowHeaders: [Content-Type]
+        MaxAge: 300
+
+  ProgramIntakeLambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub
+        - "arn:aws-us-gov:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
+        - LambdaArn: !GetAtt ProgramIntakeLambda.Arn
+      PayloadFormatVersion: "2.0"
+
+  ProgramIntakeRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "POST /program-intake"
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  ProgramIntakeApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      StageName: "$default"
+      AutoDeploy: true
+
+  ApiGatewayLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ProgramIntakeLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws-us-gov:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgramIntakeApi}/*"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Outputs
+# ─────────────────────────────────────────────────────────────────────────────
+Outputs:
+
+  StaticSiteBucketName:
+    Description: >
+      S3 bucket for your HTML/CSS/JS files. Upload program_landings/ here,
+      then create a CloudFront distribution pointing to this bucket.
+    Value: !Ref StaticSiteBucket
+    Export:
+      Name: !Sub "${ProjectName}-static-bucket"
+
+  StaticSiteBucketArn:
+    Description: S3 bucket ARN – needed when creating the CloudFront OAI bucket policy
+    Value: !GetAtt StaticSiteBucket.Arn
+    Export:
+      Name: !Sub "${ProjectName}-static-bucket-arn"
+
+  ApiGatewayEndpoint:
+    Description: >
+      API Gateway endpoint – replace YOUR_API_GATEWAY_URL in the 3 HTML files,
+      then update ALLOWED_ORIGIN in the Lambda env vars and API Gateway CORS
+      settings to your CloudFront domain once it is created.
+    Value: !Sub "https://${ProgramIntakeApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Export:
+      Name: !Sub "${ProjectName}-api-endpoint"
+
+  LambdaFunctionName:
+    Description: Lambda function name – used to update ALLOWED_ORIGIN after CloudFront is created
+    Value: !Ref ProgramIntakeLambda
+    Export:
+      Name: !Sub "${ProjectName}-lambda-name"
+
+  ApiGatewayId:
+    Description: API Gateway ID – used to update CORS AllowOrigins after CloudFront is created
+    Value: !Ref ProgramIntakeApi
+    Export:
+      Name: !Sub "${ProjectName}-api-id"
