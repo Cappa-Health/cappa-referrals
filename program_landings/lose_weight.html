@@ -936,6 +936,15 @@
           window.jQuery("#inquiry-form").modal("show");
         });
 
+      // ── Sync aria-hidden with modal visibility ─────────────────────────────
+      window.jQuery("#inquiry-form")
+        .on("show.bs.modal", function () {
+          window.jQuery(this).removeAttr("aria-hidden");
+        })
+        .on("hidden.bs.modal", function () {
+          window.jQuery(this).attr("aria-hidden", "true");
+        });
+
       // ── Submit form via fetch → API Gateway → Lambda → SES ───────────────
       (function () {
         // Replace this value with the API Gateway endpoint from the
