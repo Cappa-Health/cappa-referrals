@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lose Weight</title>
-    <link rel="icon" href="/program_landings/assets/images/favicon.ico" />
+    <link rel="icon" href="assets/images/favicon.ico" />
     <link
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
@@ -938,7 +938,8 @@
         });
 
       // ── Sync aria-hidden with modal visibility ─────────────────────────────
-      window.jQuery("#inquiry-form")
+      window
+        .jQuery("#inquiry-form")
         .on("show.bs.modal", function () {
           window.jQuery(this).removeAttr("aria-hidden");
         })
@@ -951,7 +952,7 @@
         // Replace this value with the API Gateway endpoint from the
         // CloudFormation output "ApiGatewayEndpoint" after deployment.
         var API_URL =
-          "https://ppxnurvp3g.execute-api.us-gov-west-1.amazonaws.com/program-intake";
+          "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com/program-intake";
 
         document
           .getElementById("intake-form")

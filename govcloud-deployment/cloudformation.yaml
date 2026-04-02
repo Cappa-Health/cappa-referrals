@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  HALT Program Landing Pages – AWS GovCloud Hosting
-  Resources: S3 static site bucket, HTTP API Gateway,
-  Lambda form handler, SES email notifications.
-  Note: CloudFront is created separately through the console
-  (CloudFront CloudFormation resources are not supported in us-gov-west-1).
+  HALT Program Landing Pages – AWS GovCloud
+  Resources: S3 static site bucket, DynamoDB submissions table,
+  HTTP API Gateway, Lambda form handler with SES notification.
+  PII is stored in DynamoDB (GovCloud). Notification emails
+  contain no PII — only a link to the secure dashboard.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Parameters
@@ -15,18 +15,6 @@ Parameters:
     Type: String
     Default: halt-landing
     Description: Short name used as a prefix for all resource names/IDs.
-
-  SenderEmail:
-    Type: String
-    Description: >
-      SES-verified "From" address for intake emails (e.g. no-reply@yourdomain.gov).
-      This address MUST be verified in SES before the stack is deployed.
-
-  RecipientEmail:
-    Type: String
-    Description: >
-      Comma-separated list of addresses that receive intake notifications
-      (e.g. team@yourdomain.gov or team@yourdomain.gov,backup@yourdomain.gov).
 
   LambdaZipS3Bucket:
     Type: String
@@ -39,19 +27,38 @@ Parameters:
     Default: handler.zip
     Description: S3 key (path) of the Lambda ZIP file.
 
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: >
+      CORS allowed origin. After deployment, update to your site domain
+      (e.g. https://www.haltreferral.org).
+
+  SenderEmail:
+    Type: String
+    Default: no-reply@haltreferral.org
+    Description: >
+      SES-verified sender address for notification emails.
+      Must be verified in SES before use (domain or individual address).
+
+  NotificationEmail:
+    Type: String
+    Default: support@halt360.org
+    Description: >
+      Where to send new-referral notifications. No PII is included
+      in the email — only a link to the GovCloud dashboard.
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Resources
 # ─────────────────────────────────────────────────────────────────────────────
 Resources:
 
   # ── S3 Bucket for static site ─────────────────────────────────────────────
-  # Private bucket – content is served through CloudFront (created manually).
-  # Block all public access; CloudFront will be granted read access via OAI.
 
   StaticSiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${ProjectName}-static-site-${AWS::AccountId}"
+      BucketName: "www.haltreferral.org"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -63,6 +70,50 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ── DynamoDB Table for intake submissions ─────────────────────────────────
+
+  IntakeSubmissionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ProjectName}-intake-submissions"
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      AttributeDefinitions:
+        - AttributeName: submission_id
+          AttributeType: S
+        - AttributeName: submitted_at
+          AttributeType: S
+        - AttributeName: landing_page
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: submission_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: by-program
+          KeySchema:
+            - AttributeName: landing_page
+              KeyType: HASH
+            - AttributeName: submitted_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: by-date
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: submitted_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       Tags:
         - Key: Project
           Value: !Ref ProjectName
@@ -83,7 +134,16 @@ Resources:
       ManagedPolicyArns:
         - arn:aws-us-gov:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: SesSendEmail
+        - PolicyName: DynamoDbWrite
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  - !GetAtt IntakeSubmissionsTable.Arn
+        - PolicyName: SesSendNotification
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -109,11 +169,10 @@ Resources:
         S3Key: !Ref LambdaZipS3Key
       Environment:
         Variables:
-          SENDER_EMAIL:    !Ref SenderEmail
-          RECIPIENT_EMAIL: !Ref RecipientEmail
-          # Update ALLOWED_ORIGIN to your CloudFront domain after creating
-          # the distribution manually (e.g. https://d1abc.cloudfront.net).
-          ALLOWED_ORIGIN:  "*"
+          TABLE_NAME:         !Ref IntakeSubmissionsTable
+          SENDER_EMAIL:       !Ref SenderEmail
+          NOTIFICATION_EMAIL: !Ref NotificationEmail
+          ALLOWED_ORIGIN:     !Ref AllowedOrigin
       Tags:
         - Key: Project
           Value: !Ref ProjectName
@@ -126,10 +185,8 @@ Resources:
       Name: !Sub "${ProjectName}-api"
       ProtocolType: HTTP
       CorsConfiguration:
-        # Update AllowOrigins to your CloudFront domain after creating
-        # the distribution manually (e.g. https://d1abc.cloudfront.net).
         AllowOrigins:
-          - "*"
+          - !Ref AllowedOrigin
         AllowMethods: [POST, OPTIONS]
         AllowHeaders: [Content-Type]
         MaxAge: 300
@@ -172,36 +229,21 @@ Resources:
 Outputs:
 
   StaticSiteBucketName:
-    Description: >
-      S3 bucket for your HTML/CSS/JS files. Upload program_landings/ here,
-      then create a CloudFront distribution pointing to this bucket.
+    Description: S3 bucket for your HTML/CSS/JS files
     Value: !Ref StaticSiteBucket
-    Export:
-      Name: !Sub "${ProjectName}-static-bucket"
 
-  StaticSiteBucketArn:
-    Description: S3 bucket ARN – needed when creating the CloudFront OAI bucket policy
-    Value: !GetAtt StaticSiteBucket.Arn
-    Export:
-      Name: !Sub "${ProjectName}-static-bucket-arn"
+  IntakeSubmissionsTableName:
+    Description: DynamoDB table where form submissions are stored (PII stays here)
+    Value: !Ref IntakeSubmissionsTable
 
   ApiGatewayEndpoint:
-    Description: >
-      API Gateway endpoint – replace YOUR_API_GATEWAY_URL in the 3 HTML files,
-      then update ALLOWED_ORIGIN in the Lambda env vars and API Gateway CORS
-      settings to your CloudFront domain once it is created.
+    Description: API Gateway endpoint – replace YOUR_API_GATEWAY_URL in the 3 HTML files
     Value: !Sub "https://${ProgramIntakeApi}.execute-api.${AWS::Region}.amazonaws.com"
-    Export:
-      Name: !Sub "${ProjectName}-api-endpoint"
 
   LambdaFunctionName:
-    Description: Lambda function name – used to update ALLOWED_ORIGIN after CloudFront is created
+    Description: Lambda function name
     Value: !Ref ProgramIntakeLambda
-    Export:
-      Name: !Sub "${ProjectName}-lambda-name"
 
   ApiGatewayId:
-    Description: API Gateway ID – used to update CORS AllowOrigins after CloudFront is created
+    Description: API Gateway ID – used to update CORS settings
     Value: !Ref ProgramIntakeApi
-    Export:
-      Name: !Sub "${ProjectName}-api-id"
