@@ -157,7 +157,52 @@
       .btn-secondary:hover {
         background: #d0d7de;
       }
+      .btn-secondary:disabled {
+        background: #f3f5f7;
+        color: #94a0ad;
+        cursor: default;
+      }
       .btn-refresh {
+        margin-left: auto;
+      }
+      .filter-summary {
+        background: #f8fbff;
+        border: 1px solid #d6e4f5;
+        border-radius: 10px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: -8px 0 20px;
+      }
+      .filter-summary[hidden] {
+        display: none;
+      }
+      .filter-summary-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #003366;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #e7f0fa;
+        color: #1a2a3a;
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+      .filter-chip strong {
+        color: #003366;
+      }
+      .filter-summary-hint {
+        font-size: 0.82rem;
+        color: #5d6b79;
         margin-left: auto;
       }
 
@@ -433,6 +478,10 @@
         .detail-panel {
           grid-template-columns: 1fr 1fr;
         }
+        .filter-summary-hint {
+          margin-left: 0;
+          width: 100%;
+        }
       }
       @media (max-width: 600px) {
         header {
@@ -539,13 +588,19 @@
             oninput="applyFilters()"
           />
         </div>
-        <button class="btn btn-secondary" onclick="clearFilters()">
-          Clear
+        <button
+          class="btn btn-secondary"
+          id="clearFiltersBtn"
+          onclick="clearFilters()"
+          disabled
+        >
+          Clear filters
         </button>
         <button class="btn btn-primary btn-refresh" onclick="loadReferrals()">
           ↻ Refresh
         </button>
       </div>
+      <div class="filter-summary" id="activeFilters" hidden></div>
 
       <!-- Table -->
       <div class="table-wrap">
@@ -570,6 +625,7 @@
       let sortCol = "submitted_at";
       let sortDir = "desc";
       let expandedId = null;
+      let linkedReferralId = getLinkedId();
 
       // ── API Key ───────────────────────────────────────────────────────────────────
       window.addEventListener("DOMContentLoaded", () => {
@@ -601,6 +657,68 @@
         document.getElementById("keyOverlay").style.display = "none";
       }
 
+      // Return ?id= from the URL (used when linking directly from a notification email)
+      function getLinkedId() {
+        return new URLSearchParams(window.location.search).get("id") || null;
+      }
+
+      function clearLinkedReferralQueryParam() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("id");
+        const next = `${url.pathname}${url.search}${url.hash}`;
+        window.history.replaceState({}, "", next);
+      }
+
+      function getActiveFilters() {
+        const filters = [];
+        const program = document.getElementById("filterProgram").value;
+        const status = document.getElementById("filterStatus").value;
+        const search = document.getElementById("filterSearch").value.trim();
+
+        if (linkedReferralId) {
+          filters.push({
+            label: "Email link",
+            value: shortId(linkedReferralId),
+          });
+        }
+        if (program) {
+          filters.push({ label: "Program", value: program });
+        }
+        if (status) {
+          filters.push({ label: "Status", value: statusLabel(status) });
+        }
+        if (search) {
+          filters.push({ label: "Search", value: search });
+        }
+
+        return filters;
+      }
+
+      function renderActiveFilters() {
+        const container = document.getElementById("activeFilters");
+        const clearBtn = document.getElementById("clearFiltersBtn");
+        const activeFilters = getActiveFilters();
+
+        clearBtn.disabled = activeFilters.length === 0;
+
+        if (!activeFilters.length) {
+          container.hidden = true;
+          container.innerHTML = "";
+          return;
+        }
+
+        container.hidden = false;
+        container.innerHTML =
+          '<span class="filter-summary-label">Active filters</span>' +
+          activeFilters
+            .map(
+              (filter) =>
+                `<span class="filter-chip"><strong>${escHtml(filter.label)}:</strong> ${escHtml(filter.value)}</span>`,
+            )
+            .join("") +
+          '<span class="filter-summary-hint">Clear filters to show all referrals.</span>';
+      }
+
       // ── Load Referrals ────────────────────────────────────────────────────────────
       async function loadReferrals() {
         document.getElementById("tableContainer").innerHTML =
@@ -627,6 +745,20 @@
           const data = await res.json();
           allReferrals = data.referrals || data.items || [];
           updateStats();
+
+          linkedReferralId = getLinkedId();
+          if (linkedReferralId) {
+            const match = allReferrals.find(
+              (r) => r.submission_id === linkedReferralId,
+            );
+            if (match) {
+              expandedId = linkedReferralId;
+            } else {
+              linkedReferralId = null;
+              clearLinkedReferralQueryParam();
+            }
+          }
+
           applyFilters();
 
           const now = new Date();
@@ -665,6 +797,9 @@
           .trim();
 
         filtered = allReferrals.filter((r) => {
+          if (linkedReferralId && r.submission_id !== linkedReferralId) {
+            return false;
+          }
           if (prog && r.landing_page !== prog) return false;
           if (status && r.status !== status) return false;
           if (search) {
@@ -677,6 +812,7 @@
         });
 
         sortData();
+        renderActiveFilters();
         renderTable();
       }
 
@@ -684,6 +820,8 @@
         document.getElementById("filterProgram").value = "";
         document.getElementById("filterStatus").value = "";
         document.getElementById("filterSearch").value = "";
+        linkedReferralId = null;
+        clearLinkedReferralQueryParam();
         applyFilters();
       }
 
@@ -719,11 +857,16 @@
       ];
 
       function renderTable() {
-        document.getElementById("rowCount").textContent =
+        const activeFilters = getActiveFilters();
+        const countLabel =
           `${filtered.length} referral${filtered.length !== 1 ? "s" : ""}` +
           (filtered.length !== allReferrals.length
             ? ` of ${allReferrals.length} total`
             : "");
+
+        document.getElementById("rowCount").textContent = activeFilters.length
+          ? `Filtered results: ${countLabel}`
+          : countLabel;
 
         if (!filtered.length) {
           document.getElementById("tableContainer").innerHTML =
@@ -883,6 +1026,11 @@
         } catch {
           return iso;
         }
+      }
+
+      function shortId(id) {
+        if (!id || id.length <= 16) return id || "";
+        return `${id.slice(0, 8)}...${id.slice(-4)}`;
       }
 
       function statusBadge(s) {

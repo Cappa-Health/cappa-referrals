@@ -202,44 +202,48 @@ def _handle_update_referral(event: dict, path: str) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _send_notification(submission_id: str, program: str) -> None:
-    sender    = os.environ.get("SENDER_EMAIL", "")
-    recipient = os.environ.get("NOTIFICATION_EMAIL", "")
-    if not sender or not recipient:
+    sender     = os.environ.get("SENDER_EMAIL", "")
+    recipients = [
+        addr.strip()
+        for addr in os.environ.get("NOTIFICATION_EMAIL", "").split(",")
+        if addr.strip()
+    ]
+    if not sender or not recipients:
         logger.warning("SENDER_EMAIL or NOTIFICATION_EMAIL not set — skipping")
         return
 
-    region     = os.environ.get("AWS_REGION", "us-gov-west-1")
-    table_name = os.environ.get("TABLE_NAME", "")
-
+    allowed_origin = os.environ.get("ALLOWED_ORIGIN", "https://www.haltreferral.org").rstrip("/")
     dashboard_link = (
-        f"{GOVCLOUD_CONSOLE}/dynamodbv2/home?region={region}"
-        f"#item-explorer?table={table_name}&maximize=true"
+        f"{allowed_origin}/program_landings/dashboard.html?id={submission_id}"
     )
 
     subject   = "New Referral Received"
     text_body = (
         f"A new referral has been submitted on the {program} landing page.\n\n"
-        f"Please log in to the secure dashboard to view the details:\n"
+        f"Click the link below to view this referral in the secure dashboard:\n"
         f"{dashboard_link}\n\n"
+        f"You will be prompted for your dashboard API key when the page loads.\n\n"
         f"Submission ID: {submission_id}\n\n"
         f"This is an automated notification. No personal information "
         f"is included in this email for security purposes."
     )
     html_body = f"""<!DOCTYPE html>
 <html lang="en">
-<body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6;">
-  <h2 style="color:#2c5f2d;">New Referral Received</h2>
+<body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6;max-width:560px;margin:0 auto;padding:24px;">
+  <h2 style="color:#003366;">New Referral Received</h2>
   <p>A new referral has been submitted on the <strong>{program}</strong> landing page.</p>
-  <p>Please log in to the secure dashboard to view the details:</p>
-  <p>
+  <p>Click the button below to view this referral directly in the secure dashboard.
+     You will be prompted for your dashboard API key when the page loads.</p>
+  <p style="margin:28px 0;">
     <a href="{dashboard_link}"
-       style="display:inline-block;background-color:#3a7a3a;color:#fff;
-              padding:10px 20px;text-decoration:none;border-radius:4px;font-weight:bold;">
-      View Referral Details
+       style="display:inline-block;background-color:#003366;color:#fff;
+              padding:12px 28px;text-decoration:none;border-radius:6px;
+              font-weight:bold;font-size:15px;">
+      View This Referral
     </a>
   </p>
   <p style="color:#595959;font-size:13px;">Submission ID: {submission_id}</p>
-  <hr style="border:none;border-top:1px solid #ddd;"/>
+  <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;"/>
   <p style="color:#888;font-size:12px;">
     Automated notification from the HALT referral system.
     No personal information is included in this email.
@@ -251,7 +255,7 @@ def _send_notification(submission_id: str, program: str) -> None:
     try:
         ses.send_email(
             Source=sender,
-            Destination={"ToAddresses": [recipient]},
+            Destination={"ToAddresses": recipients},
             Message={
                 "Subject": {"Data": subject,   "Charset": "UTF-8"},
                 "Body": {
