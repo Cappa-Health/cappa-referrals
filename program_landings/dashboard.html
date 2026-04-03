@@ -701,7 +701,7 @@
 
         clearBtn.disabled = activeFilters.length === 0;
 
-        if (!activeFilters.length) {
+        if (!linkedReferralId) {
           container.hidden = true;
           container.innerHTML = "";
           return;
@@ -796,6 +796,10 @@
           .value.toLowerCase()
           .trim();
 
+        if (prog || status || search) {
+          expandedId = null;
+        }
+
         filtered = allReferrals.filter((r) => {
           if (linkedReferralId && r.submission_id !== linkedReferralId) {
             return false;
@@ -821,6 +825,7 @@
         document.getElementById("filterStatus").value = "";
         document.getElementById("filterSearch").value = "";
         linkedReferralId = null;
+        expandedId = null;
         clearLinkedReferralQueryParam();
         applyFilters();
       }
