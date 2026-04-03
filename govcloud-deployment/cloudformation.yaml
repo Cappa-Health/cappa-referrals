@@ -48,6 +48,15 @@ Parameters:
       Where to send new-referral notifications. No PII is included
       in the email — only a link to the GovCloud dashboard.
 
+  DashboardApiKey:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    Description: >
+      Secret API key required by support staff to access GET /referrals and
+      PATCH /referrals/{id}. Choose a strong random string (≥ 16 characters).
+      Store this value securely — it is not recoverable from CloudFormation.
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Resources
 # ─────────────────────────────────────────────────────────────────────────────
@@ -134,15 +143,20 @@ Resources:
       ManagedPolicyArns:
         - arn:aws-us-gov:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: DynamoDbWrite
+        - PolicyName: DynamoDbAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
                   - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
                 Resource:
                   - !GetAtt IntakeSubmissionsTable.Arn
+                  - !Sub "${IntakeSubmissionsTable.Arn}/index/*"
         - PolicyName: SesSendNotification
           PolicyDocument:
             Version: "2012-10-17"
@@ -169,10 +183,11 @@ Resources:
         S3Key: !Ref LambdaZipS3Key
       Environment:
         Variables:
-          TABLE_NAME:         !Ref IntakeSubmissionsTable
-          SENDER_EMAIL:       !Ref SenderEmail
-          NOTIFICATION_EMAIL: !Ref NotificationEmail
-          ALLOWED_ORIGIN:     !Ref AllowedOrigin
+          TABLE_NAME:           !Ref IntakeSubmissionsTable
+          SENDER_EMAIL:         !Ref SenderEmail
+          NOTIFICATION_EMAIL:   !Ref NotificationEmail
+          ALLOWED_ORIGIN:       !Ref AllowedOrigin
+          DASHBOARD_API_KEY:    !Ref DashboardApiKey
       Tags:
         - Key: Project
           Value: !Ref ProjectName
@@ -187,8 +202,8 @@ Resources:
       CorsConfiguration:
         AllowOrigins:
           - !Ref AllowedOrigin
-        AllowMethods: [POST, OPTIONS]
-        AllowHeaders: [Content-Type]
+        AllowMethods: [GET, POST, PATCH, OPTIONS]
+        AllowHeaders: [Content-Type, x-api-key]
         MaxAge: 300
 
   ProgramIntakeLambdaIntegration:
@@ -206,6 +221,20 @@ Resources:
     Properties:
       ApiId: !Ref ProgramIntakeApi
       RouteKey: "POST /program-intake"
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  GetReferralsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "GET /referrals"
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  UpdateReferralRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "PATCH /referrals/{id}"
       Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
 
   ProgramIntakeApiStage:

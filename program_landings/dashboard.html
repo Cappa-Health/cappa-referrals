@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HALT Referral Dashboard</title>
+    <style>
+      /* ── Reset & Base ── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f0f4f8;
+        color: #1a2a3a;
+        min-height: 100vh;
+      }
+
+      /* ── Header ── */
+      header {
+        background: #003366;
+        color: #fff;
+        padding: 16px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      }
+      header .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      header .logo img {
+        height: 40px;
+      }
+      header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      header .meta {
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+
+      /* ── Layout ── */
+      main {
+        padding: 28px 32px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      /* ── Stats Bar ── */
+      .stats-bar {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 16px 24px;
+        flex: 1;
+        min-width: 150px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #003366;
+      }
+      .stat-card.new {
+        border-color: #e67e22;
+      }
+      .stat-card.contacted {
+        border-color: #2980b9;
+      }
+      .stat-card.enrolled {
+        border-color: #27ae60;
+      }
+      .stat-card.other {
+        border-color: #7f8c8d;
+      }
+      .stat-card .label {
+        font-size: 0.75rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .stat-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a2a3a;
+        line-height: 1.1;
+      }
+
+      /* ── Filter Bar ── */
+      .filter-bar {
+        background: #fff;
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .filter-group label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .filter-group select,
+      .filter-group input {
+        padding: 8px 12px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        background: #fafbfc;
+        min-width: 160px;
+        color: #1a2a3a;
+      }
+      .filter-group input {
+        min-width: 220px;
+      }
+      .btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .btn-primary {
+        background: #003366;
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #004488;
+      }
+      .btn-secondary {
+        background: #e8ecf0;
+        color: #1a2a3a;
+      }
+      .btn-secondary:hover {
+        background: #d0d7de;
+      }
+      .btn-refresh {
+        margin-left: auto;
+      }
+
+      /* ── Table ── */
+      .table-wrap {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      .table-meta {
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #e8ecf0;
+      }
+      .table-meta .count {
+        font-size: 0.85rem;
+        color: #666;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+      }
+      thead th {
+        background: #f6f8fa;
+        padding: 11px 16px;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #e8ecf0;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+      thead th:hover {
+        background: #eef1f5;
+      }
+      thead th .sort-icon {
+        opacity: 0.4;
+        font-size: 0.65rem;
+        margin-left: 4px;
+      }
+      thead th.sorted .sort-icon {
+        opacity: 1;
+      }
+      tbody tr {
+        border-bottom: 1px solid #f0f4f8;
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      tbody tr:hover {
+        background: #f6f8fa;
+      }
+      tbody tr.expanded {
+        background: #eef3fb;
+      }
+      tbody td {
+        padding: 11px 16px;
+        vertical-align: middle;
+      }
+
+      /* Status badge */
+      .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .badge-new {
+        background: #fef3e2;
+        color: #b75e0a;
+      }
+      .badge-contacted {
+        background: #e3f0fb;
+        color: #1a5f9e;
+      }
+      .badge-enrolled {
+        background: #e2f5ea;
+        color: #1a7a3c;
+      }
+      .badge-not_eligible {
+        background: #fde8e8;
+        color: #9b1c1c;
+      }
+      .badge-no_response {
+        background: #f0f0f0;
+        color: #555;
+      }
+
+      /* Program badge */
+      .prog {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .prog-lw {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .prog-bp {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .prog-bs {
+        background: #fff3e0;
+        color: #e65100;
+      }
+
+      /* ── Detail Row ── */
+      .detail-row td {
+        padding: 0 !important;
+        background: #eef3fb !important;
+        border-bottom: 2px solid #c8d8f0 !important;
+      }
+      .detail-panel {
+        padding: 20px 24px 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+      }
+      .detail-section h3 {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        margin-bottom: 10px;
+      }
+      .detail-field {
+        margin-bottom: 8px;
+      }
+      .detail-field .field-label {
+        font-size: 0.7rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .detail-field .field-value {
+        font-size: 0.9rem;
+        color: #1a2a3a;
+        font-weight: 500;
+        word-break: break-word;
+      }
+      .detail-actions {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .status-select {
+        padding: 7px 10px;
+        border: 1px solid #c8d8f0;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        background: #fff;
+        color: #1a2a3a;
+      }
+      .btn-save {
+        background: #27ae60;
+        color: #fff;
+        padding: 7px 18px;
+      }
+      .btn-save:hover {
+        background: #219150;
+      }
+      .save-msg {
+        font-size: 0.8rem;
+        color: #27ae60;
+        align-self: center;
+        display: none;
+      }
+
+      /* ── Empty / Loading / Error ── */
+      .state-msg {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+        font-size: 0.95rem;
+      }
+      .state-msg .icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .spinner {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        border: 3px solid #d0d7de;
+        border-top-color: #003366;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── API Key Modal ── */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 51, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+      }
+      .modal {
+        background: #fff;
+        border-radius: 12px;
+        padding: 36px 40px;
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        box-shadow: 0 12px 40px rgba(0, 0, 51, 0.3);
+      }
+      .modal h2 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+        color: #003366;
+      }
+      .modal p {
+        font-size: 0.875rem;
+        color: #555;
+        margin-bottom: 24px;
+      }
+      .modal input {
+        width: 100%;
+        padding: 11px 14px;
+        font-size: 1rem;
+        letter-spacing: 0.12em;
+        border: 1.5px solid #d0d7de;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 16px;
+        outline: none;
+      }
+      .modal input:focus {
+        border-color: #003366;
+      }
+      .modal .error {
+        color: #c0392b;
+        font-size: 0.8rem;
+        margin-top: -10px;
+        margin-bottom: 12px;
+        min-height: 18px;
+      }
+      .modal .btn-primary {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        border-radius: 8px;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 900px) {
+        main {
+          padding: 16px;
+        }
+        .detail-panel {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        header {
+          padding: 12px 16px;
+        }
+        .detail-panel {
+          grid-template-columns: 1fr;
+        }
+        thead th:nth-child(4),
+        thead th:nth-child(5),
+        tbody td:nth-child(4),
+        tbody td:nth-child(5) {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── API Key Modal ───────────────────────────────────────────────────────── -->
+    <div class="overlay" id="keyOverlay">
+      <div class="modal">
+        <h2>🔒 HALT Dashboard</h2>
+        <p>Enter your dashboard API key to view referral submissions.</p>
+        <input
+          type="password"
+          id="keyInput"
+          placeholder="API Key"
+          autocomplete="off"
+        />
+        <div class="error" id="keyError"></div>
+        <button class="btn btn-primary" onclick="submitKey()">
+          Access Dashboard
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+    <header>
+      <div class="logo">
+        <div>
+          <h1>HALT Referral Dashboard</h1>
+          <div class="meta">
+            Alaska Department of Health — Health and Lifestyle Training
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 0.8rem; opacity: 0.7" id="lastRefreshed"></div>
+    </header>
+
+    <!-- ── Main ───────────────────────────────────────────────────────────────── -->
+    <main>
+      <!-- Stats -->
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-card">
+          <div class="label">Total</div>
+          <div class="value" id="statTotal">–</div>
+        </div>
+        <div class="stat-card new">
+          <div class="label">New</div>
+          <div class="value" id="statNew">–</div>
+        </div>
+        <div class="stat-card contacted">
+          <div class="label">Contacted</div>
+          <div class="value" id="statContacted">–</div>
+        </div>
+        <div class="stat-card enrolled">
+          <div class="label">Enrolled</div>
+          <div class="value" id="statEnrolled">–</div>
+        </div>
+        <div class="stat-card other">
+          <div class="label">Other</div>
+          <div class="value" id="statOther">–</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Program</label>
+          <select id="filterProgram" onchange="applyFilters()">
+            <option value="">All Programs</option>
+            <option value="Lose Weight">Lose Weight</option>
+            <option value="Lower Blood Pressure">Lower Blood Pressure</option>
+            <option value="Lower Blood Sugar">Lower Blood Sugar</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Status</label>
+          <select id="filterStatus" onchange="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="enrolled">Enrolled</option>
+            <option value="not_eligible">Not Eligible</option>
+            <option value="no_response">No Response</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Search</label>
+          <input
+            type="text"
+            id="filterSearch"
+            placeholder="Name, email, phone, zip…"
+            oninput="applyFilters()"
+          />
+        </div>
+        <button class="btn btn-secondary" onclick="clearFilters()">
+          Clear
+        </button>
+        <button class="btn btn-primary btn-refresh" onclick="loadReferrals()">
+          ↻ Refresh
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-meta">
+          <span class="count" id="rowCount">Loading…</span>
+        </div>
+        <div id="tableContainer">
+          <div class="state-msg"><span class="spinner"></span></div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // ── Config ────────────────────────────────────────────────────────────────────
+      const API_BASE =
+        "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com/";
+
+      // ── State ─────────────────────────────────────────────────────────────────────
+      let apiKey = "";
+      let allReferrals = [];
+      let filtered = [];
+      let sortCol = "submitted_at";
+      let sortDir = "desc";
+      let expandedId = null;
+
+      // ── API Key ───────────────────────────────────────────────────────────────────
+      window.addEventListener("DOMContentLoaded", () => {
+        const stored = sessionStorage.getItem("haltApiKey");
+        if (stored) {
+          apiKey = stored;
+          hideModal();
+          loadReferrals();
+        }
+        document.getElementById("keyInput").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submitKey();
+        });
+      });
+
+      function submitKey() {
+        const val = document.getElementById("keyInput").value.trim();
+        if (!val) {
+          document.getElementById("keyError").textContent =
+            "Please enter the API key.";
+          return;
+        }
+        apiKey = val;
+        sessionStorage.setItem("haltApiKey", apiKey);
+        hideModal();
+        loadReferrals();
+      }
+
+      function hideModal() {
+        document.getElementById("keyOverlay").style.display = "none";
+      }
+
+      // ── Load Referrals ────────────────────────────────────────────────────────────
+      async function loadReferrals() {
+        document.getElementById("tableContainer").innerHTML =
+          '<div class="state-msg"><span class="spinner"></span></div>';
+        document.getElementById("rowCount").textContent = "Loading…";
+
+        try {
+          const res = await fetch(`${API_BASE}/referrals`, {
+            headers: { "x-api-key": apiKey },
+          });
+
+          if (res.status === 401 || res.status === 403) {
+            sessionStorage.removeItem("haltApiKey");
+            document.getElementById("keyError").textContent =
+              "Invalid API key. Please try again.";
+            document.getElementById("keyInput").value = "";
+            document.getElementById("keyOverlay").style.display = "flex";
+            document.getElementById("tableContainer").innerHTML =
+              '<div class="state-msg"><span class="icon">🔒</span>Authentication required.</div>';
+            return;
+          }
+
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          allReferrals = data.referrals || data.items || [];
+          updateStats();
+          applyFilters();
+
+          const now = new Date();
+          document.getElementById("lastRefreshed").textContent =
+            "Last refreshed: " + now.toLocaleTimeString();
+        } catch (err) {
+          document.getElementById("tableContainer").innerHTML =
+            `<div class="state-msg"><span class="icon">⚠️</span>Failed to load referrals.<br><small>${err.message}</small></div>`;
+          document.getElementById("rowCount").textContent = "Error";
+        }
+      }
+
+      // ── Stats ─────────────────────────────────────────────────────────────────────
+      function updateStats() {
+        const counts = { new: 0, contacted: 0, enrolled: 0, other: 0 };
+        allReferrals.forEach((r) => {
+          if (r.status === "new") counts.new++;
+          else if (r.status === "contacted") counts.contacted++;
+          else if (r.status === "enrolled") counts.enrolled++;
+          else counts.other++;
+        });
+        document.getElementById("statTotal").textContent = allReferrals.length;
+        document.getElementById("statNew").textContent = counts.new;
+        document.getElementById("statContacted").textContent = counts.contacted;
+        document.getElementById("statEnrolled").textContent = counts.enrolled;
+        document.getElementById("statOther").textContent = counts.other;
+      }
+
+      // ── Filters ───────────────────────────────────────────────────────────────────
+      function applyFilters() {
+        const prog = document.getElementById("filterProgram").value;
+        const status = document.getElementById("filterStatus").value;
+        const search = document
+          .getElementById("filterSearch")
+          .value.toLowerCase()
+          .trim();
+
+        filtered = allReferrals.filter((r) => {
+          if (prog && r.landing_page !== prog) return false;
+          if (status && r.status !== status) return false;
+          if (search) {
+            const haystack = [r.name, r.email, r.phone, r.zipcode, r.motivation]
+              .join(" ")
+              .toLowerCase();
+            if (!haystack.includes(search)) return false;
+          }
+          return true;
+        });
+
+        sortData();
+        renderTable();
+      }
+
+      function clearFilters() {
+        document.getElementById("filterProgram").value = "";
+        document.getElementById("filterStatus").value = "";
+        document.getElementById("filterSearch").value = "";
+        applyFilters();
+      }
+
+      // ── Sort ──────────────────────────────────────────────────────────────────────
+      function sortBy(col) {
+        if (sortCol === col) sortDir = sortDir === "asc" ? "desc" : "asc";
+        else {
+          sortCol = col;
+          sortDir = col === "submitted_at" ? "desc" : "asc";
+        }
+        sortData();
+        renderTable();
+      }
+
+      function sortData() {
+        filtered.sort((a, b) => {
+          let va = (a[sortCol] || "").toString().toLowerCase();
+          let vb = (b[sortCol] || "").toString().toLowerCase();
+          if (va < vb) return sortDir === "asc" ? -1 : 1;
+          if (va > vb) return sortDir === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      // ── Render Table ──────────────────────────────────────────────────────────────
+      const COLS = [
+        { key: "submitted_at", label: "Date / Time" },
+        { key: "name", label: "Name" },
+        { key: "landing_page", label: "Program" },
+        { key: "status", label: "Status" },
+        { key: "state", label: "State" },
+        { key: "zipcode", label: "ZIP" },
+      ];
+
+      function renderTable() {
+        document.getElementById("rowCount").textContent =
+          `${filtered.length} referral${filtered.length !== 1 ? "s" : ""}` +
+          (filtered.length !== allReferrals.length
+            ? ` of ${allReferrals.length} total`
+            : "");
+
+        if (!filtered.length) {
+          document.getElementById("tableContainer").innerHTML =
+            '<div class="state-msg"><span class="icon">📭</span>No referrals match the current filters.</div>';
+          return;
+        }
+
+        let html = "<table><thead><tr>";
+        COLS.forEach((c) => {
+          const cls = sortCol === c.key ? " sorted" : "";
+          const arrow =
+            sortCol === c.key ? (sortDir === "asc" ? "▲" : "▼") : "⇅";
+          html += `<th class="${cls}" onclick="sortBy('${c.key}')">${c.label} <span class="sort-icon">${arrow}</span></th>`;
+        });
+        html += "<th>Actions</th></tr></thead><tbody>";
+
+        filtered.forEach((r) => {
+          const expanded = expandedId === r.submission_id;
+          html += `<tr onclick="toggleExpand('${r.submission_id}')" class="${expanded ? "expanded" : ""}">`;
+          COLS.forEach((c) => {
+            if (c.key === "status") html += `<td>${statusBadge(r.status)}</td>`;
+            else if (c.key === "landing_page")
+              html += `<td>${programBadge(r.landing_page)}</td>`;
+            else if (c.key === "submitted_at")
+              html += `<td>${formatDate(r.submitted_at)}</td>`;
+            else html += `<td>${escHtml(r[c.key] || "–")}</td>`;
+          });
+          html += `<td><span style="font-size:.8rem;color:#666;">${expanded ? "▲ Hide" : "▼ View"}</span></td>`;
+          html += "</tr>";
+
+          if (expanded) {
+            html += `<tr class="detail-row"><td colspan="${COLS.length + 1}">`;
+            html += detailPanel(r);
+            html += "</td></tr>";
+          }
+        });
+
+        html += "</tbody></table>";
+        document.getElementById("tableContainer").innerHTML = html;
+      }
+
+      // ── Detail Panel ──────────────────────────────────────────────────────────────
+      function detailPanel(r) {
+        return `
+  <div class="detail-panel">
+    <div class="detail-section">
+      <h3>Contact Information</h3>
+      <div class="detail-field"><div class="field-label">Full Name</div><div class="field-value">${escHtml(r.name || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">Email</div><div class="field-value">${escHtml(r.email || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">Phone</div><div class="field-value">${escHtml(r.phone || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">ZIP Code</div><div class="field-value">${escHtml(r.zipcode || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">State</div><div class="field-value">${escHtml(r.state || "Alaska")}</div></div>
+    </div>
+    <div class="detail-section">
+      <h3>Referral Details</h3>
+      <div class="detail-field"><div class="field-label">Program of Interest</div><div class="field-value">${escHtml(r.program_of_interest || r.landing_page || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">Landing Page</div><div class="field-value">${escHtml(r.landing_page || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">Submitted</div><div class="field-value">${escHtml(r.submitted_at || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">Submission ID</div><div class="field-value" style="font-size:.75rem;color:#888;">${escHtml(r.submission_id || "–")}</div></div>
+    </div>
+    <div class="detail-section">
+      <h3>Motivation</h3>
+      <div class="detail-field">
+        <div class="field-value" style="white-space:pre-wrap;line-height:1.5;">${escHtml(r.motivation || "–")}</div>
+      </div>
+      <h3 style="margin-top:20px;">Update Status</h3>
+      <div class="detail-actions">
+        <select class="status-select" id="sel_${r.submission_id}">
+          ${["new", "contacted", "enrolled", "not_eligible", "no_response"]
+            .map(
+              (s) =>
+                `<option value="${s}"${r.status === s ? " selected" : ""}>${statusLabel(s)}</option>`,
+            )
+            .join("")}
+        </select>
+        <button class="btn btn-save" onclick="saveStatus('${r.submission_id}', event)">Save</button>
+        <span class="save-msg" id="msg_${r.submission_id}">✓ Saved</span>
+      </div>
+    </div>
+  </div>`;
+      }
+
+      // ── Toggle Expand ─────────────────────────────────────────────────────────────
+      function toggleExpand(id) {
+        expandedId = expandedId === id ? null : id;
+        renderTable();
+      }
+
+      // ── Save Status ───────────────────────────────────────────────────────────────
+      async function saveStatus(id, e) {
+        e.stopPropagation();
+        const sel = document.getElementById(`sel_${id}`);
+        const msg = document.getElementById(`msg_${id}`);
+        const newStatus = sel.value;
+
+        try {
+          const res = await fetch(`${API_BASE}/referrals/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": apiKey,
+            },
+            body: JSON.stringify({ status: newStatus }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          // Update local data
+          const idx = allReferrals.findIndex((r) => r.submission_id === id);
+          if (idx !== -1) allReferrals[idx].status = newStatus;
+          const fidx = filtered.findIndex((r) => r.submission_id === id);
+          if (fidx !== -1) filtered[fidx].status = newStatus;
+
+          msg.style.display = "inline";
+          setTimeout(() => {
+            msg.style.display = "none";
+          }, 2500);
+          updateStats();
+
+          // Re-render just the row badge without collapsing
+          const rows = document.querySelectorAll("tbody tr:not(.detail-row)");
+          rows.forEach((row) => {
+            if (row.onclick && row.onclick.toString().includes(id)) {
+              const statusCell = row.cells[3];
+              if (statusCell) statusCell.innerHTML = statusBadge(newStatus);
+            }
+          });
+        } catch (err) {
+          alert("Failed to update status: " + err.message);
+        }
+      }
+
+      // ── Helpers ───────────────────────────────────────────────────────────────────
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function formatDate(iso) {
+        if (!iso) return "–";
+        try {
+          const d = new Date(iso);
+          return (
+            d.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }) +
+            " " +
+            d.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          );
+        } catch {
+          return iso;
+        }
+      }
+
+      function statusBadge(s) {
+        const labels = {
+          new: "New",
+          contacted: "Contacted",
+          enrolled: "Enrolled",
+          not_eligible: "Not Eligible",
+          no_response: "No Response",
+        };
+        return `<span class="badge badge-${s || "new"}">${labels[s] || s || "New"}</span>`;
+      }
+
+      function statusLabel(s) {
+        return (
+          {
+            new: "New",
+            contacted: "Contacted",
+            enrolled: "Enrolled",
+            not_eligible: "Not Eligible",
+            no_response: "No Response",
+          }[s] || s
+        );
+      }
+
+      function programBadge(p) {
+        const cls =
+          p === "Lose Weight"
+            ? "prog-lw"
+            : p === "Lower Blood Pressure"
+              ? "prog-bp"
+              : "prog-bs";
+        return `<span class="prog ${cls}">${escHtml(p || "–")}</span>`;
+      }
+    </script>
+  </body>
+</html>
