@@ -29,10 +29,9 @@ Parameters:
 
   AllowedOrigin:
     Type: String
-    Default: "*"
     Description: >
-      CORS allowed origin. After deployment, update to your site domain
-      (e.g. https://www.haltreferral.org).
+      CORS allowed origin. Must be set to your site domain
+      (e.g. https://www.haltreferral.org). No default — must be provided.
 
   SenderEmail:
     Type: String
