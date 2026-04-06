@@ -264,8 +264,8 @@ In sandbox mode, SES can only send to verified addresses. Since you've verified 
 **Check email:**
 7. Check the `support@halt360.org` inbox for the notification email
 8. The email subject should be "New Referral Received"
-9. The email body should say "A new referral has been submitted..." with a "View Referral Details" button
-10. Clicking the button should take you to the DynamoDB table in the GovCloud console
+9. The email body should say "A new referral has been submitted..." with a "View This Referral" button
+10. Clicking the button should open the referral dashboard at `/program_landings/dashboard.html` (you will be prompted for your API key)
 
 ---
 
