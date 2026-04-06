@@ -212,26 +212,25 @@ def _send_notification(submission_id: str, program: str) -> None:
         logger.warning("SENDER_EMAIL or NOTIFICATION_EMAIL not set — skipping")
         return
 
-    allowed_origin = os.environ.get("ALLOWED_ORIGIN", "https://www.haltreferral.org").rstrip("/")
-    dashboard_link = (
-        f"{allowed_origin}/program_landings/dashboard.html?id={submission_id}"
-    )
+    allowed_origin = os.environ.get("ALLOWED_ORIGIN", "").rstrip("/")
+    if not allowed_origin or allowed_origin == "*":
+        logger.warning("ALLOWED_ORIGIN not set or is '*' — dashboard link omitted from notification email")
+        dashboard_link = None
+    else:
+        dashboard_link = f"{allowed_origin}/program_landings/dashboard.html?id={submission_id}"
 
     subject   = "New Referral Received"
-    text_body = (
-        f"A new referral has been submitted on the {program} landing page.\n\n"
-        f"Click the link below to view this referral in the secure dashboard:\n"
-        f"{dashboard_link}\n\n"
-        f"You will be prompted for your dashboard API key when the page loads.\n\n"
-        f"Submission ID: {submission_id}\n\n"
-        f"This is an automated notification. No personal information "
-        f"is included in this email for security purposes."
-    )
-    html_body = f"""<!DOCTYPE html>
-<html lang="en">
-<body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6;max-width:560px;margin:0 auto;padding:24px;">
-  <h2 style="color:#003366;">New Referral Received</h2>
-  <p>A new referral has been submitted on the <strong>{program}</strong> landing page.</p>
+    if dashboard_link:
+        text_body = (
+            f"A new referral has been submitted on the {program} landing page.\n\n"
+            f"Click the link below to view this referral in the secure dashboard:\n"
+            f"{dashboard_link}\n\n"
+            f"You will be prompted for your dashboard API key when the page loads.\n\n"
+            f"Submission ID: {submission_id}\n\n"
+            f"This is an automated notification. No personal information "
+            f"is included in this email for security purposes."
+        )
+        dashboard_button = f"""
   <p>Click the button below to view this referral directly in the secure dashboard.
      You will be prompted for your dashboard API key when the page loads.</p>
   <p style="margin:28px 0;">
@@ -241,7 +240,23 @@ def _send_notification(submission_id: str, program: str) -> None:
               font-weight:bold;font-size:15px;">
       View This Referral
     </a>
-  </p>
+  </p>"""
+    else:
+        text_body = (
+            f"A new referral has been submitted on the {program} landing page.\n\n"
+            f"Log in to the dashboard to view this referral.\n\n"
+            f"Submission ID: {submission_id}\n\n"
+            f"This is an automated notification. No personal information "
+            f"is included in this email for security purposes."
+        )
+        dashboard_button = "<p>Log in to the dashboard to view this referral.</p>"
+
+    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6;max-width:560px;margin:0 auto;padding:24px;">
+  <h2 style="color:#003366;">New Referral Received</h2>
+  <p>A new referral has been submitted on the <strong>{program}</strong> landing page.</p>
+  {dashboard_button}
   <p style="color:#595959;font-size:13px;">Submission ID: {submission_id}</p>
   <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;"/>
   <p style="color:#888;font-size:12px;">
