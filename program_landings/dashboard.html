@@ -1010,13 +1010,18 @@
           updateStats();
 
           // Re-render just the row badge without collapsing
-          const rows = document.querySelectorAll("tbody tr:not(.detail-row)");
-          rows.forEach((row) => {
-            if (row.onclick && row.onclick.toString().includes(id)) {
-              const statusCell = row.cells[3];
-              if (statusCell) statusCell.innerHTML = statusBadge(newStatus);
-            }
-          });
+          const detailRow = e.target.closest("tr");
+          const summaryRow =
+            detailRow &&
+            detailRow.classList.contains("detail-row") &&
+            detailRow.previousElementSibling &&
+            !detailRow.previousElementSibling.classList.contains("detail-row")
+              ? detailRow.previousElementSibling
+              : null;
+          if (summaryRow) {
+            const statusCell = summaryRow.cells[3];
+            if (statusCell) statusCell.innerHTML = statusBadge(newStatus);
+          }
         } catch (err) {
           alert("Failed to update status: " + err.message);
         }
