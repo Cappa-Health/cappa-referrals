@@ -177,8 +177,8 @@ By default SES is in **sandbox mode** and can only send to verified email addres
 1. Go to **https://www.haltreferral.org/program_landings/lose_weight.html**
 2. Click **Get Started**, fill out the form with test data, and click **Submit**
 3. You should see the "Thank you!" success message
-4. Check the recipient mailbox (e.g. `referrals@haltreferral.org`) for the notification email
-5. The email should come from `no-reply@haltreferral.org` with the submitted form details
+4. Check the mailbox configured in the Lambda's `NOTIFICATION_EMAIL` setting (e.g. `referrals@haltreferral.org`) for the notification email
+5. The email should come from `no-reply@haltreferral.org` and contain a PII-free notification rather than the submitted form details
 
 If the email doesn't arrive:
 - Check **CloudWatch Logs** in GovCloud: CloudWatch → Log groups → `/aws/lambda/halt-landing-intake-handler`
