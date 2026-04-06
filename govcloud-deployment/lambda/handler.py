@@ -85,8 +85,8 @@ def _handle_intake(body: dict) -> dict:
     zipcode             = (body.get("zipcode")      or "").strip()
     landing_page        = (body.get("landing_page") or "Unknown Program").strip()
     program_of_interest = landing_page
-    state               = "Alaska"   # All HALT programs are Alaska DOH programs
-
+    state               = "Alaska"
+    
     now           = datetime.now(timezone.utc).isoformat()
     submission_id = str(uuid.uuid4())
 
