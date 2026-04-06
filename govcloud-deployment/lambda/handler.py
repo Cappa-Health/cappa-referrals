@@ -274,9 +274,14 @@ def _send_notification(submission_id: str, program: str) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def lambda_handler(event, context):
-    logger.info("Event: %s", json.dumps(event))
-
-    http    = event.get("requestContext", {}).get("http", {})
+    request_context = event.get("requestContext", {})
+    http = request_context.get("http", {})
+    logger.info(
+        "Request received method=%s path=%s requestId=%s",
+        http.get("method", "").upper(),
+        http.get("path", ""),
+        request_context.get("requestId", ""),
+    )
     method  = http.get("method", "").upper()
     path    = http.get("path", "")
 
