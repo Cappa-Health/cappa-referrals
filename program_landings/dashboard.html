@@ -205,6 +205,14 @@
         color: #5d6b79;
         margin-left: auto;
       }
+      .filter-chip-linked {
+        background: #fff3cd;
+        border: 1px solid #f0c040;
+        color: #7a5200;
+      }
+      .filter-chip-linked strong {
+        color: #7a5200;
+      }
 
       /* ── Table ── */
       .table-wrap {
@@ -696,27 +704,38 @@
 
       function renderActiveFilters() {
         const container = document.getElementById("activeFilters");
-        const clearBtn = document.getElementById("clearFiltersBtn");
+        const clearBtn  = document.getElementById("clearFiltersBtn");
         const activeFilters = getActiveFilters();
+        const hasLinked = !!linkedReferralId;
+        const hasFilters = activeFilters.length > 0;
 
-        clearBtn.disabled = activeFilters.length === 0;
+        // Enable Clear whenever anything is filtering the view
+        clearBtn.disabled = !hasLinked && !hasFilters;
 
-        if (!linkedReferralId) {
+        if (!hasLinked && !hasFilters) {
           container.hidden = true;
           container.innerHTML = "";
           return;
         }
 
+        // Build chips
+        let chips = "";
+
+        if (hasLinked) {
+          chips += `<span class="filter-chip filter-chip-linked">
+            <strong>📧 Viewing referral from email link</strong>
+          </span>`;
+        }
+
+        chips += activeFilters
+          .map(f => `<span class="filter-chip"><strong>${escHtml(f.label)}:</strong> ${escHtml(f.value)}</span>`)
+          .join("");
+
         container.hidden = false;
         container.innerHTML =
           '<span class="filter-summary-label">Active filters</span>' +
-          activeFilters
-            .map(
-              (filter) =>
-                `<span class="filter-chip"><strong>${escHtml(filter.label)}:</strong> ${escHtml(filter.value)}</span>`,
-            )
-            .join("") +
-          '<span class="filter-summary-hint">Clear filters to show all referrals.</span>';
+          chips +
+          '<span class="filter-summary-hint">Click <strong>Clear filters</strong> to see all referrals.</span>';
       }
 
       // ── Load Referrals ────────────────────────────────────────────────────────────
