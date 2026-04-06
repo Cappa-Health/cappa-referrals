@@ -83,7 +83,7 @@ This bucket temporarily holds the Lambda ZIP so CloudFormation can access it.
 |---|---|
 | ProjectName | `halt-landing` |
 | SenderEmail | Your verified sender address |
-| RecipientEmail | Your verified recipient address |
+| NotificationEmail | Your verified recipient address |
 | LambdaZipS3Bucket | The staging bucket name from Step 2 |
 | LambdaZipS3Key | `handler.zip` |
 
