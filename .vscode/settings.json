@@ -1,3 +1,8 @@
 {
-  "claudeCodeChat.permissions.yoloMode": false
+  "claudeCodeChat.permissions.yoloMode": false,
+  "builder.serverUrl": "",
+  "builder.command": "",
+  "builder.runDevServer": false,
+  "builder.autoDetectDevServer": true,
+  "builder.launchType": "editor"
 }
