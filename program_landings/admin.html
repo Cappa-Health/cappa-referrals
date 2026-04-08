@@ -5,9 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HALT Admin — Manage Users</title>
     <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: #f0f4f8;
         color: #1a2a3a;
         min-height: 100vh;
@@ -21,20 +28,46 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
       }
-      header h1 { font-size: 1.1rem; font-weight: 600; }
-      header .meta { font-size: 0.75rem; opacity: 0.7; margin-top: 1px; }
-      .user-info { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; }
-      .user-info .user-detail { text-align: right; opacity: 0.85; line-height: 1.3; }
-      .user-info .user-detail strong { display: block; font-size: 0.82rem; }
+      header h1 {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      header .meta {
+        font-size: 0.75rem;
+        opacity: 0.7;
+        margin-top: 1px;
+      }
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.8rem;
+      }
+      .user-info .user-detail {
+        text-align: right;
+        opacity: 0.85;
+        line-height: 1.3;
+      }
+      .user-info .user-detail strong {
+        display: block;
+        font-size: 0.82rem;
+      }
       .btn-logout {
-        background: rgba(255,255,255,0.15); color: #fff;
-        border: 1px solid rgba(255,255,255,0.35);
-        padding: 5px 12px; border-radius: 6px;
-        font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
       }
-      .btn-logout:hover { background: rgba(255,255,255,0.25); }
+      .btn-logout:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
 
       /* ── Layout ── */
       main {
@@ -55,7 +88,7 @@
       .card {
         background: #fff;
         border-radius: 10px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
         overflow: hidden;
       }
       .card-header {
@@ -68,8 +101,12 @@
         border-bottom: 1px solid transparent;
         transition: background 0.15s;
       }
-      .card-header:hover { background: #f6f8fa; }
-      .card-header.open { border-bottom-color: #e8ecf0; }
+      .card-header:hover {
+        background: #f6f8fa;
+      }
+      .card-header.open {
+        border-bottom-color: #e8ecf0;
+      }
       .card-header h2 {
         font-size: 0.9rem;
         font-weight: 700;
@@ -80,12 +117,16 @@
         color: #888;
         transition: transform 0.2s;
       }
-      .card-chevron.open { transform: rotate(180deg); }
+      .card-chevron.open {
+        transform: rotate(180deg);
+      }
       .card-body {
         padding: 16px 18px;
         display: none;
       }
-      .card-body.open { display: block; }
+      .card-body.open {
+        display: block;
+      }
 
       /* ── Form ── */
       .form-row {
@@ -94,8 +135,14 @@
         align-items: flex-start;
         flex-wrap: wrap;
       }
-      .form-group { margin-bottom: 12px; flex: 1; min-width: 160px; }
-      .form-group.full { flex: 100%; }
+      .form-group {
+        margin-bottom: 12px;
+        flex: 1;
+        min-width: 160px;
+      }
+      .form-group.full {
+        flex: 100%;
+      }
       .form-group label {
         display: block;
         font-size: 0.72rem;
@@ -121,17 +168,61 @@
       .form-group select:focus {
         outline: none;
         border-color: #003366;
-        box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
+        box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
       }
-      .form-hint { font-size: 0.72rem; color: #888; margin-top: 3px; }
-      .pw-wrap { position: relative; }
-      .pw-wrap input { padding-right: 36px; }
+      .form-hint {
+        font-size: 0.72rem;
+        color: #888;
+        margin-top: 3px;
+      }
+      .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding-top: 24px;
+      }
+      .checkbox-group input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+        flex: 0 0 auto;
+      }
+      .checkbox-group label {
+        margin-bottom: 0;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+        color: #1a2a3a;
+        cursor: pointer;
+      }
+      .checkbox-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .pw-wrap {
+        position: relative;
+      }
+      .pw-wrap input {
+        padding-right: 36px;
+      }
       .pw-toggle {
-        position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-        background: none; border: none; cursor: pointer;
-        color: #888; font-size: 0.95rem; padding: 0; line-height: 1;
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #888;
+        font-size: 0.95rem;
+        padding: 0;
+        line-height: 1;
       }
-      .pw-toggle:hover { color: #003366; }
+      .pw-toggle:hover {
+        color: #003366;
+      }
 
       /* ── Password requirements ── */
       .pw-reqs {
@@ -142,67 +233,162 @@
         grid-template-columns: 1fr 1fr;
         gap: 0 8px;
       }
-      .pw-reqs span { color: #aaa; }
-      .pw-match { font-size: 0.72rem; margin-top: 3px; color: #aaa; }
+      .pw-reqs span {
+        color: #aaa;
+      }
+      .pw-match {
+        font-size: 0.72rem;
+        margin-top: 3px;
+        color: #aaa;
+      }
 
       /* ── Buttons ── */
       .btn-submit {
-        background: #003366; color: #fff;
-        border: none; border-radius: 6px;
-        padding: 8px 20px; font-size: 0.88rem; font-weight: 600;
-        cursor: pointer; white-space: nowrap;
+        background: #003366;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 20px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
       }
-      .btn-submit:hover { background: #004488; }
-      .btn-submit:disabled { background: #7a9cbf; cursor: not-allowed; }
+      .btn-submit:hover {
+        background: #004488;
+      }
+      .btn-submit:disabled {
+        background: #7a9cbf;
+        cursor: not-allowed;
+      }
 
       /* ── Feedback ── */
       .feedback {
-        margin-top: 10px; padding: 8px 12px;
-        border-radius: 6px; font-size: 0.82rem; display: none;
+        margin-top: 10px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        display: none;
       }
-      .feedback.success { background: #e2f5ea; color: #1a7a3c; border: 1px solid #a8d5b5; display: block; }
-      .feedback.error   { background: #fde8e8; color: #9b1c1c; border: 1px solid #f5b7b7; display: block; }
+      .feedback.success {
+        background: #e2f5ea;
+        color: #1a7a3c;
+        border: 1px solid #a8d5b5;
+        display: block;
+      }
+      .feedback.error {
+        background: #fde8e8;
+        color: #9b1c1c;
+        border: 1px solid #f5b7b7;
+        display: block;
+      }
 
       /* ── User table ── */
-      .user-table-wrap { overflow-x: auto; }
-      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-      thead th {
-        background: #f6f8fa; padding: 9px 14px;
-        text-align: left; font-size: 0.7rem; font-weight: 700;
-        color: #555; text-transform: uppercase; letter-spacing: 0.05em;
-        border-bottom: 2px solid #e8ecf0; white-space: nowrap;
+      .user-table-wrap {
+        overflow-x: auto;
       }
-      tbody tr { border-bottom: 1px solid #f0f4f8; }
-      tbody tr:hover { background: #f6f8fa; }
-      tbody td { padding: 9px 14px; vertical-align: middle; }
-      .badge-enabled     { background: #e2f5ea; color: #1a7a3c; }
-      .badge-disabled    { background: #fde8e8; color: #9b1c1c; }
-      .badge-unconfirmed { background: #fff3cd; color: #7a5200; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      thead th {
+        background: #f6f8fa;
+        padding: 9px 14px;
+        text-align: left;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #e8ecf0;
+        white-space: nowrap;
+      }
+      tbody tr {
+        border-bottom: 1px solid #f0f4f8;
+      }
+      tbody tr:hover {
+        background: #f6f8fa;
+      }
+      tbody td {
+        padding: 9px 14px;
+        vertical-align: middle;
+      }
+      .badge-enabled {
+        background: #e2f5ea;
+        color: #1a7a3c;
+      }
+      .badge-disabled {
+        background: #fde8e8;
+        color: #9b1c1c;
+      }
+      .badge-unconfirmed {
+        background: #fff3cd;
+        color: #7a5200;
+      }
       .status-badge {
-        display: inline-block; padding: 2px 8px;
-        border-radius: 10px; font-size: 0.68rem; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.05em;
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
       .btn-sm {
-        padding: 3px 10px; border: none; border-radius: 5px;
-        font-size: 0.75rem; font-weight: 600; cursor: pointer;
+        padding: 3px 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
       }
-      .btn-disable { background: #fde8e8; color: #9b1c1c; }
-      .btn-disable:hover { background: #fbd1d1; }
-      .btn-enable  { background: #e2f5ea; color: #1a7a3c; }
-      .btn-enable:hover  { background: #c8edda; }
-      .empty-state { text-align: center; padding: 28px; color: #888; font-size: 0.88rem; }
+      .btn-disable {
+        background: #fde8e8;
+        color: #9b1c1c;
+      }
+      .btn-disable:hover {
+        background: #fbd1d1;
+      }
+      .btn-enable {
+        background: #e2f5ea;
+        color: #1a7a3c;
+      }
+      .btn-enable:hover {
+        background: #c8edda;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 28px;
+        color: #888;
+        font-size: 0.88rem;
+      }
       .spinner {
-        display: inline-block; width: 20px; height: 20px;
-        border: 3px solid #d0d7de; border-top-color: #003366;
-        border-radius: 50%; animation: spin 0.7s linear infinite;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #d0d7de;
+        border-top-color: #003366;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
       }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .loading { text-align: center; padding: 20px; }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .loading {
+        text-align: center;
+        padding: 20px;
+      }
 
       @media (max-width: 700px) {
-        .top-row { grid-template-columns: 1fr; }
-        main { padding: 12px; }
+        .top-row {
+          grid-template-columns: 1fr;
+        }
+        main {
+          padding: 12px;
+        }
       }
     </style>
   </head>
@@ -212,7 +398,9 @@
     <header>
       <div>
         <h1>HALT Admin — Manage Users</h1>
-        <div class="meta">Alaska Department of Health — Health and Lifestyle Training</div>
+        <div class="meta">
+          Alaska Department of Health — Health and Lifestyle Training
+        </div>
       </div>
       <div class="user-info">
         <div class="user-detail">
@@ -224,10 +412,8 @@
     </header>
 
     <main>
-
       <!-- Top row: Create User + Change Password -->
       <div class="top-row">
-
         <!-- Create User -->
         <div class="card">
           <div class="card-header open" onclick="toggleCard(this)">
@@ -238,34 +424,87 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="newEmail">Email Address</label>
-                <input type="email" id="newEmail" placeholder="user@example.gov" autocomplete="off" />
+                <input
+                  type="email"
+                  id="newEmail"
+                  placeholder="user@example.gov"
+                  autocomplete="off"
+                />
               </div>
               <div class="form-group">
                 <label for="newState">State</label>
                 <select id="newState">
                   <option value="">— Select —</option>
-                  <option>Alabama</option><option>Alaska</option><option>Arizona</option>
-                  <option>Arkansas</option><option>California</option><option>Colorado</option>
-                  <option>Connecticut</option><option>Delaware</option><option>Florida</option>
-                  <option>Georgia</option><option>Hawaii</option><option>Idaho</option>
-                  <option>Illinois</option><option>Indiana</option><option>Iowa</option>
-                  <option>Kansas</option><option>Kentucky</option><option>Louisiana</option>
-                  <option>Maine</option><option>Maryland</option><option>Massachusetts</option>
-                  <option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
-                  <option>Missouri</option><option>Montana</option><option>Nebraska</option>
-                  <option>Nevada</option><option>New Hampshire</option><option>New Jersey</option>
-                  <option>New Mexico</option><option>New York</option><option>North Carolina</option>
-                  <option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
-                  <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option>
-                  <option>South Carolina</option><option>South Dakota</option><option>Tennessee</option>
-                  <option>Texas</option><option>Utah</option><option>Vermont</option>
-                  <option>Virginia</option><option>Washington</option><option>West Virginia</option>
-                  <option>Wisconsin</option><option>Wyoming</option>
+                  <option>Alabama</option>
+                  <option>Alaska</option>
+                  <option>Arizona</option>
+                  <option>Arkansas</option>
+                  <option>California</option>
+                  <option>Colorado</option>
+                  <option>Connecticut</option>
+                  <option>Delaware</option>
+                  <option>Florida</option>
+                  <option>Georgia</option>
+                  <option>Hawaii</option>
+                  <option>Idaho</option>
+                  <option>Illinois</option>
+                  <option>Indiana</option>
+                  <option>Iowa</option>
+                  <option>Kansas</option>
+                  <option>Kentucky</option>
+                  <option>Louisiana</option>
+                  <option>Maine</option>
+                  <option>Maryland</option>
+                  <option>Massachusetts</option>
+                  <option>Michigan</option>
+                  <option>Minnesota</option>
+                  <option>Mississippi</option>
+                  <option>Missouri</option>
+                  <option>Montana</option>
+                  <option>Nebraska</option>
+                  <option>Nevada</option>
+                  <option>New Hampshire</option>
+                  <option>New Jersey</option>
+                  <option>New Mexico</option>
+                  <option>New York</option>
+                  <option>North Carolina</option>
+                  <option>North Dakota</option>
+                  <option>Ohio</option>
+                  <option>Oklahoma</option>
+                  <option>Oregon</option>
+                  <option>Pennsylvania</option>
+                  <option>Rhode Island</option>
+                  <option>South Carolina</option>
+                  <option>South Dakota</option>
+                  <option>Tennessee</option>
+                  <option>Texas</option>
+                  <option>Utah</option>
+                  <option>Vermont</option>
+                  <option>Virginia</option>
+                  <option>Washington</option>
+                  <option>West Virginia</option>
+                  <option>Wisconsin</option>
+                  <option>Wyoming</option>
                 </select>
-                <div class="form-hint">User sees only this state's referrals.</div>
+                <div class="form-hint">
+                  User sees only this state's referrals.
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="checkbox-group">
+                  <input type="checkbox" id="newIsAdmin" />
+                  <label for="newIsAdmin" class="checkbox-copy">
+                    <span>Add user to admin group</span>
+                    <span class="form-hint"
+                      >Assigns the Cognito group admin.</span
+                    >
+                  </label>
+                </div>
               </div>
             </div>
-            <button class="btn-submit" id="createBtn" onclick="createUser()">Create User</button>
+            <button class="btn-submit" id="createBtn" onclick="createUser()">
+              Create User
+            </button>
             <div class="feedback" id="createFeedback"></div>
           </div>
         </div>
@@ -280,15 +519,40 @@
             <div class="form-group">
               <label for="cpOldPw">Current Password</label>
               <div class="pw-wrap">
-                <input type="password" id="cpOldPw" autocomplete="current-password" placeholder="Current password" />
-                <button type="button" class="pw-toggle" onclick="togglePw('cpOldPw', this)" tabindex="-1">👁</button>
+                <input
+                  type="password"
+                  id="cpOldPw"
+                  autocomplete="current-password"
+                  placeholder="Current password"
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  onclick="togglePw('cpOldPw', this)"
+                  tabindex="-1"
+                >
+                  👁
+                </button>
               </div>
             </div>
             <div class="form-group">
               <label for="cpNewPw1">New Password</label>
               <div class="pw-wrap">
-                <input type="password" id="cpNewPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="validateCpPw()" />
-                <button type="button" class="pw-toggle" onclick="togglePw('cpNewPw1', this)" tabindex="-1">👁</button>
+                <input
+                  type="password"
+                  id="cpNewPw1"
+                  autocomplete="new-password"
+                  placeholder="Min 12 chars, upper, lower, number, symbol"
+                  oninput="validateCpPw()"
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  onclick="togglePw('cpNewPw1', this)"
+                  tabindex="-1"
+                >
+                  👁
+                </button>
               </div>
               <div class="pw-reqs">
                 <span id="cpReqLen">✗ 12+ characters</span>
@@ -301,17 +565,37 @@
             <div class="form-group">
               <label for="cpNewPw2">Confirm New Password</label>
               <div class="pw-wrap">
-                <input type="password" id="cpNewPw2" autocomplete="new-password" placeholder="Confirm new password" oninput="validateCpPw()" />
-                <button type="button" class="pw-toggle" onclick="togglePw('cpNewPw2', this)" tabindex="-1">👁</button>
+                <input
+                  type="password"
+                  id="cpNewPw2"
+                  autocomplete="new-password"
+                  placeholder="Confirm new password"
+                  oninput="validateCpPw()"
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  onclick="togglePw('cpNewPw2', this)"
+                  tabindex="-1"
+                >
+                  👁
+                </button>
               </div>
               <div class="pw-match" id="cpPwMatch">✗ Passwords match</div>
             </div>
-            <button class="btn-submit" id="cpBtn" onclick="changeMyPassword()" disabled>Change Password</button>
+            <button
+              class="btn-submit"
+              id="cpBtn"
+              onclick="changeMyPassword()"
+              disabled
+            >
+              Change Password
+            </button>
             <div class="feedback" id="cpFeedback"></div>
           </div>
         </div>
-
-      </div><!-- /top-row -->
+      </div>
+      <!-- /top-row -->
 
       <!-- User List -->
       <div class="card">
@@ -325,11 +609,11 @@
           </div>
         </div>
       </div>
-
     </main>
 
     <script>
-      const API_BASE = "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
+      const API_BASE =
+        "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
 
       Auth.onReady(() => {
         document.getElementById("headerEmail").textContent = Auth.getEmail();
@@ -339,9 +623,9 @@
 
       // ── Collapsible cards ─────────────────────────────────────────────────────
       function toggleCard(header) {
-        const body    = header.nextElementSibling;
+        const body = header.nextElementSibling;
         const chevron = header.querySelector(".card-chevron");
-        const isOpen  = body.classList.contains("open");
+        const isOpen = body.classList.contains("open");
         body.classList.toggle("open", !isOpen);
         header.classList.toggle("open", !isOpen);
         chevron.classList.toggle("open", !isOpen);
@@ -362,11 +646,11 @@
         const pw2 = document.getElementById("cpNewPw2").value || "";
 
         const checks = {
-          cpReqLen:   pw1.length >= 12,
+          cpReqLen: pw1.length >= 12,
           cpReqUpper: /[A-Z]/.test(pw1),
           cpReqLower: /[a-z]/.test(pw1),
-          cpReqNum:   /[0-9]/.test(pw1),
-          cpReqSym:   /[^A-Za-z0-9]/.test(pw1),
+          cpReqNum: /[0-9]/.test(pw1),
+          cpReqSym: /[^A-Za-z0-9]/.test(pw1),
         };
 
         Object.entries(checks).forEach(([id, pass]) => {
@@ -381,7 +665,9 @@
         const matches = pw1 && pw1 === pw2;
         const matchEl = document.getElementById("cpPwMatch");
         if (matchEl) {
-          matchEl.textContent = matches ? "✓ Passwords match" : "✗ Passwords match";
+          matchEl.textContent = matches
+            ? "✓ Passwords match"
+            : "✗ Passwords match";
           matchEl.style.color = matches ? "#1a7a3c" : "#aaa";
         }
         document.getElementById("cpBtn").disabled = !(allPass && matches);
@@ -389,7 +675,7 @@
 
       // ── Change Password ───────────────────────────────────────────────────────
       async function changeMyPassword() {
-        const oldPw  = (document.getElementById("cpOldPw").value  || "").trim();
+        const oldPw = (document.getElementById("cpOldPw").value || "").trim();
         const newPw1 = (document.getElementById("cpNewPw1").value || "").trim();
         const newPw2 = (document.getElementById("cpNewPw2").value || "").trim();
         const feedback = document.getElementById("cpFeedback");
@@ -405,7 +691,7 @@
           await Auth.changePassword(oldPw, newPw1);
           feedback.className = "feedback success";
           feedback.textContent = "Password changed successfully.";
-          document.getElementById("cpOldPw").value  = "";
+          document.getElementById("cpOldPw").value = "";
           document.getElementById("cpNewPw1").value = "";
           document.getElementById("cpNewPw2").value = "";
           validateCpPw();
@@ -414,7 +700,8 @@
           if (err.code === "NotAuthorizedException") {
             feedback.textContent = "Current password is incorrect.";
           } else if (err.code === "InvalidPasswordException") {
-            feedback.textContent = "New password does not meet requirements: min 12 chars, upper, lower, number, symbol.";
+            feedback.textContent =
+              "New password does not meet requirements: min 12 chars, upper, lower, number, symbol.";
           } else {
             feedback.textContent = err.message || "Failed to change password.";
           }
@@ -426,8 +713,9 @@
 
       // ── Create User ───────────────────────────────────────────────────────────
       async function createUser() {
-        const email    = (document.getElementById("newEmail").value || "").trim();
-        const state    = document.getElementById("newState").value;
+        const email = (document.getElementById("newEmail").value || "").trim();
+        const state = document.getElementById("newState").value;
+        const isAdmin = document.getElementById("newIsAdmin").checked;
         const feedback = document.getElementById("createFeedback");
 
         feedback.className = "feedback";
@@ -449,9 +737,9 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${Auth.getToken()}`,
+              Authorization: `Bearer ${Auth.getToken()}`,
             },
-            body: JSON.stringify({ email, state }),
+            body: JSON.stringify({ email, state, is_admin: isAdmin }),
           });
 
           const data = await res.json();
@@ -461,6 +749,7 @@
           feedback.textContent = `User ${email} created. A temporary password has been sent to their email.`;
           document.getElementById("newEmail").value = "";
           document.getElementById("newState").value = "";
+          document.getElementById("newIsAdmin").checked = false;
           loadUsers();
         } catch (err) {
           feedback.className = "feedback error";
@@ -478,9 +767,12 @@
         try {
           await Auth.ensureValidToken();
           const res = await fetch(`${API_BASE}/admin/users`, {
-            headers: { "Authorization": `Bearer ${Auth.getToken()}` },
+            headers: { Authorization: `Bearer ${Auth.getToken()}` },
           });
-          if (res.status === 401 || res.status === 403) { Auth.logout(); return; }
+          if (res.status === 401 || res.status === 403) {
+            Auth.logout();
+            return;
+          }
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           renderUsers(data.users || []);
@@ -501,12 +793,16 @@
           <th>Email</th><th>State</th><th>Status</th><th>Created</th><th>Actions</th>
         </tr></thead><tbody>`;
 
-        users.forEach(u => {
+        users.forEach((u) => {
           const statusClass = u.enabled
-            ? (u.status === "CONFIRMED" ? "badge-enabled" : "badge-unconfirmed")
+            ? u.status === "CONFIRMED"
+              ? "badge-enabled"
+              : "badge-unconfirmed"
             : "badge-disabled";
           const statusLabel = u.enabled
-            ? (u.status === "CONFIRMED" ? "Active" : "Pending")
+            ? u.status === "CONFIRMED"
+              ? "Active"
+              : "Pending"
             : "Disabled";
           const actionBtn = u.enabled
             ? `<button class="btn-sm btn-disable" onclick="toggleUser('${escHtml(u.email)}', false)">Disable</button>`
@@ -533,7 +829,7 @@
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${Auth.getToken()}`,
+              Authorization: `Bearer ${Auth.getToken()}`,
             },
             body: JSON.stringify({ email, enabled: enable }),
           });
@@ -549,8 +845,10 @@
 
       function escHtml(str) {
         return String(str)
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
     </script>
   </body>

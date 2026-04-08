@@ -315,6 +315,13 @@ def _get_user_pool_id() -> str:
     return pool_id
 
 
+def _get_admin_group_name() -> str:
+    group_name = os.environ.get("ADMIN_GROUP_NAME", "").strip()
+    if not group_name:
+        raise ValueError("ADMIN_GROUP_NAME environment variable is not set")
+    return group_name
+
+
 def _handle_list_users() -> dict:
     try:
         pool_id = _get_user_pool_id()
@@ -348,6 +355,7 @@ def _handle_list_users() -> dict:
 def _handle_create_user(body: dict) -> dict:
     email = (body.get("email") or "").strip().lower()
     state = (body.get("state") or "").strip()
+    is_admin = body.get("is_admin") is True
     if not email or not state:
         return _respond(400, {"error": "Fields 'email' and 'state' are required"})
 
@@ -363,15 +371,27 @@ def _handle_create_user(body: dict) -> dict:
             ],
             DesiredDeliveryMediums=["EMAIL"],
         )
-        logger.info("Created user %s for state %s", email, state)
+        if is_admin:
+            cognito.admin_add_user_to_group(
+                UserPoolId=pool_id,
+                Username=email,
+                GroupName=_get_admin_group_name(),
+            )
+
+        logger.info("Created user %s for state %s admin=%s", email, state, is_admin)
         return _respond(200, {"message": f"User {email} created. Temporary password sent by email."})
 
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UsernameExistsException":
             return _respond(409, {"error": f"A user with email {email} already exists."})
+        if code == "ResourceNotFoundException" and is_admin:
+            return _respond(500, {"error": "Admin group is not configured correctly."})
         logger.error("admin_create_user failed: %s", exc)
         return _respond(500, {"error": "Failed to create user"})
+    except ValueError as exc:
+        logger.error("create_user config error: %s", exc)
+        return _respond(500, {"error": "Admin group is not configured correctly."})
 
 
 def _handle_toggle_user(body: dict) -> dict:

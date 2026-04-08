@@ -11,7 +11,6 @@ Description: >
 # Parameters
 # ─────────────────────────────────────────────────────────────────────────────
 Parameters:
-
   ProjectName:
     Type: String
     Default: halt-landing
@@ -52,7 +51,6 @@ Parameters:
 # Resources
 # ─────────────────────────────────────────────────────────────────────────────
 Resources:
-
   # ── S3 Bucket for static site ─────────────────────────────────────────────
 
   StaticSiteBucket:
@@ -230,6 +228,7 @@ Resources:
                 Action:
                   - cognito-idp:ListUsers
                   - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminAddUserToGroup
                   - cognito-idp:AdminEnableUser
                   - cognito-idp:AdminDisableUser
                 Resource: !GetAtt DashboardUserPool.Arn
@@ -250,11 +249,12 @@ Resources:
         S3Key: !Ref LambdaZipS3Key
       Environment:
         Variables:
-          TABLE_NAME:         !Ref IntakeSubmissionsTable
-          USER_POOL_ID:       !Ref DashboardUserPool
-          SENDER_EMAIL:       !Ref SenderEmail
+          TABLE_NAME: !Ref IntakeSubmissionsTable
+          USER_POOL_ID: !Ref DashboardUserPool
+          ADMIN_GROUP_NAME: admin
+          SENDER_EMAIL: !Ref SenderEmail
           NOTIFICATION_EMAIL: !Ref NotificationEmail
-          ALLOWED_ORIGIN:     !Ref AllowedOrigin
+          ALLOWED_ORIGIN: !Ref AllowedOrigin
       Tags:
         - Key: Project
           Value: !Ref ProjectName
@@ -369,7 +369,6 @@ Resources:
 # Outputs
 # ─────────────────────────────────────────────────────────────────────────────
 Outputs:
-
   StaticSiteBucketName:
     Description: S3 bucket for your HTML/CSS/JS files
     Value: !Ref StaticSiteBucket
