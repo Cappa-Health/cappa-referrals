@@ -17,168 +17,193 @@
       header {
         background: #003366;
         color: #fff;
-        padding: 16px 32px;
+        padding: 12px 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         box-shadow: 0 2px 6px rgba(0,0,0,0.25);
       }
-      header h1 { font-size: 1.25rem; font-weight: 600; }
-      header .meta { font-size: 0.8rem; opacity: 0.7; margin-top: 2px; }
-      .user-info {
-        display: flex; align-items: center; gap: 16px; font-size: 0.8rem;
-      }
-      .user-info .user-detail { text-align: right; opacity: 0.85; line-height: 1.4; }
-      .user-info .user-detail strong { display: block; font-size: 0.85rem; opacity: 1; }
+      header h1 { font-size: 1.1rem; font-weight: 600; }
+      header .meta { font-size: 0.75rem; opacity: 0.7; margin-top: 1px; }
+      .user-info { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; }
+      .user-info .user-detail { text-align: right; opacity: 0.85; line-height: 1.3; }
+      .user-info .user-detail strong { display: block; font-size: 0.82rem; }
       .btn-logout {
         background: rgba(255,255,255,0.15); color: #fff;
         border: 1px solid rgba(255,255,255,0.35);
-        padding: 6px 14px; border-radius: 6px;
-        font-size: 0.8rem; font-weight: 600; cursor: pointer;
+        padding: 5px 12px; border-radius: 6px;
+        font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap;
       }
       .btn-logout:hover { background: rgba(255,255,255,0.25); }
 
       /* ── Layout ── */
       main {
-        padding: 32px;
-        max-width: 700px;
+        padding: 20px 24px;
+        max-width: 1100px;
         margin: 0 auto;
       }
 
-      /* ── Card ── */
+      /* ── Top row: 2 cards side by side ── */
+      .top-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      /* ── Collapsible Card ── */
       .card {
         background: #fff;
         border-radius: 10px;
-        padding: 28px 32px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        margin-bottom: 28px;
+        overflow: hidden;
       }
-      .card h2 {
-        font-size: 1rem;
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 18px;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 1px solid transparent;
+        transition: background 0.15s;
+      }
+      .card-header:hover { background: #f6f8fa; }
+      .card-header.open { border-bottom-color: #e8ecf0; }
+      .card-header h2 {
+        font-size: 0.9rem;
         font-weight: 700;
         color: #003366;
-        margin-bottom: 20px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #e8ecf0;
       }
+      .card-chevron {
+        font-size: 0.7rem;
+        color: #888;
+        transition: transform 0.2s;
+      }
+      .card-chevron.open { transform: rotate(180deg); }
+      .card-body {
+        padding: 16px 18px;
+        display: none;
+      }
+      .card-body.open { display: block; }
 
       /* ── Form ── */
-      .form-group {
-        margin-bottom: 18px;
+      .form-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
       }
+      .form-group { margin-bottom: 12px; flex: 1; min-width: 160px; }
+      .form-group.full { flex: 100%; }
       .form-group label {
         display: block;
-        font-size: 0.78rem;
+        font-size: 0.72rem;
         font-weight: 700;
-        color: #444;
+        color: #555;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
       }
       .form-group input,
       .form-group select {
         width: 100%;
-        padding: 9px 12px;
+        padding: 7px 10px;
+        height: 34px;
         border: 1px solid #ccc;
         border-radius: 6px;
-        font-size: 0.95rem;
+        font-size: 0.88rem;
         color: #1a2a3a;
         background: #fafbfc;
+        line-height: 1.2;
       }
       .form-group input:focus,
       .form-group select:focus {
         outline: none;
         border-color: #003366;
-        box-shadow: 0 0 0 3px rgba(0,51,102,0.12);
+        box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
       }
-      .form-hint {
-        font-size: 0.78rem;
-        color: #888;
+      .form-hint { font-size: 0.72rem; color: #888; margin-top: 3px; }
+      .pw-wrap { position: relative; }
+      .pw-wrap input { padding-right: 36px; }
+      .pw-toggle {
+        position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; cursor: pointer;
+        color: #888; font-size: 0.95rem; padding: 0; line-height: 1;
+      }
+      .pw-toggle:hover { color: #003366; }
+
+      /* ── Password requirements ── */
+      .pw-reqs {
+        font-size: 0.72rem;
+        line-height: 1.8;
         margin-top: 4px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 8px;
       }
+      .pw-reqs span { color: #aaa; }
+      .pw-match { font-size: 0.72rem; margin-top: 3px; color: #aaa; }
+
+      /* ── Buttons ── */
       .btn-submit {
-        background: #003366;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: 10px 28px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 4px;
+        background: #003366; color: #fff;
+        border: none; border-radius: 6px;
+        padding: 8px 20px; font-size: 0.88rem; font-weight: 600;
+        cursor: pointer; white-space: nowrap;
       }
       .btn-submit:hover { background: #004488; }
       .btn-submit:disabled { background: #7a9cbf; cursor: not-allowed; }
 
       /* ── Feedback ── */
       .feedback {
-        margin-top: 16px;
-        padding: 12px 16px;
-        border-radius: 6px;
-        font-size: 0.88rem;
-        display: none;
+        margin-top: 10px; padding: 8px 12px;
+        border-radius: 6px; font-size: 0.82rem; display: none;
       }
-      .feedback.success {
-        background: #e2f5ea;
-        color: #1a7a3c;
-        border: 1px solid #a8d5b5;
-        display: block;
-      }
-      .feedback.error {
-        background: #fde8e8;
-        color: #9b1c1c;
-        border: 1px solid #f5b7b7;
-        display: block;
-      }
+      .feedback.success { background: #e2f5ea; color: #1a7a3c; border: 1px solid #a8d5b5; display: block; }
+      .feedback.error   { background: #fde8e8; color: #9b1c1c; border: 1px solid #f5b7b7; display: block; }
 
-      /* ── User list ── */
+      /* ── User table ── */
       .user-table-wrap { overflow-x: auto; }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-      }
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
       thead th {
-        background: #f6f8fa;
-        padding: 10px 14px;
-        text-align: left;
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-bottom: 2px solid #e8ecf0;
-        white-space: nowrap;
+        background: #f6f8fa; padding: 9px 14px;
+        text-align: left; font-size: 0.7rem; font-weight: 700;
+        color: #555; text-transform: uppercase; letter-spacing: 0.05em;
+        border-bottom: 2px solid #e8ecf0; white-space: nowrap;
       }
       tbody tr { border-bottom: 1px solid #f0f4f8; }
       tbody tr:hover { background: #f6f8fa; }
-      tbody td { padding: 10px 14px; vertical-align: middle; }
-      .badge-enabled  { background: #e2f5ea; color: #1a7a3c; }
-      .badge-disabled { background: #fde8e8; color: #9b1c1c; }
+      tbody td { padding: 9px 14px; vertical-align: middle; }
+      .badge-enabled     { background: #e2f5ea; color: #1a7a3c; }
+      .badge-disabled    { background: #fde8e8; color: #9b1c1c; }
       .badge-unconfirmed { background: #fff3cd; color: #7a5200; }
       .status-badge {
-        display: inline-block; padding: 2px 9px;
-        border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+        display: inline-block; padding: 2px 8px;
+        border-radius: 10px; font-size: 0.68rem; font-weight: 700;
         text-transform: uppercase; letter-spacing: 0.05em;
       }
       .btn-sm {
-        padding: 4px 12px; border: none; border-radius: 5px;
-        font-size: 0.78rem; font-weight: 600; cursor: pointer;
+        padding: 3px 10px; border: none; border-radius: 5px;
+        font-size: 0.75rem; font-weight: 600; cursor: pointer;
       }
       .btn-disable { background: #fde8e8; color: #9b1c1c; }
       .btn-disable:hover { background: #fbd1d1; }
       .btn-enable  { background: #e2f5ea; color: #1a7a3c; }
       .btn-enable:hover  { background: #c8edda; }
-      .empty-state {
-        text-align: center; padding: 32px; color: #888; font-size: 0.9rem;
-      }
+      .empty-state { text-align: center; padding: 28px; color: #888; font-size: 0.88rem; }
       .spinner {
-        display: inline-block; width: 22px; height: 22px;
+        display: inline-block; width: 20px; height: 20px;
         border: 3px solid #d0d7de; border-top-color: #003366;
         border-radius: 50%; animation: spin 0.7s linear infinite;
       }
       @keyframes spin { to { transform: rotate(360deg); } }
-      .loading { text-align: center; padding: 24px; }
+      .loading { text-align: center; padding: 20px; }
+
+      @media (max-width: 700px) {
+        .top-row { grid-template-columns: 1fr; }
+        main { padding: 12px; }
+      }
     </style>
   </head>
   <body>
@@ -200,117 +225,104 @@
 
     <main>
 
-      <!-- Create User -->
-      <div class="card">
-        <h2>Create New Dashboard User</h2>
-        <div class="form-group">
-          <label for="newEmail">Email Address</label>
-          <input type="email" id="newEmail" placeholder="user@example.gov" autocomplete="off" />
-        </div>
-        <div class="form-group">
-          <label for="newState">State</label>
-          <select id="newState">
-            <option value="">— Select a state —</option>
-            <option>Alabama</option>
-            <option>Alaska</option>
-            <option>Arizona</option>
-            <option>Arkansas</option>
-            <option>California</option>
-            <option>Colorado</option>
-            <option>Connecticut</option>
-            <option>Delaware</option>
-            <option>Florida</option>
-            <option>Georgia</option>
-            <option>Hawaii</option>
-            <option>Idaho</option>
-            <option>Illinois</option>
-            <option>Indiana</option>
-            <option>Iowa</option>
-            <option>Kansas</option>
-            <option>Kentucky</option>
-            <option>Louisiana</option>
-            <option>Maine</option>
-            <option>Maryland</option>
-            <option>Massachusetts</option>
-            <option>Michigan</option>
-            <option>Minnesota</option>
-            <option>Mississippi</option>
-            <option>Missouri</option>
-            <option>Montana</option>
-            <option>Nebraska</option>
-            <option>Nevada</option>
-            <option>New Hampshire</option>
-            <option>New Jersey</option>
-            <option>New Mexico</option>
-            <option>New York</option>
-            <option>North Carolina</option>
-            <option>North Dakota</option>
-            <option>Ohio</option>
-            <option>Oklahoma</option>
-            <option>Oregon</option>
-            <option>Pennsylvania</option>
-            <option>Rhode Island</option>
-            <option>South Carolina</option>
-            <option>South Dakota</option>
-            <option>Tennessee</option>
-            <option>Texas</option>
-            <option>Utah</option>
-            <option>Vermont</option>
-            <option>Virginia</option>
-            <option>Washington</option>
-            <option>West Virginia</option>
-            <option>Wisconsin</option>
-            <option>Wyoming</option>
-          </select>
-          <div class="form-hint">
-            The user will only see referrals from this state.
-          </div>
-        </div>
-        <button class="btn-submit" id="createBtn" onclick="createUser()">Create User</button>
-        <div class="feedback" id="createFeedback"></div>
-      </div>
+      <!-- Top row: Create User + Change Password -->
+      <div class="top-row">
 
-      <!-- Change Password -->
-      <div class="card">
-        <h2>Change My Password</h2>
-        <div class="form-group">
-          <label for="cpOldPw">Current Password</label>
-          <div style="position:relative;">
-            <input type="password" id="cpOldPw" autocomplete="current-password" placeholder="Current password" style="padding-right:40px;width:100%;" />
-            <button type="button" onclick="togglePw('cpOldPw', this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:1rem;">👁</button>
+        <!-- Create User -->
+        <div class="card">
+          <div class="card-header open" onclick="toggleCard(this)">
+            <h2>Create New User</h2>
+            <span class="card-chevron open">▼</span>
+          </div>
+          <div class="card-body open">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newEmail">Email Address</label>
+                <input type="email" id="newEmail" placeholder="user@example.gov" autocomplete="off" />
+              </div>
+              <div class="form-group">
+                <label for="newState">State</label>
+                <select id="newState">
+                  <option value="">— Select —</option>
+                  <option>Alabama</option><option>Alaska</option><option>Arizona</option>
+                  <option>Arkansas</option><option>California</option><option>Colorado</option>
+                  <option>Connecticut</option><option>Delaware</option><option>Florida</option>
+                  <option>Georgia</option><option>Hawaii</option><option>Idaho</option>
+                  <option>Illinois</option><option>Indiana</option><option>Iowa</option>
+                  <option>Kansas</option><option>Kentucky</option><option>Louisiana</option>
+                  <option>Maine</option><option>Maryland</option><option>Massachusetts</option>
+                  <option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
+                  <option>Missouri</option><option>Montana</option><option>Nebraska</option>
+                  <option>Nevada</option><option>New Hampshire</option><option>New Jersey</option>
+                  <option>New Mexico</option><option>New York</option><option>North Carolina</option>
+                  <option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
+                  <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option>
+                  <option>South Carolina</option><option>South Dakota</option><option>Tennessee</option>
+                  <option>Texas</option><option>Utah</option><option>Vermont</option>
+                  <option>Virginia</option><option>Washington</option><option>West Virginia</option>
+                  <option>Wisconsin</option><option>Wyoming</option>
+                </select>
+                <div class="form-hint">User sees only this state's referrals.</div>
+              </div>
+            </div>
+            <button class="btn-submit" id="createBtn" onclick="createUser()">Create User</button>
+            <div class="feedback" id="createFeedback"></div>
           </div>
         </div>
-        <div class="form-group">
-          <label for="cpNewPw1">New Password</label>
-          <div style="position:relative;">
-            <input type="password" id="cpNewPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="validateCpPw()" style="padding-right:40px;width:100%;" />
-            <button type="button" onclick="togglePw('cpNewPw1', this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:1rem;">👁</button>
+
+        <!-- Change Password -->
+        <div class="card">
+          <div class="card-header" onclick="toggleCard(this)">
+            <h2>Change My Password</h2>
+            <span class="card-chevron">▼</span>
           </div>
-          <div id="cpPwReqs" style="font-size:0.78rem;margin-top:6px;line-height:1.8;">
-            <span id="cpReqLen"   style="color:#aaa;">✗ At least 12 characters</span><br>
-            <span id="cpReqUpper" style="color:#aaa;">✗ Uppercase letter</span><br>
-            <span id="cpReqLower" style="color:#aaa;">✗ Lowercase letter</span><br>
-            <span id="cpReqNum"   style="color:#aaa;">✗ Number</span><br>
-            <span id="cpReqSym"   style="color:#aaa;">✗ Symbol (!@#$%…)</span>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="cpOldPw">Current Password</label>
+              <div class="pw-wrap">
+                <input type="password" id="cpOldPw" autocomplete="current-password" placeholder="Current password" />
+                <button type="button" class="pw-toggle" onclick="togglePw('cpOldPw', this)" tabindex="-1">👁</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cpNewPw1">New Password</label>
+              <div class="pw-wrap">
+                <input type="password" id="cpNewPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="validateCpPw()" />
+                <button type="button" class="pw-toggle" onclick="togglePw('cpNewPw1', this)" tabindex="-1">👁</button>
+              </div>
+              <div class="pw-reqs">
+                <span id="cpReqLen">✗ 12+ characters</span>
+                <span id="cpReqUpper">✗ Uppercase</span>
+                <span id="cpReqLower">✗ Lowercase</span>
+                <span id="cpReqNum">✗ Number</span>
+                <span id="cpReqSym">✗ Symbol</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cpNewPw2">Confirm New Password</label>
+              <div class="pw-wrap">
+                <input type="password" id="cpNewPw2" autocomplete="new-password" placeholder="Confirm new password" oninput="validateCpPw()" />
+                <button type="button" class="pw-toggle" onclick="togglePw('cpNewPw2', this)" tabindex="-1">👁</button>
+              </div>
+              <div class="pw-match" id="cpPwMatch">✗ Passwords match</div>
+            </div>
+            <button class="btn-submit" id="cpBtn" onclick="changeMyPassword()" disabled>Change Password</button>
+            <div class="feedback" id="cpFeedback"></div>
           </div>
         </div>
-        <div class="form-group">
-          <label for="cpNewPw2">Confirm New Password</label>
-          <div style="position:relative;">
-            <input type="password" id="cpNewPw2" autocomplete="new-password" placeholder="Confirm new password" oninput="validateCpPw()" style="padding-right:40px;width:100%;" />
-            <button type="button" onclick="togglePw('cpNewPw2', this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:1rem;">👁</button>
-          </div>
-          <div id="cpPwMatch" style="font-size:0.78rem;margin-top:6px;color:#aaa;">✗ Passwords match</div>
-        </div>
-        <button class="btn-submit" id="cpBtn" onclick="changeMyPassword()" disabled>Change Password</button>
-        <div class="feedback" id="cpFeedback"></div>
-      </div>
+
+      </div><!-- /top-row -->
 
       <!-- User List -->
       <div class="card">
-        <h2>Dashboard Users</h2>
-        <div id="userListContainer">
-          <div class="loading"><span class="spinner"></span></div>
+        <div class="card-header open" onclick="toggleCard(this)">
+          <h2>Dashboard Users</h2>
+          <span class="card-chevron open">▼</span>
+        </div>
+        <div class="card-body open">
+          <div id="userListContainer">
+            <div class="loading"><span class="spinner"></span></div>
+          </div>
         </div>
       </div>
 
@@ -324,6 +336,16 @@
         document.getElementById("headerState").textContent = Auth.getState();
         loadUsers();
       });
+
+      // ── Collapsible cards ─────────────────────────────────────────────────────
+      function toggleCard(header) {
+        const body    = header.nextElementSibling;
+        const chevron = header.querySelector(".card-chevron");
+        const isOpen  = body.classList.contains("open");
+        body.classList.toggle("open", !isOpen);
+        header.classList.toggle("open", !isOpen);
+        chevron.classList.toggle("open", !isOpen);
+      }
 
       // ── Password visibility toggle ────────────────────────────────────────────
       function togglePw(inputId, btn) {
@@ -362,35 +384,18 @@
           matchEl.textContent = matches ? "✓ Passwords match" : "✗ Passwords match";
           matchEl.style.color = matches ? "#1a7a3c" : "#aaa";
         }
-
         document.getElementById("cpBtn").disabled = !(allPass && matches);
       }
 
       // ── Change Password ───────────────────────────────────────────────────────
       async function changeMyPassword() {
-        const oldPw    = (document.getElementById("cpOldPw").value  || "").trim();
-        const newPw1   = (document.getElementById("cpNewPw1").value || "").trim();
-        const newPw2   = (document.getElementById("cpNewPw2").value || "").trim();
+        const oldPw  = (document.getElementById("cpOldPw").value  || "").trim();
+        const newPw1 = (document.getElementById("cpNewPw1").value || "").trim();
+        const newPw2 = (document.getElementById("cpNewPw2").value || "").trim();
         const feedback = document.getElementById("cpFeedback");
 
         feedback.className = "feedback";
         feedback.textContent = "";
-
-        if (!oldPw || !newPw1 || !newPw2) {
-          feedback.className = "feedback error";
-          feedback.textContent = "All fields are required.";
-          return;
-        }
-        if (newPw1 !== newPw2) {
-          feedback.className = "feedback error";
-          feedback.textContent = "New passwords do not match.";
-          return;
-        }
-        if (newPw1.length < 12) {
-          feedback.className = "feedback error";
-          feedback.textContent = "Password must be at least 12 characters.";
-          return;
-        }
 
         const btn = document.getElementById("cpBtn");
         btn.disabled = true;
@@ -421,8 +426,8 @@
 
       // ── Create User ───────────────────────────────────────────────────────────
       async function createUser() {
-        const email = (document.getElementById("newEmail").value || "").trim();
-        const state = document.getElementById("newState").value;
+        const email    = (document.getElementById("newEmail").value || "").trim();
+        const state    = document.getElementById("newState").value;
         const feedback = document.getElementById("createFeedback");
 
         feedback.className = "feedback";
@@ -492,19 +497,9 @@
           return;
         }
 
-        let html = `
-          <div class="user-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>State</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>`;
+        let html = `<div class="user-table-wrap"><table><thead><tr>
+          <th>Email</th><th>State</th><th>Status</th><th>Created</th><th>Actions</th>
+        </tr></thead><tbody>`;
 
         users.forEach(u => {
           const statusClass = u.enabled
