@@ -421,61 +421,36 @@
         }
       }
 
-      /* ── API Key Modal ── */
-      .overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 51, 0.55);
+      /* ── User Info (header) ── */
+      .user-info {
         display: flex;
         align-items: center;
-        justify-content: center;
-        z-index: 999;
-      }
-      .modal {
-        background: #fff;
-        border-radius: 12px;
-        padding: 36px 40px;
-        width: 100%;
-        max-width: 420px;
-        text-align: center;
-        box-shadow: 0 12px 40px rgba(0, 0, 51, 0.3);
-      }
-      .modal h2 {
-        font-size: 1.2rem;
-        margin-bottom: 8px;
-        color: #003366;
-      }
-      .modal p {
-        font-size: 0.875rem;
-        color: #555;
-        margin-bottom: 24px;
-      }
-      .modal input {
-        width: 100%;
-        padding: 11px 14px;
-        font-size: 1rem;
-        letter-spacing: 0.12em;
-        border: 1.5px solid #d0d7de;
-        border-radius: 8px;
-        text-align: center;
-        margin-bottom: 16px;
-        outline: none;
-      }
-      .modal input:focus {
-        border-color: #003366;
-      }
-      .modal .error {
-        color: #c0392b;
+        gap: 16px;
         font-size: 0.8rem;
-        margin-top: -10px;
-        margin-bottom: 12px;
-        min-height: 18px;
       }
-      .modal .btn-primary {
-        width: 100%;
-        padding: 12px;
-        font-size: 1rem;
-        border-radius: 8px;
+      .user-info .user-detail {
+        text-align: right;
+        opacity: 0.85;
+        line-height: 1.4;
+      }
+      .user-info .user-detail strong {
+        display: block;
+        font-size: 0.85rem;
+        opacity: 1;
+      }
+      .btn-logout {
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.35);
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn-logout:hover {
+        background: rgba(255,255,255,0.25);
       }
 
       /* ── Responsive ── */
@@ -508,35 +483,26 @@
     </style>
   </head>
   <body>
-    <!-- ── API Key Modal ───────────────────────────────────────────────────────── -->
-    <div class="overlay" id="keyOverlay">
-      <div class="modal">
-        <h2>🔒 HALT Dashboard</h2>
-        <p>Enter your dashboard API key to view referral submissions.</p>
-        <input
-          type="password"
-          id="keyInput"
-          placeholder="API Key"
-          autocomplete="off"
-        />
-        <div class="error" id="keyError"></div>
-        <button class="btn btn-primary" onclick="submitKey()">
-          Access Dashboard
-        </button>
-      </div>
-    </div>
+    <script src="/program_landings/auth.js"></script>
 
     <!-- ── Header ─────────────────────────────────────────────────────────────── -->
     <header>
       <div class="logo">
         <div>
           <h1>HALT Referral Dashboard</h1>
-          <div class="meta">
+          <div class="meta" id="headerMeta">
             Alaska Department of Health — Health and Lifestyle Training
           </div>
         </div>
       </div>
-      <div style="font-size: 0.8rem; opacity: 0.7" id="lastRefreshed"></div>
+      <div class="user-info">
+        <div class="user-detail">
+          <strong id="headerEmail"></strong>
+          <span id="headerState"></span>
+        </div>
+        <div style="font-size: 0.8rem; opacity: 0.7" id="lastRefreshed"></div>
+        <button class="btn-logout" onclick="Auth.logout()">Sign Out</button>
+      </div>
     </header>
 
     <!-- ── Main ───────────────────────────────────────────────────────────────── -->
@@ -627,7 +593,6 @@
         "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
 
       // ── State ─────────────────────────────────────────────────────────────────────
-      let apiKey = "";
       let allReferrals = [];
       let filtered = [];
       let sortCol = "submitted_at";
@@ -635,35 +600,12 @@
       let expandedId = null;
       let linkedReferralId = getLinkedId();
 
-      // ── API Key ───────────────────────────────────────────────────────────────────
-      window.addEventListener("DOMContentLoaded", () => {
-        const stored = sessionStorage.getItem("haltApiKey");
-        if (stored) {
-          apiKey = stored;
-          hideModal();
-          loadReferrals();
-        }
-        document.getElementById("keyInput").addEventListener("keydown", (e) => {
-          if (e.key === "Enter") submitKey();
-        });
-      });
-
-      function submitKey() {
-        const val = document.getElementById("keyInput").value.trim();
-        if (!val) {
-          document.getElementById("keyError").textContent =
-            "Please enter the API key.";
-          return;
-        }
-        apiKey = val;
-        sessionStorage.setItem("haltApiKey", apiKey);
-        hideModal();
+      // ── Auth bootstrap ────────────────────────────────────────────────────────────
+      Auth.onReady(() => {
+        document.getElementById("headerEmail").textContent = Auth.getEmail();
+        document.getElementById("headerState").textContent = Auth.getState();
         loadReferrals();
-      }
-
-      function hideModal() {
-        document.getElementById("keyOverlay").style.display = "none";
-      }
+      });
 
       // Return ?id= from the URL (used when linking directly from a notification email)
       function getLinkedId() {
@@ -745,18 +687,13 @@
         document.getElementById("rowCount").textContent = "Loading…";
 
         try {
+          await Auth.ensureValidToken();
           const res = await fetch(`${API_BASE}/referrals`, {
-            headers: { "x-api-key": apiKey },
+            headers: { "Authorization": `Bearer ${Auth.getToken()}` },
           });
 
           if (res.status === 401 || res.status === 403) {
-            sessionStorage.removeItem("haltApiKey");
-            document.getElementById("keyError").textContent =
-              "Invalid API key. Please try again.";
-            document.getElementById("keyInput").value = "";
-            document.getElementById("keyOverlay").style.display = "flex";
-            document.getElementById("tableContainer").innerHTML =
-              '<div class="state-msg"><span class="icon">🔒</span>Authentication required.</div>';
+            Auth.logout();
             return;
           }
 
@@ -987,11 +924,12 @@
         const newStatus = sel.value;
 
         try {
+          await Auth.ensureValidToken();
           const res = await fetch(`${API_BASE}/referrals/${id}`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": apiKey,
+              "Authorization": `Bearer ${Auth.getToken()}`,
             },
             body: JSON.stringify({ status: newStatus }),
           });

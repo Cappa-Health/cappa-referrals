@@ -4,15 +4,27 @@ AWS Lambda function for AWS GovCloud (us-gov-west-1 or us-gov-east-1)
 
 Routes:
   POST  /program-intake    – Store referral in DynamoDB + send SES notification
-  GET   /referrals         – Return all referrals (requires x-api-key header)
-  PATCH /referrals/{id}    – Update referral status (requires x-api-key header)
+  GET   /referrals         – Return referrals for the caller's state (requires Cognito JWT)
+  PATCH /referrals/{id}    – Update referral status (requires Cognito JWT)
+  GET   /admin/users       – List all Cognito dashboard users (requires Cognito JWT)
+  POST  /admin/users       – Create a new Cognito dashboard user (requires Cognito JWT)
+  PATCH /admin/users       – Enable or disable a Cognito dashboard user (requires Cognito JWT)
 
 Required environment variables:
   TABLE_NAME         – DynamoDB table name
+  USER_POOL_ID       – Cognito User Pool ID for admin user management
   SENDER_EMAIL       – SES-verified sender (e.g. no-reply@haltreferral.org)
   NOTIFICATION_EMAIL – Notification recipient (e.g. support@halt360.org)
   ALLOWED_ORIGIN     – Site domain for CORS (e.g. https://www.haltreferral.org)
-  DASHBOARD_API_KEY  – Secret key required to access GET/PATCH /referrals
+
+Authentication:
+  All routes except POST /program-intake are protected by an API Gateway JWT
+  authorizer backed by Cognito. The Lambda receives the validated claims in
+  event["requestContext"]["authorizer"]["jwt"]["claims"]. No auth code is needed
+  here — API Gateway rejects unauthenticated requests before Lambda is invoked.
+
+  Each Cognito user has a custom:state attribute (e.g. "Alaska") that determines
+  which referrals they can see. The by-state GSI is queried using this value.
 """
 
 import json
@@ -22,7 +34,7 @@ import uuid
 from datetime import datetime, timezone
 
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
@@ -30,8 +42,15 @@ logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource("dynamodb")
 ses      = boto3.client("ses")
+cognito  = boto3.client("cognito-idp")
 
-GOVCLOUD_CONSOLE = "https://console.amazonaws-us-gov.com"
+# Maps landing_page values (submitted by intake forms) to US states.
+# Add new entries here when programs in new states are launched.
+PROGRAM_STATE = {
+    "Lose Weight":          "Alaska",
+    "Lower Blood Pressure": "Alaska",
+    "Lower Blood Sugar":    "Alaska",
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -41,8 +60,8 @@ GOVCLOUD_CONSOLE = "https://console.amazonaws-us-gov.com"
 def _cors_headers() -> dict:
     return {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin":  os.environ.get("ALLOWED_ORIGIN", "*"),
-        "Access-Control-Allow-Headers": "Content-Type,x-api-key",
+        "Access-Control-Allow-Origin":  os.environ.get("ALLOWED_ORIGIN", ""),
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
         "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
     }
 
@@ -55,21 +74,22 @@ def _respond(status_code: int, body: dict) -> dict:
     }
 
 
-def _check_api_key(event: dict) -> bool:
-    """Validate the x-api-key header against the DASHBOARD_API_KEY env var."""
-    expected = os.environ.get("DASHBOARD_API_KEY", "")
-    if not expected:
-        logger.error("DASHBOARD_API_KEY env var is not set")
-        return False
-    provided = (event.get("headers") or {}).get("x-api-key", "")
-    return provided == expected
-
-
 def _get_table():
     table_name = os.environ.get("TABLE_NAME", "")
     if not table_name:
         raise ValueError("TABLE_NAME environment variable is not set")
     return dynamodb.Table(table_name)
+
+
+def _get_caller_state(event: dict) -> str:
+    """Extract the custom:state claim from the Cognito JWT (already validated by API GW)."""
+    claims = (
+        event.get("requestContext", {})
+             .get("authorizer", {})
+             .get("jwt", {})
+             .get("claims", {})
+    )
+    return claims.get("custom:state", "").strip()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -82,11 +102,10 @@ def _handle_intake(body: dict) -> dict:
     if not name or not email:
         return _respond(400, {"error": "Fields 'name' and 'email' are required"})
 
-    zipcode             = (body.get("zipcode")      or "").strip()
-    landing_page        = (body.get("landing_page") or "Unknown Program").strip()
-    program_of_interest = landing_page
-    state               = "Alaska"
-    
+    zipcode      = (body.get("zipcode")      or "").strip()
+    landing_page = (body.get("landing_page") or "Unknown Program").strip()
+    state        = PROGRAM_STATE.get(landing_page, "Unknown")
+
     now           = datetime.now(timezone.utc).isoformat()
     submission_id = str(uuid.uuid4())
 
@@ -94,7 +113,7 @@ def _handle_intake(body: dict) -> dict:
         "submission_id":       submission_id,
         "submitted_at":        now,
         "landing_page":        landing_page,
-        "program_of_interest": program_of_interest,
+        "program_of_interest": landing_page,
         "state":               state,
         "name":                name,
         "email":               email,
@@ -104,16 +123,14 @@ def _handle_intake(body: dict) -> dict:
         "status":              "new",
     }
 
-    # Step 1 — Store in DynamoDB
     try:
         _get_table().put_item(Item=item)
-        logger.info("Submission %s stored | program: %s", submission_id, program_of_interest)
+        logger.info("Submission %s stored | program: %s | state: %s", submission_id, landing_page, state)
     except (ClientError, ValueError) as exc:
         logger.error("DynamoDB put_item failed: %s", exc)
         return _respond(500, {"error": "Failed to store submission"})
 
-    # Step 2 — Send PII-free notification
-    _send_notification(submission_id, program_of_interest)
+    _send_notification(submission_id, landing_page)
 
     return _respond(200, {"message": "Submission received. A team member will follow up soon."})
 
@@ -123,27 +140,34 @@ def _handle_intake(body: dict) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _handle_get_referrals(event: dict) -> dict:
-    if not _check_api_key(event):
-        return _respond(401, {"error": "Unauthorized"})
+    user_state = _get_caller_state(event)
+    if not user_state:
+        logger.error("No custom:state claim in JWT — cannot filter referrals")
+        return _respond(403, {"error": "User account is missing a state assignment. Contact an administrator."})
 
     try:
         table    = _get_table()
-        response = table.scan()
-        items    = response.get("Items", [])
+        response = table.query(
+            IndexName="by-state",
+            KeyConditionExpression=Key("state").eq(user_state),
+            ScanIndexForward=False,  # newest first via submitted_at RANGE key
+        )
+        items = response.get("Items", [])
 
-        # Handle DynamoDB pagination
         while "LastEvaluatedKey" in response:
-            response = table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+            response = table.query(
+                IndexName="by-state",
+                KeyConditionExpression=Key("state").eq(user_state),
+                ExclusiveStartKey=response["LastEvaluatedKey"],
+                ScanIndexForward=False,
+            )
             items.extend(response.get("Items", []))
 
-        # Sort newest first
-        items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
-
-        logger.info("Returning %d referrals", len(items))
-        return _respond(200, {"referrals": items, "count": len(items)})
+        logger.info("Returning %d referrals for state=%s", len(items), user_state)
+        return _respond(200, {"referrals": items, "count": len(items), "state": user_state})
 
     except (ClientError, ValueError) as exc:
-        logger.error("DynamoDB scan failed: %s", exc)
+        logger.error("DynamoDB query failed: %s", exc)
         return _respond(500, {"error": "Failed to retrieve referrals"})
 
 
@@ -154,10 +178,6 @@ def _handle_get_referrals(event: dict) -> dict:
 VALID_STATUSES = {"new", "contacted", "enrolled", "not_eligible", "no_response"}
 
 def _handle_update_referral(event: dict, path: str) -> dict:
-    if not _check_api_key(event):
-        return _respond(401, {"error": "Unauthorized"})
-
-    # Extract submission_id from path e.g. /referrals/abc-123
     parts         = path.rstrip("/").split("/")
     submission_id = parts[-1] if len(parts) >= 2 else ""
     if not submission_id:
@@ -219,20 +239,20 @@ def _send_notification(submission_id: str, program: str) -> None:
     else:
         dashboard_link = f"{allowed_origin}/program_landings/dashboard.html?id={submission_id}"
 
-    subject   = "New Referral Received"
+    subject = "New Referral Received"
     if dashboard_link:
         text_body = (
             f"A new referral has been submitted on the {program} landing page.\n\n"
             f"Click the link below to view this referral in the secure dashboard:\n"
             f"{dashboard_link}\n\n"
-            f"You will be prompted for your dashboard API key when the page loads.\n\n"
+            f"You will be prompted to log in when the page loads.\n\n"
             f"Submission ID: {submission_id}\n\n"
             f"This is an automated notification. No personal information "
             f"is included in this email for security purposes."
         )
         dashboard_button = f"""
   <p>Click the button below to view this referral directly in the secure dashboard.
-     You will be prompted for your dashboard API key when the page loads.</p>
+     You will be prompted to log in when the page loads.</p>
   <p style="margin:28px 0;">
     <a href="{dashboard_link}"
        style="display:inline-block;background-color:#003366;color:#fff;
@@ -285,6 +305,100 @@ def _send_notification(submission_id: str, program: str) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Routes: GET / POST / PATCH /admin/users
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _get_user_pool_id() -> str:
+    pool_id = os.environ.get("USER_POOL_ID", "")
+    if not pool_id:
+        raise ValueError("USER_POOL_ID environment variable is not set")
+    return pool_id
+
+
+def _handle_list_users() -> dict:
+    try:
+        pool_id = _get_user_pool_id()
+        users   = []
+        kwargs  = {"UserPoolId": pool_id, "Limit": 60}
+        while True:
+            resp = cognito.list_users(**kwargs)
+            for u in resp.get("Users", []):
+                attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+                users.append({
+                    "email":   attrs.get("email", u["Username"]),
+                    "state":   attrs.get("custom:state", ""),
+                    "status":  u.get("UserStatus", ""),
+                    "enabled": u.get("Enabled", True),
+                    "created": u.get("UserCreateDate", "").isoformat() if u.get("UserCreateDate") else "",
+                })
+            pagination_token = resp.get("PaginationToken")
+            if not pagination_token:
+                break
+            kwargs["PaginationToken"] = pagination_token
+
+        users.sort(key=lambda u: u["email"])
+        logger.info("Listed %d users", len(users))
+        return _respond(200, {"users": users, "count": len(users)})
+
+    except (ClientError, ValueError) as exc:
+        logger.error("list_users failed: %s", exc)
+        return _respond(500, {"error": "Failed to list users"})
+
+
+def _handle_create_user(body: dict) -> dict:
+    email = (body.get("email") or "").strip().lower()
+    state = (body.get("state") or "").strip()
+    if not email or not state:
+        return _respond(400, {"error": "Fields 'email' and 'state' are required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        cognito.admin_create_user(
+            UserPoolId=pool_id,
+            Username=email,
+            UserAttributes=[
+                {"Name": "email",         "Value": email},
+                {"Name": "email_verified", "Value": "true"},
+                {"Name": "custom:state",  "Value": state},
+            ],
+            DesiredDeliveryMediums=["EMAIL"],
+        )
+        logger.info("Created user %s for state %s", email, state)
+        return _respond(200, {"message": f"User {email} created. Temporary password sent by email."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UsernameExistsException":
+            return _respond(409, {"error": f"A user with email {email} already exists."})
+        logger.error("admin_create_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to create user"})
+
+
+def _handle_toggle_user(body: dict) -> dict:
+    email   = (body.get("email") or "").strip().lower()
+    enabled = body.get("enabled")
+    if not email or enabled is None:
+        return _respond(400, {"error": "Fields 'email' and 'enabled' are required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        if enabled:
+            cognito.admin_enable_user(UserPoolId=pool_id, Username=email)
+            logger.info("Enabled user %s", email)
+        else:
+            cognito.admin_disable_user(UserPoolId=pool_id, Username=email)
+            logger.info("Disabled user %s", email)
+        return _respond(200, {"message": f"User {email} {'enabled' if enabled else 'disabled'}."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": f"User {email} not found."})
+        logger.error("admin_enable/disable_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to update user"})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main handler — route dispatcher
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -297,8 +411,8 @@ def lambda_handler(event, context):
         http.get("path", ""),
         request_context.get("requestId", ""),
     )
-    method  = http.get("method", "").upper()
-    path    = http.get("path", "")
+    method = http.get("method", "").upper()
+    path   = http.get("path", "")
 
     # CORS pre-flight
     if method == "OPTIONS":
@@ -321,5 +435,14 @@ def lambda_handler(event, context):
 
     if method == "PATCH" and path.startswith("/referrals/"):
         return _handle_update_referral(event, path)
+
+    if method == "GET" and path == "/admin/users":
+        return _handle_list_users()
+
+    if method == "POST" and path == "/admin/users":
+        return _handle_create_user(body)
+
+    if method == "PATCH" and path == "/admin/users":
+        return _handle_toggle_user(body)
 
     return _respond(404, {"error": "Not found"})

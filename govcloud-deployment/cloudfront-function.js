@@ -11,6 +11,7 @@ function handler(event) {
     "/lower-blood-pressure": "/program_landings/lower_blood_pressure.html",
     "/lower-blood-sugar": "/program_landings/lower_blood_sugar.html",
     "/dashboard": "/program_landings/dashboard.html",
+    "/admin": "/program_landings/admin.html",
   };
   var passthroughPrefixes = ["/program_landings/", "/public/", "/assets/"];
   var passthroughFiles = {

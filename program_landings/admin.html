@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HALT Admin — Manage Users</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f0f4f8;
+        color: #1a2a3a;
+        min-height: 100vh;
+      }
+
+      /* ── Header ── */
+      header {
+        background: #003366;
+        color: #fff;
+        padding: 16px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      }
+      header h1 { font-size: 1.25rem; font-weight: 600; }
+      header .meta { font-size: 0.8rem; opacity: 0.7; margin-top: 2px; }
+      .user-info {
+        display: flex; align-items: center; gap: 16px; font-size: 0.8rem;
+      }
+      .user-info .user-detail { text-align: right; opacity: 0.85; line-height: 1.4; }
+      .user-info .user-detail strong { display: block; font-size: 0.85rem; opacity: 1; }
+      .btn-logout {
+        background: rgba(255,255,255,0.15); color: #fff;
+        border: 1px solid rgba(255,255,255,0.35);
+        padding: 6px 14px; border-radius: 6px;
+        font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      }
+      .btn-logout:hover { background: rgba(255,255,255,0.25); }
+
+      /* ── Layout ── */
+      main {
+        padding: 32px;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      /* ── Card ── */
+      .card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 28px 32px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        margin-bottom: 28px;
+      }
+      .card h2 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #003366;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e8ecf0;
+      }
+
+      /* ── Form ── */
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #444;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        color: #1a2a3a;
+        background: #fafbfc;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #003366;
+        box-shadow: 0 0 0 3px rgba(0,51,102,0.12);
+      }
+      .form-hint {
+        font-size: 0.78rem;
+        color: #888;
+        margin-top: 4px;
+      }
+      .btn-submit {
+        background: #003366;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 28px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 4px;
+      }
+      .btn-submit:hover { background: #004488; }
+      .btn-submit:disabled { background: #7a9cbf; cursor: not-allowed; }
+
+      /* ── Feedback ── */
+      .feedback {
+        margin-top: 16px;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 0.88rem;
+        display: none;
+      }
+      .feedback.success {
+        background: #e2f5ea;
+        color: #1a7a3c;
+        border: 1px solid #a8d5b5;
+        display: block;
+      }
+      .feedback.error {
+        background: #fde8e8;
+        color: #9b1c1c;
+        border: 1px solid #f5b7b7;
+        display: block;
+      }
+
+      /* ── User list ── */
+      .user-table-wrap { overflow-x: auto; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+      }
+      thead th {
+        background: #f6f8fa;
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #e8ecf0;
+        white-space: nowrap;
+      }
+      tbody tr { border-bottom: 1px solid #f0f4f8; }
+      tbody tr:hover { background: #f6f8fa; }
+      tbody td { padding: 10px 14px; vertical-align: middle; }
+      .badge-enabled  { background: #e2f5ea; color: #1a7a3c; }
+      .badge-disabled { background: #fde8e8; color: #9b1c1c; }
+      .badge-unconfirmed { background: #fff3cd; color: #7a5200; }
+      .status-badge {
+        display: inline-block; padding: 2px 9px;
+        border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.05em;
+      }
+      .btn-sm {
+        padding: 4px 12px; border: none; border-radius: 5px;
+        font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      }
+      .btn-disable { background: #fde8e8; color: #9b1c1c; }
+      .btn-disable:hover { background: #fbd1d1; }
+      .btn-enable  { background: #e2f5ea; color: #1a7a3c; }
+      .btn-enable:hover  { background: #c8edda; }
+      .empty-state {
+        text-align: center; padding: 32px; color: #888; font-size: 0.9rem;
+      }
+      .spinner {
+        display: inline-block; width: 22px; height: 22px;
+        border: 3px solid #d0d7de; border-top-color: #003366;
+        border-radius: 50%; animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .loading { text-align: center; padding: 24px; }
+    </style>
+  </head>
+  <body>
+    <script src="/program_landings/auth.js"></script>
+
+    <header>
+      <div>
+        <h1>HALT Admin — Manage Users</h1>
+        <div class="meta">Alaska Department of Health — Health and Lifestyle Training</div>
+      </div>
+      <div class="user-info">
+        <div class="user-detail">
+          <strong id="headerEmail"></strong>
+          <span id="headerState"></span>
+        </div>
+        <button class="btn-logout" onclick="Auth.logout()">Sign Out</button>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- Create User -->
+      <div class="card">
+        <h2>Create New Dashboard User</h2>
+        <div class="form-group">
+          <label for="newEmail">Email Address</label>
+          <input type="email" id="newEmail" placeholder="user@example.gov" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="newState">State</label>
+          <select id="newState">
+            <option value="">— Select a state —</option>
+            <option>Alabama</option>
+            <option>Alaska</option>
+            <option>Arizona</option>
+            <option>Arkansas</option>
+            <option>California</option>
+            <option>Colorado</option>
+            <option>Connecticut</option>
+            <option>Delaware</option>
+            <option>Florida</option>
+            <option>Georgia</option>
+            <option>Hawaii</option>
+            <option>Idaho</option>
+            <option>Illinois</option>
+            <option>Indiana</option>
+            <option>Iowa</option>
+            <option>Kansas</option>
+            <option>Kentucky</option>
+            <option>Louisiana</option>
+            <option>Maine</option>
+            <option>Maryland</option>
+            <option>Massachusetts</option>
+            <option>Michigan</option>
+            <option>Minnesota</option>
+            <option>Mississippi</option>
+            <option>Missouri</option>
+            <option>Montana</option>
+            <option>Nebraska</option>
+            <option>Nevada</option>
+            <option>New Hampshire</option>
+            <option>New Jersey</option>
+            <option>New Mexico</option>
+            <option>New York</option>
+            <option>North Carolina</option>
+            <option>North Dakota</option>
+            <option>Ohio</option>
+            <option>Oklahoma</option>
+            <option>Oregon</option>
+            <option>Pennsylvania</option>
+            <option>Rhode Island</option>
+            <option>South Carolina</option>
+            <option>South Dakota</option>
+            <option>Tennessee</option>
+            <option>Texas</option>
+            <option>Utah</option>
+            <option>Vermont</option>
+            <option>Virginia</option>
+            <option>Washington</option>
+            <option>West Virginia</option>
+            <option>Wisconsin</option>
+            <option>Wyoming</option>
+          </select>
+          <div class="form-hint">
+            The user will only see referrals from this state.
+          </div>
+        </div>
+        <button class="btn-submit" id="createBtn" onclick="createUser()">Create User</button>
+        <div class="feedback" id="createFeedback"></div>
+      </div>
+
+      <!-- User List -->
+      <div class="card">
+        <h2>Dashboard Users</h2>
+        <div id="userListContainer">
+          <div class="loading"><span class="spinner"></span></div>
+        </div>
+      </div>
+
+    </main>
+
+    <script>
+      const API_BASE = "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
+
+      Auth.onReady(() => {
+        document.getElementById("headerEmail").textContent = Auth.getEmail();
+        document.getElementById("headerState").textContent = Auth.getState();
+        loadUsers();
+      });
+
+      // ── Create User ───────────────────────────────────────────────────────────
+      async function createUser() {
+        const email = (document.getElementById("newEmail").value || "").trim();
+        const state = document.getElementById("newState").value;
+        const feedback = document.getElementById("createFeedback");
+
+        feedback.className = "feedback";
+        feedback.textContent = "";
+
+        if (!email || !state) {
+          feedback.className = "feedback error";
+          feedback.textContent = "Email and state are both required.";
+          return;
+        }
+
+        const btn = document.getElementById("createBtn");
+        btn.disabled = true;
+        btn.textContent = "Creating…";
+
+        try {
+          await Auth.ensureValidToken();
+          const res = await fetch(`${API_BASE}/admin/users`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Auth.getToken()}`,
+            },
+            body: JSON.stringify({ email, state }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+          feedback.className = "feedback success";
+          feedback.textContent = `User ${email} created. A temporary password has been sent to their email.`;
+          document.getElementById("newEmail").value = "";
+          document.getElementById("newState").value = "";
+          loadUsers();
+        } catch (err) {
+          feedback.className = "feedback error";
+          feedback.textContent = err.message || "Failed to create user.";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Create User";
+        }
+      }
+
+      // ── Load Users ────────────────────────────────────────────────────────────
+      async function loadUsers() {
+        document.getElementById("userListContainer").innerHTML =
+          '<div class="loading"><span class="spinner"></span></div>';
+        try {
+          await Auth.ensureValidToken();
+          const res = await fetch(`${API_BASE}/admin/users`, {
+            headers: { "Authorization": `Bearer ${Auth.getToken()}` },
+          });
+          if (res.status === 401 || res.status === 403) { Auth.logout(); return; }
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          renderUsers(data.users || []);
+        } catch (err) {
+          document.getElementById("userListContainer").innerHTML =
+            `<div class="empty-state">Failed to load users: ${escHtml(err.message)}</div>`;
+        }
+      }
+
+      function renderUsers(users) {
+        if (!users.length) {
+          document.getElementById("userListContainer").innerHTML =
+            '<div class="empty-state">No users found.</div>';
+          return;
+        }
+
+        let html = `
+          <div class="user-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>State</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+        users.forEach(u => {
+          const statusClass = u.enabled
+            ? (u.status === "CONFIRMED" ? "badge-enabled" : "badge-unconfirmed")
+            : "badge-disabled";
+          const statusLabel = u.enabled
+            ? (u.status === "CONFIRMED" ? "Active" : "Pending")
+            : "Disabled";
+          const actionBtn = u.enabled
+            ? `<button class="btn-sm btn-disable" onclick="toggleUser('${escHtml(u.email)}', false)">Disable</button>`
+            : `<button class="btn-sm btn-enable"  onclick="toggleUser('${escHtml(u.email)}', true)">Enable</button>`;
+
+          html += `<tr>
+            <td>${escHtml(u.email)}</td>
+            <td>${escHtml(u.state || "—")}</td>
+            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+            <td>${u.created ? new Date(u.created).toLocaleDateString() : "—"}</td>
+            <td>${actionBtn}</td>
+          </tr>`;
+        });
+
+        html += "</tbody></table></div>";
+        document.getElementById("userListContainer").innerHTML = html;
+      }
+
+      // ── Enable / Disable User ─────────────────────────────────────────────────
+      async function toggleUser(email, enable) {
+        try {
+          await Auth.ensureValidToken();
+          const res = await fetch(`${API_BASE}/admin/users`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Auth.getToken()}`,
+            },
+            body: JSON.stringify({ email, enabled: enable }),
+          });
+          if (!res.ok) {
+            const d = await res.json();
+            throw new Error(d.error || `HTTP ${res.status}`);
+          }
+          loadUsers();
+        } catch (err) {
+          alert("Failed to update user: " + err.message);
+        }
+      }
+
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+    </script>
+  </body>
+</html>
