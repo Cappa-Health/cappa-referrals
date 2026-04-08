@@ -25,6 +25,12 @@ const USER_POOL_CLIENT = "6kht95c982kkdrloqfdhsveaol"; // from CF output: UserPo
 const COGNITO_ENDPOINT = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
 const SK_ID_TOKEN = "halt_id_token";
 const SK_REFRESH_TOKEN = "halt_refresh_token";
+const AUTH_VIEW_IDS = [
+  "authLogin",
+  "authForgotPassword",
+  "authConfirmReset",
+  "authNewPassword",
+];
 
 let _readyCallbacks = [];
 let _isReady = false;
@@ -85,14 +91,13 @@ async function _signIn(email, password) {
   });
 }
 
-async function _setNewPassword(email, newPassword, state, session) {
+async function _setNewPassword(email, newPassword, session) {
   return _cognitoRequest("RespondToAuthChallenge", {
     ChallengeName: "NEW_PASSWORD_REQUIRED",
     ClientId: USER_POOL_CLIENT,
     ChallengeResponses: {
       USERNAME: email,
       NEW_PASSWORD: newPassword,
-      "userAttributes.custom:state": state,
     },
     Session: session,
   });
@@ -108,7 +113,7 @@ async function _refreshTokens(refreshToken) {
 
 async function _changePassword(accessToken, oldPassword, newPassword) {
   return _cognitoRequest("ChangePassword", {
-    AccessToken:      accessToken,
+    AccessToken: accessToken,
     PreviousPassword: oldPassword,
     ProposedPassword: newPassword,
   });
@@ -123,10 +128,10 @@ async function _forgotPassword(email) {
 
 async function _confirmForgotPassword(email, code, newPassword) {
   return _cognitoRequest("ConfirmForgotPassword", {
-    ClientId:         USER_POOL_CLIENT,
-    Username:         email,
+    ClientId: USER_POOL_CLIENT,
+    Username: email,
     ConfirmationCode: code,
-    Password:         newPassword,
+    Password: newPassword,
   });
 }
 
@@ -193,13 +198,13 @@ function _injectModal() {
         outline: none; border-color: #003366;
         box-shadow: 0 0 0 3px rgba(0,51,102,0.15);
       }
-      #authBtn {
+      .auth-submit {
         width: 100%; padding: 10px; background: #003366; color: #fff;
         border: none; border-radius: 6px; font-size: 1rem;
         font-weight: 600; cursor: pointer;
       }
-      #authBtn:disabled { background: #7a9cbf; cursor: not-allowed; }
-      #authError {
+      .auth-submit:disabled { background: #7a9cbf; cursor: not-allowed; }
+      .auth-error {
         margin-top: 14px; font-size: 0.85rem; color: #c0392b;
         min-height: 1.2em;
       }
@@ -239,9 +244,9 @@ function _injectModal() {
           <input type="password" id="authPassword" autocomplete="current-password" placeholder="Password" />
           <button type="button" class="pw-toggle" onclick="Auth._togglePw('authPassword', this)" tabindex="-1">👁</button>
         </div>
-        <button id="authBtn" onclick="Auth._submitLogin()">Sign In</button>
+        <button class="auth-submit" data-idle-label="Sign In" onclick="Auth._submitLogin()">Sign In</button>
         <button class="auth-link" onclick="Auth._showForgotPassword()">Forgot password?</button>
-        <div id="authError"></div>
+        <div class="auth-error"></div>
       </div>
 
       <!-- Forgot password — step 1: enter email -->
@@ -250,9 +255,9 @@ function _injectModal() {
         <p class="auth-sub">Enter your email and we'll send a verification code.</p>
         <label for="authForgotEmail">Email</label>
         <input type="email" id="authForgotEmail" autocomplete="username" placeholder="you@example.gov" />
-        <button id="authBtn" onclick="Auth._submitForgotPassword()">Send Code</button>
+        <button class="auth-submit" data-idle-label="Send Code" onclick="Auth._submitForgotPassword()">Send Code</button>
         <button class="auth-link" onclick="Auth._showLogin()">Back to sign in</button>
-        <div id="authError"></div>
+        <div class="auth-error"></div>
       </div>
 
       <!-- Forgot password — step 2: enter code + new password -->
@@ -279,15 +284,15 @@ function _injectModal() {
           <button type="button" class="pw-toggle" onclick="Auth._togglePw('authResetPw2', this)" tabindex="-1">👁</button>
         </div>
         <div id="authPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#aaa;">✗ Passwords match</div>
-        <button id="authBtn" onclick="Auth._submitConfirmReset()" disabled>Reset Password</button>
+        <button class="auth-submit" data-idle-label="Reset Password" onclick="Auth._submitConfirmReset()" disabled>Reset Password</button>
         <button class="auth-link" onclick="Auth._showLogin()">Back to sign in</button>
-        <div id="authError"></div>
+        <div class="auth-error"></div>
       </div>
 
       <!-- New password required form (first login) -->
       <div id="authNewPassword" style="display:none">
         <h2>Set New Password</h2>
-        <p class="auth-sub">You must set a new password before continuing.</p>
+        <p class="auth-sub">You must set a new password before continuing. Your state assignment is managed by an administrator.</p>
         <label for="authNewPw1">New Password</label>
         <div class="pw-wrap">
           <input type="password" id="authNewPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="Auth._validateNewPw()" />
@@ -306,29 +311,8 @@ function _injectModal() {
           <button type="button" class="pw-toggle" onclick="Auth._togglePw('authNewPw2', this)" tabindex="-1">👁</button>
         </div>
         <div id="authNewPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#aaa;">✗ Passwords match</div>
-        <label for="authNewState">Your State</label>
-        <select id="authNewState">
-          <option value="">— Select your state —</option>
-          <option>Alabama</option><option>Alaska</option><option>Arizona</option>
-          <option>Arkansas</option><option>California</option><option>Colorado</option>
-          <option>Connecticut</option><option>Delaware</option><option>Florida</option>
-          <option>Georgia</option><option>Hawaii</option><option>Idaho</option>
-          <option>Illinois</option><option>Indiana</option><option>Iowa</option>
-          <option>Kansas</option><option>Kentucky</option><option>Louisiana</option>
-          <option>Maine</option><option>Maryland</option><option>Massachusetts</option>
-          <option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
-          <option>Missouri</option><option>Montana</option><option>Nebraska</option>
-          <option>Nevada</option><option>New Hampshire</option><option>New Jersey</option>
-          <option>New Mexico</option><option>New York</option><option>North Carolina</option>
-          <option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
-          <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option>
-          <option>South Carolina</option><option>South Dakota</option><option>Tennessee</option>
-          <option>Texas</option><option>Utah</option><option>Vermont</option>
-          <option>Virginia</option><option>Washington</option><option>West Virginia</option>
-          <option>Wisconsin</option><option>Wyoming</option>
-        </select>
-        <button id="authBtn" onclick="Auth._submitNewPassword()" disabled>Set Password</button>
-        <div id="authError"></div>
+        <button class="auth-submit" data-idle-label="Set Password" onclick="Auth._submitNewPassword()" disabled>Set Password</button>
+        <div class="auth-error"></div>
       </div>
     </div>
   `;
@@ -350,18 +334,35 @@ function _showModal() {
 function _hideModal() {
   document.getElementById("authOverlay").style.display = "none";
 }
-function _setError(msg) {
-  document.getElementById("authError").textContent = msg || "";
+function _getVisibleAuthView() {
+  return (
+    AUTH_VIEW_IDS.map((id) => document.getElementById(id)).find(
+      (el) => el && el.style.display !== "none",
+    ) || null
+  );
+}
+
+function _getAuthErrorElement() {
+  return _getVisibleAuthView()?.querySelector(".auth-error") || null;
+}
+
+function _getAuthSubmitButton() {
+  return _getVisibleAuthView()?.querySelector(".auth-submit") || null;
+}
+
+function _setError(msg, color = "#c0392b") {
+  const errorEl = _getAuthErrorElement();
+  if (!errorEl) return;
+  errorEl.textContent = msg || "";
+  errorEl.style.color = color;
 }
 function _setBusy(on) {
-  const btn = document.getElementById("authBtn");
+  const btn = _getAuthSubmitButton();
   if (btn) {
     btn.disabled = on;
     btn.textContent = on
       ? "Please wait…"
-      : document.getElementById("authNewPassword").style.display !== "none"
-        ? "Set Password"
-        : "Sign In";
+      : btn.dataset.idleLabel || btn.textContent;
   }
 }
 
@@ -431,11 +432,13 @@ const Auth = {
     _isReady = false;
     _setError("");
     document.getElementById("authLogin").style.display = "block";
+    document.getElementById("authForgotPassword").style.display = "none";
+    document.getElementById("authConfirmReset").style.display = "none";
     document.getElementById("authNewPassword").style.display = "none";
-    const btn = document.getElementById("authBtn");
+    const btn = _getAuthSubmitButton();
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "Sign In";
+      btn.textContent = btn.dataset.idleLabel || "Sign In";
     }
     _showModal();
   },
@@ -491,12 +494,11 @@ const Auth = {
   },
 
   async _submitNewPassword() {
-    const pw1   = (document.getElementById("authNewPw1").value    || "").trim();
-    const pw2   = (document.getElementById("authNewPw2").value    || "").trim();
-    const state = (document.getElementById("authNewState").value  || "").trim();
+    const pw1 = (document.getElementById("authNewPw1").value || "").trim();
+    const pw2 = (document.getElementById("authNewPw2").value || "").trim();
 
-    if (!pw1 || !pw2 || !state) {
-      _setError("All fields are required, including your state.");
+    if (!pw1 || !pw2) {
+      _setError("All fields are required.");
       return;
     }
     if (pw1 !== pw2) {
@@ -511,7 +513,7 @@ const Auth = {
     _setError("");
     _setBusy(true);
     try {
-      const data = await _setNewPassword(_pendingEmail, pw1, state, _pendingSession);
+      const data = await _setNewPassword(_pendingEmail, pw1, _pendingSession);
       const result = data.AuthenticationResult;
       _saveTokens(result.IdToken, result.RefreshToken, result.AccessToken);
       _onAuthenticated();
@@ -542,11 +544,11 @@ const Auth = {
     const pw2 = document.getElementById("authNewPw2").value || "";
 
     const checks = {
-      newReqLen:   pw1.length >= 12,
+      newReqLen: pw1.length >= 12,
       newReqUpper: /[A-Z]/.test(pw1),
       newReqLower: /[a-z]/.test(pw1),
-      newReqNum:   /[0-9]/.test(pw1),
-      newReqSym:   /[^A-Za-z0-9]/.test(pw1),
+      newReqNum: /[0-9]/.test(pw1),
+      newReqSym: /[^A-Za-z0-9]/.test(pw1),
     };
 
     Object.entries(checks).forEach(([id, pass]) => {
@@ -565,8 +567,8 @@ const Auth = {
       matchEl.style.color = matches ? "#1a7a3c" : "#aaa";
     }
 
-    const btn = document.getElementById("authBtn");
-    if (btn && btn.textContent.includes("Set Password")) {
+    const btn = document.querySelector("#authNewPassword .auth-submit");
+    if (btn) {
       btn.disabled = !(allPass && matches);
     }
   },
@@ -576,11 +578,11 @@ const Auth = {
     const pw2 = document.getElementById("authResetPw2").value || "";
 
     const checks = {
-      reqLen:   pw1.length >= 12,
+      reqLen: pw1.length >= 12,
       reqUpper: /[A-Z]/.test(pw1),
       reqLower: /[a-z]/.test(pw1),
-      reqNum:   /[0-9]/.test(pw1),
-      reqSym:   /[^A-Za-z0-9]/.test(pw1),
+      reqNum: /[0-9]/.test(pw1),
+      reqSym: /[^A-Za-z0-9]/.test(pw1),
     };
 
     Object.entries(checks).forEach(([id, pass]) => {
@@ -599,27 +601,32 @@ const Auth = {
       matchEl.style.color = matches ? "#1a7a3c" : "#aaa";
     }
 
-    const btn = document.getElementById("authBtn");
-    if (btn && btn.textContent.includes("Reset")) {
-      btn.disabled = !(allPass && matches && document.getElementById("authResetCode").value.trim());
+    const btn = document.querySelector("#authConfirmReset .auth-submit");
+    if (btn) {
+      btn.disabled = !(
+        allPass &&
+        matches &&
+        document.getElementById("authResetCode").value.trim()
+      );
     }
   },
 
   _showLogin() {
-    ["authLogin","authForgotPassword","authConfirmReset","authNewPassword"].forEach(id => {
+    AUTH_VIEW_IDS.forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
     });
     document.getElementById("authLogin").style.display = "block";
     _setError("");
-    // Reset the colour on the success message if shown
-    document.getElementById("authError").style.color = "#c0392b";
-    const btn = document.getElementById("authBtn");
-    if (btn) { btn.disabled = false; btn.textContent = "Sign In"; }
+    const btn = _getAuthSubmitButton();
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.idleLabel || "Sign In";
+    }
   },
 
   _showForgotPassword() {
-    ["authLogin","authForgotPassword","authConfirmReset","authNewPassword"].forEach(id => {
+    AUTH_VIEW_IDS.forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
     });
@@ -629,8 +636,13 @@ const Auth = {
   },
 
   async _submitForgotPassword() {
-    const email = (document.getElementById("authForgotEmail").value || "").trim();
-    if (!email) { _setError("Email is required."); return; }
+    const email = (
+      document.getElementById("authForgotEmail").value || ""
+    ).trim();
+    if (!email) {
+      _setError("Email is required.");
+      return;
+    }
 
     _setError("");
     _setBusy(true);
@@ -638,7 +650,7 @@ const Auth = {
       await _forgotPassword(email);
       _pendingEmail = email;
       document.getElementById("authForgotPassword").style.display = "none";
-      document.getElementById("authConfirmReset").style.display   = "block";
+      document.getElementById("authConfirmReset").style.display = "block";
       _setBusy(false);
     } catch (err) {
       _setBusy(false);
@@ -648,12 +660,21 @@ const Auth = {
 
   async _submitConfirmReset() {
     const code = (document.getElementById("authResetCode").value || "").trim();
-    const pw1  = (document.getElementById("authResetPw1").value  || "").trim();
-    const pw2  = (document.getElementById("authResetPw2").value  || "").trim();
+    const pw1 = (document.getElementById("authResetPw1").value || "").trim();
+    const pw2 = (document.getElementById("authResetPw2").value || "").trim();
 
-    if (!code || !pw1 || !pw2) { _setError("All fields are required."); return; }
-    if (pw1 !== pw2)            { _setError("Passwords do not match."); return; }
-    if (pw1.length < 12)        { _setError("Password must be at least 12 characters."); return; }
+    if (!code || !pw1 || !pw2) {
+      _setError("All fields are required.");
+      return;
+    }
+    if (pw1 !== pw2) {
+      _setError("Passwords do not match.");
+      return;
+    }
+    if (pw1.length < 12) {
+      _setError("Password must be at least 12 characters.");
+      return;
+    }
 
     _setError("");
     _setBusy(true);
@@ -661,8 +682,10 @@ const Auth = {
       await _confirmForgotPassword(_pendingEmail, code, pw1);
       // After reset, show login with success hint
       this._showLogin();
-      document.getElementById("authError").style.color = "#1a7a3c";
-      _setError("Password reset successful. Please sign in with your new password.");
+      _setError(
+        "Password reset successful. Please sign in with your new password.",
+        "#1a7a3c",
+      );
     } catch (err) {
       _setBusy(false);
       if (err.code === "CodeMismatchException") {
@@ -670,7 +693,9 @@ const Auth = {
       } else if (err.code === "ExpiredCodeException") {
         _setError("Verification code has expired. Request a new one.");
       } else if (err.code === "InvalidPasswordException") {
-        _setError("Password does not meet requirements: min 12 chars, upper, lower, number, symbol.");
+        _setError(
+          "Password does not meet requirements: min 12 chars, upper, lower, number, symbol.",
+        );
       } else {
         _setError(err.message || "Failed to reset password. Please try again.");
       }
