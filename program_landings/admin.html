@@ -270,6 +270,42 @@
         <div class="feedback" id="createFeedback"></div>
       </div>
 
+      <!-- Change Password -->
+      <div class="card">
+        <h2>Change My Password</h2>
+        <div class="form-group">
+          <label for="cpOldPw">Current Password</label>
+          <div style="position:relative;">
+            <input type="password" id="cpOldPw" autocomplete="current-password" placeholder="Current password" style="padding-right:40px;width:100%;" />
+            <button type="button" onclick="togglePw('cpOldPw', this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:1rem;">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cpNewPw1">New Password</label>
+          <div style="position:relative;">
+            <input type="password" id="cpNewPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="validateCpPw()" style="padding-right:40px;width:100%;" />
+            <button type="button" onclick="togglePw('cpNewPw1', this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:1rem;">👁</button>
+          </div>
+          <div id="cpPwReqs" style="font-size:0.78rem;margin-top:6px;line-height:1.8;">
+            <span id="cpReqLen"   style="color:#aaa;">✗ At least 12 characters</span><br>
+            <span id="cpReqUpper" style="color:#aaa;">✗ Uppercase letter</span><br>
+            <span id="cpReqLower" style="color:#aaa;">✗ Lowercase letter</span><br>
+            <span id="cpReqNum"   style="color:#aaa;">✗ Number</span><br>
+            <span id="cpReqSym"   style="color:#aaa;">✗ Symbol (!@#$%…)</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cpNewPw2">Confirm New Password</label>
+          <div style="position:relative;">
+            <input type="password" id="cpNewPw2" autocomplete="new-password" placeholder="Confirm new password" oninput="validateCpPw()" style="padding-right:40px;width:100%;" />
+            <button type="button" onclick="togglePw('cpNewPw2', this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:1rem;">👁</button>
+          </div>
+          <div id="cpPwMatch" style="font-size:0.78rem;margin-top:6px;color:#aaa;">✗ Passwords match</div>
+        </div>
+        <button class="btn-submit" id="cpBtn" onclick="changeMyPassword()" disabled>Change Password</button>
+        <div class="feedback" id="cpFeedback"></div>
+      </div>
+
       <!-- User List -->
       <div class="card">
         <h2>Dashboard Users</h2>
@@ -288,6 +324,100 @@
         document.getElementById("headerState").textContent = Auth.getState();
         loadUsers();
       });
+
+      // ── Password visibility toggle ────────────────────────────────────────────
+      function togglePw(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const isHidden = input.type === "password";
+        input.type = isHidden ? "text" : "password";
+        btn.textContent = isHidden ? "🙈" : "👁";
+      }
+
+      // ── Change Password validation ────────────────────────────────────────────
+      function validateCpPw() {
+        const pw1 = document.getElementById("cpNewPw1").value || "";
+        const pw2 = document.getElementById("cpNewPw2").value || "";
+
+        const checks = {
+          cpReqLen:   pw1.length >= 12,
+          cpReqUpper: /[A-Z]/.test(pw1),
+          cpReqLower: /[a-z]/.test(pw1),
+          cpReqNum:   /[0-9]/.test(pw1),
+          cpReqSym:   /[^A-Za-z0-9]/.test(pw1),
+        };
+
+        Object.entries(checks).forEach(([id, pass]) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const label = el.textContent.slice(2);
+          el.textContent = (pass ? "✓ " : "✗ ") + label;
+          el.style.color = pass ? "#1a7a3c" : "#aaa";
+        });
+
+        const allPass = Object.values(checks).every(Boolean);
+        const matches = pw1 && pw1 === pw2;
+        const matchEl = document.getElementById("cpPwMatch");
+        if (matchEl) {
+          matchEl.textContent = matches ? "✓ Passwords match" : "✗ Passwords match";
+          matchEl.style.color = matches ? "#1a7a3c" : "#aaa";
+        }
+
+        document.getElementById("cpBtn").disabled = !(allPass && matches);
+      }
+
+      // ── Change Password ───────────────────────────────────────────────────────
+      async function changeMyPassword() {
+        const oldPw    = (document.getElementById("cpOldPw").value  || "").trim();
+        const newPw1   = (document.getElementById("cpNewPw1").value || "").trim();
+        const newPw2   = (document.getElementById("cpNewPw2").value || "").trim();
+        const feedback = document.getElementById("cpFeedback");
+
+        feedback.className = "feedback";
+        feedback.textContent = "";
+
+        if (!oldPw || !newPw1 || !newPw2) {
+          feedback.className = "feedback error";
+          feedback.textContent = "All fields are required.";
+          return;
+        }
+        if (newPw1 !== newPw2) {
+          feedback.className = "feedback error";
+          feedback.textContent = "New passwords do not match.";
+          return;
+        }
+        if (newPw1.length < 12) {
+          feedback.className = "feedback error";
+          feedback.textContent = "Password must be at least 12 characters.";
+          return;
+        }
+
+        const btn = document.getElementById("cpBtn");
+        btn.disabled = true;
+        btn.textContent = "Changing…";
+
+        try {
+          await Auth.changePassword(oldPw, newPw1);
+          feedback.className = "feedback success";
+          feedback.textContent = "Password changed successfully.";
+          document.getElementById("cpOldPw").value  = "";
+          document.getElementById("cpNewPw1").value = "";
+          document.getElementById("cpNewPw2").value = "";
+          validateCpPw();
+        } catch (err) {
+          feedback.className = "feedback error";
+          if (err.code === "NotAuthorizedException") {
+            feedback.textContent = "Current password is incorrect.";
+          } else if (err.code === "InvalidPasswordException") {
+            feedback.textContent = "New password does not meet requirements: min 12 chars, upper, lower, number, symbol.";
+          } else {
+            feedback.textContent = err.message || "Failed to change password.";
+          }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Change Password";
+        }
+      }
 
       // ── Create User ───────────────────────────────────────────────────────────
       async function createUser() {
