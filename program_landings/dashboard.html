@@ -439,9 +439,9 @@
         opacity: 1;
       }
       .btn-logout {
-        background: rgba(255,255,255,0.15);
+        background: rgba(255, 255, 255, 0.15);
         color: #fff;
-        border: 1px solid rgba(255,255,255,0.35);
+        border: 1px solid rgba(255, 255, 255, 0.35);
         padding: 6px 14px;
         border-radius: 6px;
         font-size: 0.8rem;
@@ -450,7 +450,7 @@
         white-space: nowrap;
       }
       .btn-logout:hover {
-        background: rgba(255,255,255,0.25);
+        background: rgba(255, 255, 255, 0.25);
       }
 
       /* ── Responsive ── */
@@ -483,6 +483,7 @@
     </style>
   </head>
   <body>
+    <script src="/program_landings/auth-config.js"></script>
     <script src="/program_landings/auth.js"></script>
 
     <!-- ── Header ─────────────────────────────────────────────────────────────── -->
@@ -646,7 +647,7 @@
 
       function renderActiveFilters() {
         const container = document.getElementById("activeFilters");
-        const clearBtn  = document.getElementById("clearFiltersBtn");
+        const clearBtn = document.getElementById("clearFiltersBtn");
         const activeFilters = getActiveFilters();
         const hasLinked = !!linkedReferralId;
         const hasFilters = activeFilters.length > 0;
@@ -670,7 +671,10 @@
         }
 
         chips += activeFilters
-          .map(f => `<span class="filter-chip"><strong>${escHtml(f.label)}:</strong> ${escHtml(f.value)}</span>`)
+          .map(
+            (f) =>
+              `<span class="filter-chip"><strong>${escHtml(f.label)}:</strong> ${escHtml(f.value)}</span>`,
+          )
           .join("");
 
         container.hidden = false;
@@ -689,7 +693,7 @@
         try {
           await Auth.ensureValidToken();
           const res = await fetch(`${API_BASE}/referrals`, {
-            headers: { "Authorization": `Bearer ${Auth.getToken()}` },
+            headers: { Authorization: `Bearer ${Auth.getToken()}` },
           });
 
           if (res.status === 401 || res.status === 403) {
@@ -929,7 +933,7 @@
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${Auth.getToken()}`,
+              Authorization: `Bearer ${Auth.getToken()}`,
             },
             body: JSON.stringify({ status: newStatus }),
           });

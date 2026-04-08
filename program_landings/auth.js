@@ -2,6 +2,7 @@
  * auth.js — Shared Cognito authentication module for HALT dashboard pages.
  *
  * Usage:
+ *   <script src="auth-config.js"></script>
  *   <script src="auth.js"></script>
  *   <script>
  *     Auth.onReady(() => {
@@ -10,13 +11,19 @@
  *     });
  *   </script>
  *
- * After CloudFormation deployment, update the two constants below with the
- * values from the stack Outputs (UserPoolClientId, and set the region to
- * match your GovCloud deployment region).
+ * Configure Cognito values in auth-config.js so deployments can swap
+ * environment-specific settings without editing this shared bundle.
  */
 
-const COGNITO_REGION = "us-gov-west-1";
-const USER_POOL_CLIENT = "6kht95c982kkdrloqfdhsveaol"; // from CF output: UserPoolClientId
+const AUTH_CONFIG = window.HALT_AUTH_CONFIG || {};
+const COGNITO_REGION = AUTH_CONFIG.cognitoRegion || "";
+const USER_POOL_CLIENT = AUTH_CONFIG.userPoolClient || "";
+
+if (!COGNITO_REGION || !USER_POOL_CLIENT) {
+  throw new Error(
+    "Missing HALT auth config. Load /program_landings/auth-config.js before auth.js.",
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal state
@@ -387,7 +394,7 @@ async function _tryRefresh() {
     const data = await _refreshTokens(refreshToken);
     const result = data.AuthenticationResult;
     // Refresh flow does not return a new refresh token — keep the existing one
-    _saveTokens(result.IdToken, null);
+    _saveTokens(result.IdToken, null, result.AccessToken);
     return true;
   } catch {
     _clearTokens();
@@ -412,6 +419,11 @@ const Auth = {
   /** Returns the current Cognito ID token for use as Authorization: Bearer <token>. */
   getToken() {
     return sessionStorage.getItem(SK_ID_TOKEN) || "";
+  },
+
+  /** Returns the current Cognito access token for admin API calls. */
+  getAccessToken() {
+    return sessionStorage.getItem("halt_access_token") || "";
   },
 
   /** Returns the custom:state claim from the ID token (e.g. "Alaska"). */
@@ -446,6 +458,13 @@ const Auth = {
   /** Ensures the ID token is valid, refreshing silently if needed. */
   async ensureValidToken() {
     const token = this.getToken();
+    if (token && !_isTokenExpired(token)) return true;
+    return _tryRefresh();
+  },
+
+  /** Ensures the access token is valid, refreshing silently if needed. */
+  async ensureValidAccessToken() {
+    const token = this.getAccessToken();
     if (token && !_isTokenExpired(token)) return true;
     return _tryRefresh();
   },

@@ -393,6 +393,7 @@
     </style>
   </head>
   <body>
+    <script src="/program_landings/auth-config.js"></script>
     <script src="/program_landings/auth.js"></script>
 
     <header>
@@ -618,6 +619,7 @@
       Auth.onReady(() => {
         document.getElementById("headerEmail").textContent = Auth.getEmail();
         document.getElementById("headerState").textContent = Auth.getState();
+        initUserListActions();
         loadUsers();
       });
 
@@ -732,17 +734,23 @@
         btn.textContent = "Creating…";
 
         try {
-          await Auth.ensureValidToken();
+          await Auth.ensureValidAccessToken();
           const res = await fetch(`${API_BASE}/admin/users`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${Auth.getToken()}`,
+              Authorization: `Bearer ${Auth.getAccessToken()}`,
             },
             body: JSON.stringify({ email, state, is_admin: isAdmin }),
           });
 
           const data = await res.json();
+          if (res.status === 403) {
+            throw new Error(
+              data.error ||
+                "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
+            );
+          }
           if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
           feedback.className = "feedback success";
@@ -765,12 +773,21 @@
         document.getElementById("userListContainer").innerHTML =
           '<div class="loading"><span class="spinner"></span></div>';
         try {
-          await Auth.ensureValidToken();
+          await Auth.ensureValidAccessToken();
           const res = await fetch(`${API_BASE}/admin/users`, {
-            headers: { Authorization: `Bearer ${Auth.getToken()}` },
+            headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
           });
-          if (res.status === 401 || res.status === 403) {
+          if (res.status === 401) {
             Auth.logout();
+            return;
+          }
+          if (res.status === 403) {
+            const data = await res.json();
+            document.getElementById("userListContainer").innerHTML =
+              `<div class="empty-state">${escHtml(
+                data.error ||
+                  "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
+              )}</div>`;
             return;
           }
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -805,8 +822,8 @@
               : "Pending"
             : "Disabled";
           const actionBtn = u.enabled
-            ? `<button class="btn-sm btn-disable" onclick="toggleUser('${escHtml(u.email)}', false)">Disable</button>`
-            : `<button class="btn-sm btn-enable"  onclick="toggleUser('${escHtml(u.email)}', true)">Enable</button>`;
+            ? `<button class="btn-sm btn-disable" data-email="${escHtml(u.email)}" data-enable="false">Disable</button>`
+            : `<button class="btn-sm btn-enable" data-email="${escHtml(u.email)}" data-enable="true">Enable</button>`;
 
           html += `<tr>
             <td>${escHtml(u.email)}</td>
@@ -821,18 +838,42 @@
         document.getElementById("userListContainer").innerHTML = html;
       }
 
+      function initUserListActions() {
+        const container = document.getElementById("userListContainer");
+        if (!container || container.dataset.actionsBound === "true") return;
+
+        container.dataset.actionsBound = "true";
+        container.addEventListener("click", (event) => {
+          const button = event.target.closest(
+            "button[data-email][data-enable]",
+          );
+          if (!button || !container.contains(button)) return;
+          toggleUser(
+            button.dataset.email || "",
+            button.dataset.enable === "true",
+          );
+        });
+      }
+
       // ── Enable / Disable User ─────────────────────────────────────────────────
       async function toggleUser(email, enable) {
         try {
-          await Auth.ensureValidToken();
+          await Auth.ensureValidAccessToken();
           const res = await fetch(`${API_BASE}/admin/users`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${Auth.getToken()}`,
+              Authorization: `Bearer ${Auth.getAccessToken()}`,
             },
             body: JSON.stringify({ email, enabled: enable }),
           });
+          if (res.status === 403) {
+            const d = await res.json();
+            throw new Error(
+              d.error ||
+                "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
+            );
+          }
           if (!res.ok) {
             const d = await res.json();
             throw new Error(d.error || `HTTP ${res.status}`);

@@ -6,9 +6,9 @@ Routes:
   POST  /program-intake    – Store referral in DynamoDB + send SES notification
   GET   /referrals         – Return referrals for the caller's state (requires Cognito JWT)
   PATCH /referrals/{id}    – Update referral status (requires Cognito JWT)
-  GET   /admin/users       – List all Cognito dashboard users (requires Cognito JWT)
-  POST  /admin/users       – Create a new Cognito dashboard user (requires Cognito JWT)
-  PATCH /admin/users       – Enable or disable a Cognito dashboard user (requires Cognito JWT)
+    GET   /admin/users       – List all Cognito dashboard users (requires admin Cognito JWT)
+    POST  /admin/users       – Create a new Cognito dashboard user (requires admin Cognito JWT)
+    PATCH /admin/users       – Enable or disable a Cognito dashboard user (requires admin Cognito JWT)
 
 Required environment variables:
   TABLE_NAME         – DynamoDB table name
@@ -81,15 +81,70 @@ def _get_table():
     return dynamodb.Table(table_name)
 
 
-def _get_caller_state(event: dict) -> str:
-    """Extract the custom:state claim from the Cognito JWT (already validated by API GW)."""
-    claims = (
+def _get_jwt_claims(event: dict) -> dict:
+    return (
         event.get("requestContext", {})
              .get("authorizer", {})
              .get("jwt", {})
              .get("claims", {})
     )
+
+
+def _get_caller_state(event: dict) -> str:
+    """Extract the custom:state claim from the Cognito JWT (already validated by API GW)."""
+    claims = _get_jwt_claims(event)
     return claims.get("custom:state", "").strip()
+
+
+def _get_caller_username(event: dict) -> str:
+    claims = _get_jwt_claims(event)
+    return (
+        claims.get("cognito:username")
+        or claims.get("username")
+        or claims.get("email")
+        or ""
+    ).strip()
+
+
+def _parse_group_claims(raw_groups) -> list[str]:
+    if isinstance(raw_groups, list):
+        return [str(group).strip() for group in raw_groups if str(group).strip()]
+
+    if isinstance(raw_groups, str):
+        raw_groups = raw_groups.strip()
+        if not raw_groups:
+            return []
+        try:
+            parsed = json.loads(raw_groups)
+        except json.JSONDecodeError:
+            return [group.strip() for group in raw_groups.split(",") if group.strip()]
+        if isinstance(parsed, list):
+            return [str(group).strip() for group in parsed if str(group).strip()]
+        parsed_value = str(parsed).strip()
+        return [parsed_value] if parsed_value else []
+
+    return []
+
+
+def _is_admin_caller(event: dict) -> bool:
+    claims = _get_jwt_claims(event)
+    admin_group_name = _get_admin_group_name()
+    groups = _parse_group_claims(claims.get("cognito:groups") or claims.get("groups") or "")
+
+    if admin_group_name in groups:
+        return True
+
+    username = _get_caller_username(event)
+    if not username:
+        return False
+
+    pool_id = _get_user_pool_id()
+    response = cognito.admin_list_groups_for_user(
+        UserPoolId=pool_id,
+        Username=username,
+        Limit=60,
+    )
+    return any(group.get("GroupName") == admin_group_name for group in response.get("Groups", []))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -455,6 +510,14 @@ def lambda_handler(event, context):
 
     if method == "PATCH" and path.startswith("/referrals/"):
         return _handle_update_referral(event, path)
+
+    if path == "/admin/users" and method in {"GET", "POST", "PATCH"}:
+        try:
+            if not _is_admin_caller(event):
+                return _respond(403, {"error": "Administrator access is required."})
+        except ValueError as exc:
+            logger.error("admin authorization config error: %s", exc)
+            return _respond(500, {"error": "Admin authorization is not configured correctly."})
 
     if method == "GET" and path == "/admin/users":
         return _handle_list_users()

@@ -155,7 +155,7 @@ Resources:
       Schema:
         - Name: state
           AttributeDataType: String
-          Mutable: true
+          Mutable: false
           Required: false
           StringAttributeConstraints:
             MinLength: "2"
@@ -229,6 +229,7 @@ Resources:
                   - cognito-idp:ListUsers
                   - cognito-idp:AdminCreateUser
                   - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminListGroupsForUser
                   - cognito-idp:AdminEnableUser
                   - cognito-idp:AdminDisableUser
                 Resource: !GetAtt DashboardUserPool.Arn
