@@ -332,6 +332,35 @@
         border-bottom: 2px solid #e8ecf0;
         white-space: nowrap;
       }
+      .sort-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: none;
+        background: none;
+        color: inherit;
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+        cursor: pointer;
+      }
+      .sort-button:hover {
+        color: #003366;
+      }
+      .sort-button:focus-visible {
+        outline: 2px solid #003366;
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+      .sort-indicator {
+        color: #8a94a6;
+        font-size: 0.72rem;
+        line-height: 1;
+      }
+      .sort-button.active .sort-indicator {
+        color: #003366;
+      }
       tbody tr {
         border-bottom: 1px solid #f0f4f8;
       }
@@ -894,7 +923,9 @@
     <script>
       const API_BASE =
         "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
+      const USER_SORT_DEFAULT = { column: "email", direction: "asc" };
       let _allUsers = [];
+      let _userSort = { ...USER_SORT_DEFAULT };
 
       Auth.onReady(() => {
         document.getElementById("headerEmail").textContent = Auth.getEmail();
@@ -912,6 +943,7 @@
         document.getElementById("userStatusFilter").value = "all";
         document.getElementById("userFilterSummary").textContent = "";
         _allUsers = [];
+        _userSort = { ...USER_SORT_DEFAULT };
         // Create user form
         document.getElementById("newEmail").value = "";
         document.getElementById("newState").value = "";
@@ -1156,6 +1188,81 @@
         return user.status === "CONFIRMED" ? "active" : "pending";
       }
 
+      function getUserStatusSortValue(user) {
+        const statusValue = getUserStatusFilterValue(user);
+        if (statusValue === "active") return 0;
+        if (statusValue === "pending") return 1;
+        return 2;
+      }
+
+      function compareTextValues(left, right) {
+        return String(left || "").localeCompare(
+          String(right || ""),
+          undefined,
+          {
+            sensitivity: "base",
+          },
+        );
+      }
+
+      function compareDateValues(left, right) {
+        const leftValue = Date.parse(left || "") || 0;
+        const rightValue = Date.parse(right || "") || 0;
+        return leftValue - rightValue;
+      }
+
+      function sortUsers(users) {
+        const direction = _userSort.direction === "desc" ? -1 : 1;
+        return [...users].sort((left, right) => {
+          let result = 0;
+
+          if (_userSort.column === "email") {
+            result = compareTextValues(left.email, right.email);
+          } else if (_userSort.column === "state") {
+            result = compareTextValues(left.state, right.state);
+          } else if (_userSort.column === "status") {
+            result =
+              getUserStatusSortValue(left) - getUserStatusSortValue(right);
+            if (result === 0) {
+              result = compareTextValues(left.status, right.status);
+            }
+          } else if (_userSort.column === "last_modified") {
+            result = compareDateValues(left.last_modified, right.last_modified);
+          }
+
+          if (result === 0) {
+            result = compareTextValues(left.email, right.email);
+          }
+
+          return result * direction;
+        });
+      }
+
+      function getSortIndicator(column) {
+        if (_userSort.column !== column) return "↕";
+        return _userSort.direction === "asc" ? "↑" : "↓";
+      }
+
+      function getSortAriaSort(column) {
+        if (_userSort.column !== column) return "none";
+        return _userSort.direction === "asc" ? "ascending" : "descending";
+      }
+
+      function getSortButtonClass(column) {
+        return _userSort.column === column
+          ? "sort-button active"
+          : "sort-button";
+      }
+
+      function setUserSort(column) {
+        if (_userSort.column === column) {
+          _userSort.direction = _userSort.direction === "asc" ? "desc" : "asc";
+        } else {
+          _userSort = { column, direction: "asc" };
+        }
+        updateUserFilters();
+      }
+
       function updateUserFilters() {
         const query = (document.getElementById("userSearch").value || "")
           .trim()
@@ -1183,8 +1290,9 @@
 
           return haystack.includes(query);
         });
+        const sortedUsers = sortUsers(filteredUsers);
 
-        renderUsers(filteredUsers, _allUsers.length, {
+        renderUsers(sortedUsers, _allUsers.length, {
           query,
           statusFilter,
         });
@@ -1218,7 +1326,7 @@
         }
 
         let html = `<div class="user-table-wrap"><table><thead><tr>
-          <th scope="col">Email</th><th scope="col">State</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Last Modified</th><th scope="col">Actions</th>
+          <th scope="col" aria-sort="${getSortAriaSort("email")}"><button type="button" class="${getSortButtonClass("email")}" onclick="setUserSort('email')">Email<span class="sort-indicator" aria-hidden="true">${getSortIndicator("email")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("state")}"><button type="button" class="${getSortButtonClass("state")}" onclick="setUserSort('state')">State<span class="sort-indicator" aria-hidden="true">${getSortIndicator("state")}</span></button></th><th scope="col">Role</th><th scope="col" aria-sort="${getSortAriaSort("status")}"><button type="button" class="${getSortButtonClass("status")}" onclick="setUserSort('status')">Status<span class="sort-indicator" aria-hidden="true">${getSortIndicator("status")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("last_modified")}"><button type="button" class="${getSortButtonClass("last_modified")}" onclick="setUserSort('last_modified')">Last Modified<span class="sort-indicator" aria-hidden="true">${getSortIndicator("last_modified")}</span></button></th><th scope="col">Actions</th>
         </tr></thead><tbody>`;
 
         users.forEach((u) => {
