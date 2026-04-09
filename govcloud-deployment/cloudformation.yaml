@@ -155,7 +155,7 @@ Resources:
       Schema:
         - Name: state
           AttributeDataType: String
-          Mutable: false
+          Mutable: true
           Required: false
           StringAttributeConstraints:
             MinLength: "2"
@@ -227,11 +227,16 @@ Resources:
               - Effect: Allow
                 Action:
                   - cognito-idp:ListUsers
+                  - cognito-idp:ListUsersInGroup
                   - cognito-idp:AdminCreateUser
                   - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminRemoveUserFromGroup
+                  - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:AdminDeleteUser
                   - cognito-idp:AdminListGroupsForUser
                   - cognito-idp:AdminEnableUser
                   - cognito-idp:AdminDisableUser
+                  - cognito-idp:AdminResetUserPassword
                 Resource: !GetAtt DashboardUserPool.Arn
 
   # ── Lambda Function ───────────────────────────────────────────────────────
@@ -270,7 +275,7 @@ Resources:
       CorsConfiguration:
         AllowOrigins:
           - !Ref AllowedOrigin
-        AllowMethods: [GET, POST, PATCH, OPTIONS]
+        AllowMethods: [GET, POST, PATCH, DELETE, OPTIONS]
         AllowHeaders: [Content-Type, Authorization]
         MaxAge: 300
 
@@ -347,6 +352,24 @@ Resources:
     Properties:
       ApiId: !Ref ProgramIntakeApi
       RouteKey: "PATCH /admin/users"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  ResendInviteRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "POST /admin/users/resend"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  DeleteUserRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "DELETE /admin/users"
       AuthorizationType: JWT
       AuthorizerId: !Ref DashboardAuthorizer
       Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"

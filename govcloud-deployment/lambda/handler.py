@@ -3,12 +3,14 @@ Program Intake Form Handler
 AWS Lambda function for AWS GovCloud (us-gov-west-1 or us-gov-east-1)
 
 Routes:
-  POST  /program-intake    – Store referral in DynamoDB + send SES notification
-  GET   /referrals         – Return referrals for the caller's state (requires Cognito JWT)
-  PATCH /referrals/{id}    – Update referral status (requires Cognito JWT)
-    GET   /admin/users       – List all Cognito dashboard users (requires admin Cognito JWT)
-    POST  /admin/users       – Create a new Cognito dashboard user (requires admin Cognito JWT)
-    PATCH /admin/users       – Enable or disable a Cognito dashboard user (requires admin Cognito JWT)
+  POST  /program-intake       – Store referral in DynamoDB + send SES notification
+  GET   /referrals            – Return referrals for the caller's state (requires Cognito JWT)
+  PATCH /referrals/{id}       – Update referral status (requires Cognito JWT)
+  GET   /admin/users          – List all Cognito dashboard users (requires admin group)
+  POST  /admin/users          – Create a new Cognito dashboard user (requires admin group)
+  PATCH  /admin/users         – Enable/disable or edit state/admin role of a user (requires admin group)
+  DELETE /admin/users         – Permanently delete a Cognito dashboard user (requires admin group)
+  POST  /admin/users/resend   – Resend temporary password to a user (requires admin group)
 
 Required environment variables:
   TABLE_NAME         – DynamoDB table name
@@ -62,7 +64,7 @@ def _cors_headers() -> dict:
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin":  os.environ.get("ALLOWED_ORIGIN", ""),
         "Access-Control-Allow-Headers": "Content-Type,Authorization",
-        "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
+        "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     }
 
 
@@ -379,19 +381,44 @@ def _get_admin_group_name() -> str:
 
 def _handle_list_users() -> dict:
     try:
-        pool_id = _get_user_pool_id()
-        users   = []
-        kwargs  = {"UserPoolId": pool_id, "Limit": 60}
+        pool_id     = _get_user_pool_id()
+        admin_group = _get_admin_group_name()
+
+        # Fetch admin group members — use sub (UUID) for reliable cross-call matching.
+        # Email-based matching fails when the email attribute is absent or differs in
+        # casing between list_users_in_group and list_users.
+        admin_subs: set = set()
+        kwargs = {"UserPoolId": pool_id, "GroupName": admin_group, "Limit": 60}
+        while True:
+            resp = cognito.list_users_in_group(**kwargs)
+            for u in resp.get("Users", []):
+                attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+                sub = attrs.get("sub", "")
+                if sub:
+                    admin_subs.add(sub)
+            next_token = resp.get("NextToken")
+            if not next_token:
+                break
+            kwargs["NextToken"] = next_token
+
+        # Fetch all users and annotate with group membership
+        users  = []
+        kwargs = {"UserPoolId": pool_id, "Limit": 60}
         while True:
             resp = cognito.list_users(**kwargs)
             for u in resp.get("Users", []):
-                attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+                attrs     = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+                email     = attrs.get("email", u["Username"])
+                sub       = attrs.get("sub", "")
+                last_mod  = u.get("UserLastModifiedDate")
                 users.append({
-                    "email":   attrs.get("email", u["Username"]),
-                    "state":   attrs.get("custom:state", ""),
-                    "status":  u.get("UserStatus", ""),
-                    "enabled": u.get("Enabled", True),
-                    "created": u.get("UserCreateDate", "").isoformat() if u.get("UserCreateDate") else "",
+                    "email":         email,
+                    "state":         attrs.get("custom:state", ""),
+                    "status":        u.get("UserStatus", ""),
+                    "enabled":       u.get("Enabled", True),
+                    "created":       u.get("UserCreateDate").isoformat() if u.get("UserCreateDate") else "",
+                    "last_modified": last_mod.isoformat() if last_mod else "",
+                    "is_admin":      bool(sub and sub in admin_subs),
                 })
             pagination_token = resp.get("PaginationToken")
             if not pagination_token:
@@ -399,12 +426,15 @@ def _handle_list_users() -> dict:
             kwargs["PaginationToken"] = pagination_token
 
         users.sort(key=lambda u: u["email"])
-        logger.info("Listed %d users", len(users))
+        logger.info("Listed %d users (%d admins)", len(users), len(admin_subs))
         return _respond(200, {"users": users, "count": len(users)})
 
-    except (ClientError, ValueError) as exc:
+    except ClientError as exc:
         logger.error("list_users failed: %s", exc)
         return _respond(500, {"error": "Failed to list users"})
+    except ValueError as exc:
+        logger.error("list_users config error: %s", exc)
+        return _respond(500, {"error": "Admin group is not configured correctly."})
 
 
 def _handle_create_user(body: dict) -> dict:
@@ -446,6 +476,97 @@ def _handle_create_user(body: dict) -> dict:
         return _respond(500, {"error": "Failed to create user"})
     except ValueError as exc:
         logger.error("create_user config error: %s", exc)
+        return _respond(500, {"error": "Admin group is not configured correctly."})
+
+
+def _handle_delete_user(event: dict) -> dict:
+    params = event.get("queryStringParameters") or {}
+    email  = (params.get("email") or "").strip().lower()
+    if not email:
+        return _respond(400, {"error": "Query parameter 'email' is required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        cognito.admin_delete_user(UserPoolId=pool_id, Username=email)
+        logger.info("Deleted user %s", email)
+        return _respond(200, {"message": f"User {email} deleted."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": f"User {email} not found."})
+        logger.error("admin_delete_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to delete user"})
+
+
+def _handle_resend_invite(body: dict) -> dict:
+    email = (body.get("email") or "").strip().lower()
+    if not email:
+        return _respond(400, {"error": "Field 'email' is required"})
+    try:
+        pool_id = _get_user_pool_id()
+        cognito.admin_reset_user_password(UserPoolId=pool_id, Username=email)
+        logger.info("Resent temporary password for %s", email)
+        return _respond(200, {"message": f"Temporary password resent to {email}."})
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": f"User {email} not found."})
+        logger.error("admin_reset_user_password failed: %s", exc)
+        return _respond(500, {"error": "Failed to resend invite"})
+
+
+def _handle_edit_user(body: dict) -> dict:
+    email    = (body.get("email") or "").strip().lower()
+    state    = body.get("state")    # None means don't change
+    is_admin = body.get("is_admin") # None means don't change
+
+    if not email:
+        return _respond(400, {"error": "Field 'email' is required"})
+    if state is None and is_admin is None:
+        return _respond(400, {"error": "At least one of 'state' or 'is_admin' must be provided"})
+
+    try:
+        pool_id     = _get_user_pool_id()
+        admin_group = _get_admin_group_name()
+
+        if state is not None:
+            state = state.strip()
+            if not state:
+                return _respond(400, {"error": "Field 'state' cannot be empty"})
+            cognito.admin_update_user_attributes(
+                UserPoolId=pool_id,
+                Username=email,
+                UserAttributes=[{"Name": "custom:state", "Value": state}],
+            )
+            logger.info("Updated state for user %s to %s", email, state)
+
+        if is_admin is not None:
+            if is_admin:
+                cognito.admin_add_user_to_group(
+                    UserPoolId=pool_id,
+                    Username=email,
+                    GroupName=admin_group,
+                )
+                logger.info("Added user %s to admin group", email)
+            else:
+                cognito.admin_remove_user_from_group(
+                    UserPoolId=pool_id,
+                    Username=email,
+                    GroupName=admin_group,
+                )
+                logger.info("Removed user %s from admin group", email)
+
+        return _respond(200, {"message": f"User {email} updated."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": f"User {email} not found."})
+        logger.error("edit_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to update user"})
+    except ValueError as exc:
+        logger.error("edit_user config error: %s", exc)
         return _respond(500, {"error": "Admin group is not configured correctly."})
 
 
@@ -511,7 +632,8 @@ def lambda_handler(event, context):
     if method == "PATCH" and path.startswith("/referrals/"):
         return _handle_update_referral(event, path)
 
-    if path == "/admin/users" and method in {"GET", "POST", "PATCH"}:
+    _admin_paths = {"/admin/users", "/admin/users/resend"}
+    if path in _admin_paths and method in {"GET", "POST", "PATCH", "DELETE"}:
         try:
             if not _is_admin_caller(event):
                 return _respond(403, {"error": "Administrator access is required."})
@@ -526,6 +648,14 @@ def lambda_handler(event, context):
         return _handle_create_user(body)
 
     if method == "PATCH" and path == "/admin/users":
-        return _handle_toggle_user(body)
+        if "enabled" in body:
+            return _handle_toggle_user(body)
+        return _handle_edit_user(body)
+
+    if method == "POST" and path == "/admin/users/resend":
+        return _handle_resend_invite(body)
+
+    if method == "DELETE" and path == "/admin/users":
+        return _handle_delete_user(event)
 
     return _respond(404, {"error": "Not found"})

@@ -608,6 +608,23 @@
         loadReferrals();
       });
 
+      document.addEventListener("halt:logout", () => {
+        // Clear all referral data and PII from the DOM before login screen appears.
+        allReferrals = [];
+        filtered = [];
+        document.getElementById("headerEmail").textContent = "";
+        document.getElementById("headerState").textContent = "";
+        document.getElementById("lastRefreshed").textContent = "";
+        document.getElementById("tableContainer").innerHTML = "";
+        document.getElementById("statTotal").textContent = "–";
+        document.getElementById("statNew").textContent = "–";
+        document.getElementById("statContacted").textContent = "–";
+        document.getElementById("statEnrolled").textContent = "–";
+        document.getElementById("statOther").textContent = "–";
+        document.getElementById("filterProgram").value = "";
+        document.getElementById("filterStatus").value = "";
+      });
+
       // Return ?id= from the URL (used when linking directly from a notification email)
       function getLinkedId() {
         return new URLSearchParams(window.location.search).get("id") || null;

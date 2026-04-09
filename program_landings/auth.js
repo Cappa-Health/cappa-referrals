@@ -440,6 +440,8 @@ const Auth = {
 
   /** Signs the user out and shows the login form. */
   logout() {
+    // Let pages clear their displayed data before the login screen appears.
+    document.dispatchEvent(new CustomEvent("halt:logout"));
     _clearTokens();
     _isReady = false;
     _setError("");
