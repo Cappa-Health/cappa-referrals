@@ -616,6 +616,17 @@
         outline-offset: -3px;
       }
 
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
       @media (max-width: 960px) {
         header {
           padding: 14px 18px;
@@ -1022,7 +1033,12 @@
             >
               Select a user from the table to manage their account.
             </div>
-            <div class="selected-user-note" id="selectedUserNote"></div>
+            <div
+              class="selected-user-note"
+              id="selectedUserNote"
+              role="status"
+              aria-live="polite"
+            ></div>
             <div class="selected-user-actions">
               <button
                 class="btn-sm"
@@ -1640,7 +1656,7 @@
           return;
         }
 
-        let html = `<div class="user-table-wrap"><table><thead><tr>
+        let html = `<div class="user-table-wrap"><table><caption class="sr-only" id="userTableHelp">Dashboard users. Use the selection control in the email column to choose a user for the actions above. Press space on a selected control to clear the selection.</caption><thead><tr>
           <th scope="col" aria-sort="${getSortAriaSort("email")}"><button type="button" class="${getSortButtonClass("email")}" onclick="setUserSort('email')">Email<span class="sort-indicator" aria-hidden="true">${getSortIndicator("email")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("state")}"><button type="button" class="${getSortButtonClass("state")}" onclick="setUserSort('state')">State<span class="sort-indicator" aria-hidden="true">${getSortIndicator("state")}</span></button></th><th scope="col">Role</th><th scope="col" aria-sort="${getSortAriaSort("status")}"><button type="button" class="${getSortButtonClass("status")}" onclick="setUserSort('status')">Status<span class="sort-indicator" aria-hidden="true">${getSortIndicator("status")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("last_modified")}"><button type="button" class="${getSortButtonClass("last_modified")}" onclick="setUserSort('last_modified')">Last Modified<span class="sort-indicator" aria-hidden="true">${getSortIndicator("last_modified")}</span></button></th>
         </tr></thead><tbody>`;
 
@@ -1660,7 +1676,7 @@
           const lastMod = formatDate(u.last_modified);
 
           html += `<tr${u.email === _selectedUserEmail ? (u.is_admin ? ' class="row-admin row-selected"' : ' class="row-selected"') : u.is_admin ? ' class="row-admin"' : ""}>
-            <td><label class="user-select-cell"><input type="radio" name="selectedUser" value="${escHtml(u.email)}"${u.email === _selectedUserEmail ? " checked" : ""} /><span>${escHtml(u.email)}</span></label></td>
+            <td><label class="user-select-cell"><input type="radio" name="selectedUser" value="${escHtml(u.email)}" aria-describedby="userTableHelp" aria-label="Select ${escHtml(u.email)}"${u.email === _selectedUserEmail ? " checked" : ""} /><span>${escHtml(u.email)}</span></label></td>
             <td>${escHtml(u.state || "—")}</td>
             <td>${roleBadge}</td>
             <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
@@ -1694,6 +1710,15 @@
           const radio = event.target.closest('input[name="selectedUser"]');
           if (!radio || !container.contains(radio)) return;
           setSelectedUser(radio.value || "");
+        });
+
+        container.addEventListener("keydown", (event) => {
+          const radio = event.target.closest('input[name="selectedUser"]');
+          if (!radio || !container.contains(radio)) return;
+          if ((event.key === " " || event.key === "Enter") && radio.checked) {
+            event.preventDefault();
+            setSelectedUser("");
+          }
         });
       }
 
