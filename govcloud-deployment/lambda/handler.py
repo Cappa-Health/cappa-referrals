@@ -6,7 +6,7 @@ Routes:
   POST  /program-intake       – Store referral in DynamoDB + send SES notification
   GET   /referrals            – Return referrals for the caller's state (requires Cognito JWT)
   PATCH /referrals/{id}       – Update referral status (requires Cognito JWT)
-  GET   /admin/users          – List all Cognito dashboard users (requires admin group)
+    GET   /admin/users          – List Cognito dashboard users (supports pagination token; requires admin group)
   POST  /admin/users          – Create a new Cognito dashboard user (requires admin group)
   PATCH  /admin/users         – Enable/disable or edit state/admin role of a user (requires admin group)
   DELETE /admin/users         – Permanently delete a Cognito dashboard user (requires admin group)
@@ -380,10 +380,12 @@ def _get_admin_group_name() -> str:
     return group_name
 
 
-def _handle_list_users() -> dict:
+def _handle_list_users(event: dict) -> dict:
     try:
         pool_id     = _get_user_pool_id()
         admin_group = _get_admin_group_name()
+        params = event.get("queryStringParameters") or {}
+        pagination_token = (params.get("pagination_token") or "").strip()
 
         # Fetch admin group members — use sub (UUID) for reliable cross-call matching.
         # Email-based matching fails when the email attribute is absent or differs in
@@ -402,33 +404,45 @@ def _handle_list_users() -> dict:
                 break
             kwargs["NextToken"] = next_token
 
-        # Fetch all users and annotate with group membership
+        # Fetch one page of users and annotate with group membership.
         users  = []
         kwargs = {"UserPoolId": pool_id, "Limit": 60}
-        while True:
-            resp = cognito.list_users(**kwargs)
-            for u in resp.get("Users", []):
-                attrs     = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
-                email     = attrs.get("email", u["Username"])
-                sub       = attrs.get("sub", "")
-                last_mod  = u.get("UserLastModifiedDate")
-                users.append({
-                    "email":         email,
-                    "state":         attrs.get("custom:state", ""),
-                    "status":        u.get("UserStatus", ""),
-                    "enabled":       u.get("Enabled", True),
-                    "created":       u.get("UserCreateDate").isoformat() if u.get("UserCreateDate") else "",
-                    "last_modified": last_mod.isoformat() if last_mod else "",
-                    "is_admin":      bool(sub and sub in admin_subs),
-                })
-            pagination_token = resp.get("PaginationToken")
-            if not pagination_token:
-                break
+        if pagination_token:
             kwargs["PaginationToken"] = pagination_token
 
+        resp = cognito.list_users(**kwargs)
+        for u in resp.get("Users", []):
+            attrs     = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+            email     = attrs.get("email", u["Username"])
+            sub       = attrs.get("sub", "")
+            last_mod  = u.get("UserLastModifiedDate")
+            users.append({
+                "email":         email,
+                "state":         attrs.get("custom:state", ""),
+                "status":        u.get("UserStatus", ""),
+                "enabled":       u.get("Enabled", True),
+                "created":       u.get("UserCreateDate").isoformat() if u.get("UserCreateDate") else "",
+                "last_modified": last_mod.isoformat() if last_mod else "",
+                "is_admin":      bool(sub and sub in admin_subs),
+            })
+
+        next_pagination_token = resp.get("PaginationToken", "")
+
         users.sort(key=lambda u: u["email"])
-        logger.info("Listed %d users (%d admins)", len(users), len(admin_subs))
-        return _respond(200, {"users": users, "count": len(users)})
+        logger.info(
+            "Listed %d users (%d admins) next_token=%s",
+            len(users),
+            len(admin_subs),
+            bool(next_pagination_token),
+        )
+        return _respond(
+            200,
+            {
+                "users": users,
+                "count": len(users),
+                "next_pagination_token": next_pagination_token,
+            },
+        )
 
     except ClientError as exc:
         logger.error("list_users failed: %s", exc)
@@ -686,7 +700,7 @@ def lambda_handler(event, context):
             return _respond(500, {"error": "Admin authorization is not configured correctly."})
 
     if method == "GET" and path == "/admin/users":
-        return _handle_list_users()
+        return _handle_list_users(event)
 
     if method == "POST" and path == "/admin/users":
         return _handle_create_user(body)

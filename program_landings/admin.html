@@ -287,6 +287,34 @@
       .user-table-wrap {
         overflow-x: auto;
       }
+      .user-filters {
+        margin-bottom: 14px;
+        padding: 12px;
+        background: #f6f8fa;
+        border: 1px solid #e8ecf0;
+        border-radius: 8px;
+      }
+      .user-filter-row {
+        align-items: flex-end;
+        gap: 10px;
+      }
+      .user-filter-search {
+        flex: 2;
+        min-width: 240px;
+      }
+      .user-filter-status {
+        max-width: 180px;
+        min-width: 160px;
+      }
+      .user-filter-actions {
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 12px;
+      }
+      .user-filter-summary {
+        font-size: 0.78rem;
+        color: #595959;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -741,6 +769,49 @@
           <span class="card-chevron open" aria-hidden="true">▼</span>
         </div>
         <div class="card-body open" id="card-body-users">
+          <div class="user-filters" aria-label="Filter dashboard users">
+            <div class="form-row user-filter-row">
+              <div
+                class="form-group user-filter-search"
+                style="margin-bottom: 0"
+              >
+                <label for="userSearch">Search users</label>
+                <input
+                  type="search"
+                  id="userSearch"
+                  placeholder="Search by email, state, role, or status"
+                  oninput="updateUserFilters()"
+                />
+              </div>
+              <div
+                class="form-group user-filter-status"
+                style="margin-bottom: 0"
+              >
+                <label for="userStatusFilter">Status</label>
+                <select id="userStatusFilter" onchange="updateUserFilters()">
+                  <option value="all">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="disabled">Disabled</option>
+                </select>
+              </div>
+              <div class="user-filter-actions">
+                <button
+                  class="btn-sm"
+                  type="button"
+                  onclick="resetUserFilters()"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+            <div
+              class="user-filter-summary"
+              id="userFilterSummary"
+              role="status"
+              aria-live="polite"
+            ></div>
+          </div>
           <div id="userListContainer">
             <div class="loading" role="status" aria-label="Loading users">
               <span class="spinner" aria-hidden="true"></span
@@ -823,6 +894,7 @@
     <script>
       const API_BASE =
         "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
+      let _allUsers = [];
 
       Auth.onReady(() => {
         document.getElementById("headerEmail").textContent = Auth.getEmail();
@@ -836,6 +908,10 @@
         document.getElementById("headerEmail").textContent = "";
         document.getElementById("headerState").textContent = "";
         document.getElementById("userListContainer").innerHTML = "";
+        document.getElementById("userSearch").value = "";
+        document.getElementById("userStatusFilter").value = "all";
+        document.getElementById("userFilterSummary").textContent = "";
+        _allUsers = [];
         // Create user form
         document.getElementById("newEmail").value = "";
         document.getElementById("newState").value = "";
@@ -1026,39 +1102,118 @@
 
       // ── Load Users ────────────────────────────────────────────────────────────
       async function loadUsers() {
+        _allUsers = [];
+        document.getElementById("userFilterSummary").textContent =
+          "Loading users…";
         document.getElementById("userListContainer").innerHTML =
           '<div class="loading" role="status" aria-label="Loading users"><span class="spinner" aria-hidden="true"></span><span class="sr-only">Loading users…</span></div>';
         try {
           await Auth.ensureValidAccessToken();
-          const res = await fetch(`${API_BASE}/admin/users`, {
-            headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
-          });
-          if (res.status === 401) {
-            Auth.logout();
-            return;
-          }
-          if (res.status === 403) {
+          let nextPaginationToken = "";
+          do {
+            const query = nextPaginationToken
+              ? `?pagination_token=${encodeURIComponent(nextPaginationToken)}`
+              : "";
+            const res = await fetch(`${API_BASE}/admin/users${query}`, {
+              headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
+            });
+            if (res.status === 401) {
+              Auth.logout();
+              return;
+            }
+            if (res.status === 403) {
+              const data = await res.json();
+              document.getElementById("userFilterSummary").textContent = "";
+              document.getElementById("userListContainer").innerHTML =
+                `<div class="empty-state">${escHtml(
+                  data.error ||
+                    "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
+                )}</div>`;
+              return;
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
             const data = await res.json();
-            document.getElementById("userListContainer").innerHTML =
-              `<div class="empty-state">${escHtml(
-                data.error ||
-                  "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
-              )}</div>`;
-            return;
-          }
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          renderUsers(data.users || []);
+            _allUsers.push(...(data.users || []));
+            nextPaginationToken = data.next_pagination_token || "";
+          } while (nextPaginationToken);
+
+          updateUserFilters();
         } catch (err) {
+          document.getElementById("userFilterSummary").textContent = "";
           document.getElementById("userListContainer").innerHTML =
             `<div class="empty-state">Failed to load users: ${escHtml(err.message)}</div>`;
         }
       }
 
-      function renderUsers(users) {
+      function getUserStatusLabel(user) {
+        if (!user.enabled) return "Disabled";
+        return user.status === "CONFIRMED" ? "Active" : "Pending";
+      }
+
+      function getUserStatusFilterValue(user) {
+        if (!user.enabled) return "disabled";
+        return user.status === "CONFIRMED" ? "active" : "pending";
+      }
+
+      function updateUserFilters() {
+        const query = (document.getElementById("userSearch").value || "")
+          .trim()
+          .toLowerCase();
+        const statusFilter = document.getElementById("userStatusFilter").value;
+        const filteredUsers = _allUsers.filter((user) => {
+          if (
+            statusFilter !== "all" &&
+            getUserStatusFilterValue(user) !== statusFilter
+          ) {
+            return false;
+          }
+
+          if (!query) return true;
+
+          const haystack = [
+            user.email,
+            user.state || "",
+            getUserStatusLabel(user),
+            user.status || "",
+            user.is_admin ? "admin" : "user",
+          ]
+            .join(" ")
+            .toLowerCase();
+
+          return haystack.includes(query);
+        });
+
+        renderUsers(filteredUsers, _allUsers.length, {
+          query,
+          statusFilter,
+        });
+      }
+
+      function resetUserFilters() {
+        document.getElementById("userSearch").value = "";
+        document.getElementById("userStatusFilter").value = "all";
+        updateUserFilters();
+      }
+
+      function renderUsers(users, totalUsers = users.length, filters = {}) {
+        const hasActiveFilters = Boolean(
+          filters.query ||
+          "" ||
+          (filters.statusFilter && filters.statusFilter !== "all"),
+        );
+        const summary = document.getElementById("userFilterSummary");
+        if (summary) {
+          summary.textContent = hasActiveFilters
+            ? `Showing ${users.length} of ${totalUsers} users`
+            : `${totalUsers} users`;
+        }
+
         if (!users.length) {
           document.getElementById("userListContainer").innerHTML =
-            '<div class="empty-state">No users found.</div>';
+            hasActiveFilters
+              ? '<div class="empty-state">No users match the current filters.</div>'
+              : '<div class="empty-state">No users found.</div>';
           return;
         }
 
@@ -1072,11 +1227,7 @@
               ? "badge-enabled"
               : "badge-unconfirmed"
             : "badge-disabled";
-          const statusLabel = u.enabled
-            ? u.status === "CONFIRMED"
-              ? "Active"
-              : "Pending"
-            : "Disabled";
+          const statusLabel = getUserStatusLabel(u);
 
           const roleBadge =
             u.is_admin === true
