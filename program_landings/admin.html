@@ -315,6 +315,61 @@
         font-size: 0.78rem;
         color: #595959;
       }
+      .selected-user-panel {
+        margin-bottom: 14px;
+        padding: 14px;
+        background: #f8fbff;
+        border: 1px solid #d6e4f5;
+        border-radius: 8px;
+      }
+      .selected-user-heading {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #003366;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+      }
+      .selected-user-summary {
+        font-size: 0.88rem;
+        color: #1a2a3a;
+        margin-bottom: 10px;
+      }
+      .selected-user-summary.empty {
+        color: #6b7280;
+      }
+      .selected-user-note {
+        min-height: 18px;
+        margin-bottom: 10px;
+        font-size: 0.8rem;
+        color: #7a5200;
+      }
+      .selected-user-note:empty {
+        display: none;
+      }
+      .selected-user-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .selected-user-actions .btn-sm:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .user-select-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .user-select-cell input[type="radio"] {
+        flex: 0 0 auto;
+      }
+      .row-selected {
+        background: #e8f1ff;
+      }
+      .row-selected:hover {
+        background: #dbe9ff;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -370,6 +425,12 @@
       tbody td {
         padding: 9px 14px;
         vertical-align: middle;
+      }
+      .user-cell-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
       }
       .badge-enabled {
         background: #e2f5ea;
@@ -544,12 +605,111 @@
         outline-offset: -3px;
       }
 
+      @media (max-width: 960px) {
+        header {
+          padding: 14px 18px;
+          flex-wrap: wrap;
+          gap: 14px;
+          align-items: flex-start;
+        }
+        .user-info {
+          width: 100%;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .user-info .user-detail {
+          text-align: left;
+        }
+        main {
+          padding: 16px 18px;
+        }
+        .top-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
       @media (max-width: 700px) {
         .top-row {
           grid-template-columns: 1fr;
         }
         main {
           padding: 12px;
+        }
+        .card-header {
+          padding: 12px 14px;
+          gap: 12px;
+        }
+        .card-header h2 {
+          font-size: 0.85rem;
+        }
+        .card-body {
+          padding: 14px;
+        }
+        .form-group {
+          min-width: 100%;
+        }
+        .checkbox-group {
+          padding-top: 6px;
+        }
+        .pw-reqs {
+          grid-template-columns: 1fr;
+        }
+        .user-filter-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .user-filter-search,
+        .user-filter-status {
+          min-width: 100%;
+          max-width: none;
+        }
+        .user-filter-actions {
+          width: 100%;
+          padding-bottom: 0;
+        }
+        .user-filter-actions .btn-sm,
+        .btn-submit {
+          width: 100%;
+          justify-content: center;
+        }
+        .user-table-wrap {
+          margin: 0 -6px;
+        }
+        table {
+          min-width: 720px;
+        }
+        tbody td,
+        thead th {
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+        .modal-box {
+          width: calc(100% - 24px);
+          padding: 18px;
+        }
+        .modal-actions {
+          flex-direction: column-reverse;
+          align-items: stretch;
+        }
+        .btn-modal-cancel,
+        .btn-modal-confirm {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header h1 {
+          font-size: 1rem;
+        }
+        header .meta {
+          font-size: 0.7rem;
+        }
+        .user-info {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .btn-logout {
+          width: 100%;
         }
       }
     </style>
@@ -841,6 +1001,68 @@
               aria-live="polite"
             ></div>
           </div>
+          <div class="selected-user-panel" aria-label="Selected user actions">
+            <div class="selected-user-heading">Selected User</div>
+            <div
+              class="selected-user-summary empty"
+              id="selectedUserSummary"
+              role="status"
+              aria-live="polite"
+            >
+              Select a user from the table to manage their account.
+            </div>
+            <div class="selected-user-note" id="selectedUserNote"></div>
+            <div class="selected-user-actions">
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedEditBtn"
+                onclick="handleSelectedUserEdit()"
+                disabled
+              >
+                Edit
+              </button>
+              <button
+                class="btn-sm btn-disable"
+                type="button"
+                id="selectedToggleBtn"
+                onclick="handleSelectedUserToggle()"
+                disabled
+              >
+                Disable
+              </button>
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedResendBtn"
+                style="background: #fff3cd; color: #7a5200"
+                onclick="handleSelectedUserResendInvite()"
+                disabled
+              >
+                Resend Invite
+              </button>
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedResetPasswordBtn"
+                style="background: #e8f7ee; color: #166534"
+                onclick="handleSelectedUserResetPassword()"
+                disabled
+              >
+                Reset Password
+              </button>
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedDeleteBtn"
+                style="background: #fde8e8; color: #7a1515"
+                onclick="handleSelectedUserDelete()"
+                disabled
+              >
+                Delete
+              </button>
+            </div>
+          </div>
           <div id="userListContainer">
             <div class="loading" role="status" aria-label="Loading users">
               <span class="spinner" aria-hidden="true"></span
@@ -926,6 +1148,7 @@
       const USER_SORT_DEFAULT = { column: "email", direction: "asc" };
       let _allUsers = [];
       let _userSort = { ...USER_SORT_DEFAULT };
+      let _selectedUserEmail = "";
 
       Auth.onReady(() => {
         document.getElementById("headerEmail").textContent = Auth.getEmail();
@@ -944,6 +1167,8 @@
         document.getElementById("userFilterSummary").textContent = "";
         _allUsers = [];
         _userSort = { ...USER_SORT_DEFAULT };
+        _selectedUserEmail = "";
+        updateSelectedUserPanel();
         // Create user form
         document.getElementById("newEmail").value = "";
         document.getElementById("newState").value = "";
@@ -1170,6 +1395,13 @@
             nextPaginationToken = data.next_pagination_token || "";
           } while (nextPaginationToken);
 
+          if (
+            _selectedUserEmail &&
+            !_allUsers.some((user) => user.email === _selectedUserEmail)
+          ) {
+            _selectedUserEmail = "";
+          }
+
           updateUserFilters();
         } catch (err) {
           document.getElementById("userFilterSummary").textContent = "";
@@ -1181,6 +1413,67 @@
       function getUserStatusLabel(user) {
         if (!user.enabled) return "Disabled";
         return user.status === "CONFIRMED" ? "Active" : "Pending";
+      }
+
+      function getUserByEmail(email = _selectedUserEmail) {
+        return _allUsers.find((user) => user.email === email) || null;
+      }
+
+      function setSelectedUser(email) {
+        _selectedUserEmail = email || "";
+        updateUserFilters();
+      }
+
+      function updateSelectedUserPanel() {
+        const user = getUserByEmail();
+        const summary = document.getElementById("selectedUserSummary");
+        const note = document.getElementById("selectedUserNote");
+        const editBtn = document.getElementById("selectedEditBtn");
+        const toggleBtn = document.getElementById("selectedToggleBtn");
+        const resendBtn = document.getElementById("selectedResendBtn");
+        const resetBtn = document.getElementById("selectedResetPasswordBtn");
+        const deleteBtn = document.getElementById("selectedDeleteBtn");
+
+        if (!user) {
+          summary.className = "selected-user-summary empty";
+          summary.textContent =
+            "Select a user from the table to manage their account.";
+          note.textContent = "";
+          editBtn.disabled = true;
+          toggleBtn.disabled = true;
+          toggleBtn.textContent = "Disable";
+          toggleBtn.className = "btn-sm btn-disable";
+          resendBtn.disabled = true;
+          resetBtn.disabled = true;
+          deleteBtn.disabled = true;
+          deleteBtn.title = "";
+          return;
+        }
+
+        const statusLabel = getUserStatusLabel(user);
+        const isPending =
+          user.enabled && user.status === "FORCE_CHANGE_PASSWORD";
+        const canResetPassword = user.enabled && user.status === "CONFIRMED";
+        const isSelf =
+          user.email.toLowerCase() === (Auth.getEmail() || "").toLowerCase();
+
+        summary.className = "selected-user-summary";
+        summary.textContent = `${user.email} • ${user.state || "No state"} • ${statusLabel}${user.is_admin ? " • Admin" : ""}`;
+        editBtn.disabled = false;
+        toggleBtn.disabled = false;
+        toggleBtn.textContent = user.enabled ? "Disable" : "Enable";
+        toggleBtn.className = user.enabled
+          ? "btn-sm btn-disable"
+          : "btn-sm btn-enable";
+        resendBtn.disabled = !isPending;
+        resetBtn.disabled = !canResetPassword;
+        deleteBtn.disabled = isSelf;
+        note.textContent = isSelf
+          ? "You cannot delete your own account while signed in."
+          : "";
+        deleteBtn.title = isSelf
+          ? "You cannot delete your own account while signed in."
+          : "";
       }
 
       function getUserStatusFilterValue(user) {
@@ -1290,7 +1583,16 @@
 
           return haystack.includes(query);
         });
+
+        if (
+          _selectedUserEmail &&
+          !filteredUsers.some((user) => user.email === _selectedUserEmail)
+        ) {
+          _selectedUserEmail = "";
+        }
+
         const sortedUsers = sortUsers(filteredUsers);
+        updateSelectedUserPanel();
 
         renderUsers(sortedUsers, _allUsers.length, {
           query,
@@ -1326,7 +1628,7 @@
         }
 
         let html = `<div class="user-table-wrap"><table><thead><tr>
-          <th scope="col" aria-sort="${getSortAriaSort("email")}"><button type="button" class="${getSortButtonClass("email")}" onclick="setUserSort('email')">Email<span class="sort-indicator" aria-hidden="true">${getSortIndicator("email")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("state")}"><button type="button" class="${getSortButtonClass("state")}" onclick="setUserSort('state')">State<span class="sort-indicator" aria-hidden="true">${getSortIndicator("state")}</span></button></th><th scope="col">Role</th><th scope="col" aria-sort="${getSortAriaSort("status")}"><button type="button" class="${getSortButtonClass("status")}" onclick="setUserSort('status')">Status<span class="sort-indicator" aria-hidden="true">${getSortIndicator("status")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("last_modified")}"><button type="button" class="${getSortButtonClass("last_modified")}" onclick="setUserSort('last_modified')">Last Modified<span class="sort-indicator" aria-hidden="true">${getSortIndicator("last_modified")}</span></button></th><th scope="col">Actions</th>
+          <th scope="col" aria-sort="${getSortAriaSort("email")}"><button type="button" class="${getSortButtonClass("email")}" onclick="setUserSort('email')">Email<span class="sort-indicator" aria-hidden="true">${getSortIndicator("email")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("state")}"><button type="button" class="${getSortButtonClass("state")}" onclick="setUserSort('state')">State<span class="sort-indicator" aria-hidden="true">${getSortIndicator("state")}</span></button></th><th scope="col">Role</th><th scope="col" aria-sort="${getSortAriaSort("status")}"><button type="button" class="${getSortButtonClass("status")}" onclick="setUserSort('status')">Status<span class="sort-indicator" aria-hidden="true">${getSortIndicator("status")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("last_modified")}"><button type="button" class="${getSortButtonClass("last_modified")}" onclick="setUserSort('last_modified')">Last Modified<span class="sort-indicator" aria-hidden="true">${getSortIndicator("last_modified")}</span></button></th>
         </tr></thead><tbody>`;
 
         users.forEach((u) => {
@@ -1344,40 +1646,12 @@
 
           const lastMod = formatDate(u.last_modified);
 
-          const isPending = u.enabled && u.status === "FORCE_CHANGE_PASSWORD";
-          const canResetPassword = u.enabled && u.status === "CONFIRMED";
-          const resendBtn = isPending
-            ? `<button class="btn-sm" style="background:#fff3cd;color:#7a5200;margin-left:4px"
-                 data-email="${escHtml(u.email)}" data-action="resend">Resend Invite</button>`
-            : "";
-          const resetPasswordBtn = canResetPassword
-            ? `<button class="btn-sm" style="background:#e8f7ee;color:#166534;margin-left:4px"
-              data-email="${escHtml(u.email)}" data-action="reset-password">Reset Password</button>`
-            : "";
-
-          const toggleBtn = u.enabled
-            ? `<button class="btn-sm btn-disable" data-email="${escHtml(u.email)}" data-enable="false">Disable</button>`
-            : `<button class="btn-sm btn-enable"  data-email="${escHtml(u.email)}" data-enable="true">Enable</button>`;
-
-          const editBtn = `<button class="btn-sm" style="background:#e8eeff;color:#1a3a99;margin-right:4px"
-            data-action="edit" data-email="${escHtml(u.email)}"
-            data-state="${escHtml(u.state || "")}"
-            data-is-admin="${u.is_admin}">Edit</button>`;
-
-          const isSelf =
-            u.email.toLowerCase() === Auth.getEmail().toLowerCase();
-          const deleteBtn = isSelf
-            ? ""
-            : `<button class="btn-sm" style="background:#fde8e8;color:#7a1515;margin-left:4px"
-            data-action="delete" data-email="${escHtml(u.email)}">Delete</button>`;
-
-          html += `<tr${u.is_admin ? ' class="row-admin"' : ""}>
-            <td>${escHtml(u.email)}</td>
+          html += `<tr${u.email === _selectedUserEmail ? (u.is_admin ? ' class="row-admin row-selected"' : ' class="row-selected"') : u.is_admin ? ' class="row-admin"' : ""}>
+            <td><label class="user-select-cell"><input type="radio" name="selectedUser" value="${escHtml(u.email)}"${u.email === _selectedUserEmail ? " checked" : ""} /><span>${escHtml(u.email)}</span></label></td>
             <td>${escHtml(u.state || "—")}</td>
             <td>${roleBadge}</td>
             <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
             <td>${lastMod}</td>
-            <td style="white-space:nowrap">${editBtn}${toggleBtn}${resendBtn}${resetPasswordBtn}${deleteBtn}</td>
           </tr>`;
         });
 
@@ -1391,41 +1665,73 @@
 
         container.dataset.actionsBound = "true";
         container.addEventListener("click", (event) => {
-          const button = event.target.closest("button[data-email]");
-          if (!button || !container.contains(button)) return;
-          const email = button.dataset.email || "";
+          const selectLabel = event.target.closest("label.user-select-cell");
+          if (!selectLabel || !container.contains(selectLabel)) return;
 
-          if (button.dataset.action === "edit") {
-            openEditModal(
-              email,
-              button.dataset.state,
-              button.dataset.isAdmin === "true",
-            );
-          } else if (button.dataset.action === "delete") {
-            confirmAction(
-              `Permanently delete the account for ${email}? This cannot be undone.`,
-              "Delete User",
-              () => _doDeleteUser(email),
-            );
-          } else if (button.dataset.action === "resend") {
-            resendInvite(email);
-          } else if (button.dataset.action === "reset-password") {
-            confirmAction(
-              `Send a password reset email to ${email}? They will be prompted to choose a new password.`,
-              "Reset Password",
-              () => resetPassword(email),
-            );
-          } else if (button.dataset.enable !== undefined) {
-            const enable = button.dataset.enable === "true";
-            confirmAction(
-              enable
-                ? `Enable account for ${email}? They will be able to log in again immediately.`
-                : `Disable account for ${email}? They will not be able to log in until re-enabled.`,
-              enable ? "Enable User" : "Disable User",
-              () => _doToggleUser(email, enable),
-            );
+          const radio = selectLabel.querySelector('input[name="selectedUser"]');
+          if (!radio) return;
+
+          if (radio.checked && radio.value === _selectedUserEmail) {
+            event.preventDefault();
+            setSelectedUser("");
           }
         });
+
+        container.addEventListener("change", (event) => {
+          const radio = event.target.closest('input[name="selectedUser"]');
+          if (!radio || !container.contains(radio)) return;
+          setSelectedUser(radio.value || "");
+        });
+      }
+
+      function handleSelectedUserEdit() {
+        const user = getUserByEmail();
+        if (!user) return;
+        openEditModal(user.email, user.state || "", user.is_admin === true);
+      }
+
+      function handleSelectedUserDelete() {
+        const user = getUserByEmail();
+        if (!user) return;
+        confirmAction(
+          `Permanently delete the account for ${user.email}? This cannot be undone.`,
+          "Delete User",
+          () => _doDeleteUser(user.email),
+        );
+      }
+
+      function handleSelectedUserResendInvite() {
+        const user = getUserByEmail();
+        if (
+          !user ||
+          !(user.enabled && user.status === "FORCE_CHANGE_PASSWORD")
+        ) {
+          return;
+        }
+        resendInvite(user.email);
+      }
+
+      function handleSelectedUserResetPassword() {
+        const user = getUserByEmail();
+        if (!user || !(user.enabled && user.status === "CONFIRMED")) return;
+        confirmAction(
+          `Send a password reset email to ${user.email}? They will be prompted to choose a new password.`,
+          "Reset Password",
+          () => resetPassword(user.email),
+        );
+      }
+
+      function handleSelectedUserToggle() {
+        const user = getUserByEmail();
+        if (!user) return;
+        const enable = !user.enabled;
+        confirmAction(
+          enable
+            ? `Enable account for ${user.email}? They will be able to log in again immediately.`
+            : `Disable account for ${user.email}? They will not be able to log in until re-enabled.`,
+          enable ? "Enable User" : "Disable User",
+          () => _doToggleUser(user.email, enable),
+        );
       }
 
       // ── Focus trap helpers ────────────────────────────────────────────────────
