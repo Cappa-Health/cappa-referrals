@@ -339,13 +339,24 @@
         color: #6b7280;
       }
       .selected-user-note {
-        min-height: 18px;
-        margin-bottom: 10px;
+        max-height: 0;
+        margin-bottom: 0;
+        overflow: hidden;
         font-size: 0.8rem;
         color: #7a5200;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition:
+          max-height 180ms ease,
+          margin-bottom 180ms ease,
+          opacity 180ms ease,
+          transform 180ms ease;
       }
-      .selected-user-note:empty {
-        display: none;
+      .selected-user-note.visible {
+        max-height: 24px;
+        margin-bottom: 10px;
+        opacity: 1;
+        transform: translateY(0);
       }
       .selected-user-actions {
         display: flex;
@@ -1439,6 +1450,7 @@
           summary.textContent =
             "Select a user from the table to manage their account.";
           note.textContent = "";
+          note.classList.remove("visible");
           editBtn.disabled = true;
           toggleBtn.disabled = true;
           toggleBtn.textContent = "Disable";
@@ -1471,6 +1483,7 @@
         note.textContent = isSelf
           ? "You cannot delete your own account while signed in."
           : "";
+        note.classList.toggle("visible", isSelf);
         deleteBtn.title = isSelf
           ? "You cannot delete your own account while signed in."
           : "";
