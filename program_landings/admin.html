@@ -384,10 +384,15 @@
 
       /* ── Role badge ── */
       .badge-admin {
-        background: #1a3a99; color: #fff;
-        display: inline-block; padding: 3px 10px;
-        border-radius: 10px; font-size: 0.68rem; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.06em;
+        background: #1a3a99;
+        color: #fff;
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
       }
 
       /* ── Admin row highlight ── */
@@ -404,33 +409,64 @@
 
       /* ── Confirm modal ── */
       .modal-overlay {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.45);
-        display: flex; align-items: center; justify-content: center;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         z-index: 1000;
       }
       .modal-box {
-        background: #fff; border-radius: 10px;
-        padding: 24px 28px; max-width: 400px; width: 90%;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        background: #fff;
+        border-radius: 10px;
+        padding: 24px 28px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
       }
       .modal-title {
-        font-size: 0.95rem; font-weight: 700; color: #003366;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #003366;
         margin-bottom: 10px;
       }
-      .modal-msg { font-size: 0.88rem; line-height: 1.5; color: #333; margin-bottom: 20px; }
-      .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+      .modal-msg {
+        font-size: 0.88rem;
+        line-height: 1.5;
+        color: #333;
+        margin-bottom: 20px;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
       .btn-modal-cancel {
-        padding: 7px 16px; border: 1px solid #ccc; border-radius: 6px;
-        background: #fff; font-size: 0.85rem; cursor: pointer; font-weight: 600;
+        padding: 7px 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-weight: 600;
       }
-      .btn-modal-cancel:hover { background: #f6f8fa; }
+      .btn-modal-cancel:hover {
+        background: #f6f8fa;
+      }
       .btn-modal-confirm {
-        padding: 7px 16px; border: none; border-radius: 6px;
-        background: #9b1c1c; color: #fff;
-        font-size: 0.85rem; cursor: pointer; font-weight: 600;
+        padding: 7px 16px;
+        border: none;
+        border-radius: 6px;
+        background: #9b1c1c;
+        color: #fff;
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-weight: 600;
       }
-      .btn-modal-confirm:hover { background: #7a1515; }
+      .btn-modal-confirm:hover {
+        background: #7a1515;
+      }
 
       /* ── Screen-reader only utility ── */
       .sr-only {
@@ -486,7 +522,14 @@
       <div class="top-row">
         <!-- Create User -->
         <div class="card">
-          <div class="card-header open" role="button" tabindex="0" aria-expanded="true" aria-controls="card-body-create" onclick="toggleCard(this)">
+          <div
+            class="card-header open"
+            role="button"
+            tabindex="0"
+            aria-expanded="true"
+            aria-controls="card-body-create"
+            onclick="toggleCard(this)"
+          >
             <h2>Create New User</h2>
             <span class="card-chevron open" aria-hidden="true">▼</span>
           </div>
@@ -575,13 +618,25 @@
             <button class="btn-submit" id="createBtn" onclick="createUser()">
               Create User
             </button>
-            <div class="feedback" id="createFeedback" role="status" aria-live="polite"></div>
+            <div
+              class="feedback"
+              id="createFeedback"
+              role="status"
+              aria-live="polite"
+            ></div>
           </div>
         </div>
 
         <!-- Change Password -->
         <div class="card">
-          <div class="card-header" role="button" tabindex="0" aria-expanded="false" aria-controls="card-body-password" onclick="toggleCard(this)">
+          <div
+            class="card-header"
+            role="button"
+            tabindex="0"
+            aria-expanded="false"
+            aria-controls="card-body-password"
+            onclick="toggleCard(this)"
+          >
             <h2>Change My Password</h2>
             <span class="card-chevron" aria-hidden="true">▼</span>
           </div>
@@ -661,7 +716,12 @@
             >
               Change Password
             </button>
-            <div class="feedback" id="cpFeedback" role="status" aria-live="polite"></div>
+            <div
+              class="feedback"
+              id="cpFeedback"
+              role="status"
+              aria-live="polite"
+            ></div>
           </div>
         </div>
       </div>
@@ -669,31 +729,52 @@
 
       <!-- User List -->
       <div class="card">
-        <div class="card-header open" role="button" tabindex="0" aria-expanded="true" aria-controls="card-body-users" onclick="toggleCard(this)">
+        <div
+          class="card-header open"
+          role="button"
+          tabindex="0"
+          aria-expanded="true"
+          aria-controls="card-body-users"
+          onclick="toggleCard(this)"
+        >
           <h2>Dashboard Users</h2>
           <span class="card-chevron open" aria-hidden="true">▼</span>
         </div>
         <div class="card-body open" id="card-body-users">
           <div id="userListContainer">
-            <div class="loading" role="status" aria-label="Loading users"><span class="spinner" aria-hidden="true"></span><span class="sr-only">Loading users…</span></div>
+            <div class="loading" role="status" aria-label="Loading users">
+              <span class="spinner" aria-hidden="true"></span
+              ><span class="sr-only">Loading users…</span>
+            </div>
           </div>
         </div>
       </div>
     </main>
 
     <!-- Edit User Modal -->
-    <div id="editModal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
-      <div class="modal-box" style="max-width:460px">
+    <div
+      id="editModal"
+      class="modal-overlay"
+      style="display: none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="editModalTitle"
+    >
+      <div class="modal-box" style="max-width: 460px">
         <div class="modal-title" id="editModalTitle">Edit User</div>
-        <div style="margin-bottom:4px">
+        <div style="margin-bottom: 4px">
           <div class="form-group">
             <label for="editState">State</label>
             <select id="editState"></select>
             <div class="form-hint">User sees only this state's referrals.</div>
           </div>
-          <div class="form-group" style="margin-bottom:0">
-            <div class="checkbox-group" style="padding-top:8px">
-              <input type="checkbox" id="editIsAdmin" oninput="updateAdminCheckboxHint()" />
+          <div class="form-group" style="margin-bottom: 0">
+            <div class="checkbox-group" style="padding-top: 8px">
+              <input
+                type="checkbox"
+                id="editIsAdmin"
+                oninput="updateAdminCheckboxHint()"
+              />
               <label for="editIsAdmin" class="checkbox-copy">
                 <span>Admin group member</span>
                 <span class="form-hint" id="editAdminHint"></span>
@@ -701,21 +782,39 @@
             </div>
           </div>
         </div>
-        <div class="feedback" id="editFeedback" role="status" aria-live="polite"></div>
-        <div class="modal-actions" style="margin-top:16px">
-          <button class="btn-modal-cancel" onclick="closeEditModal()">Cancel</button>
-          <button class="btn-submit" id="editSaveBtn" onclick="saveEditUser()">Save Changes</button>
+        <div
+          class="feedback"
+          id="editFeedback"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <div class="modal-actions" style="margin-top: 16px">
+          <button class="btn-modal-cancel" onclick="closeEditModal()">
+            Cancel
+          </button>
+          <button class="btn-submit" id="editSaveBtn" onclick="saveEditUser()">
+            Save Changes
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Confirm Modal -->
-    <div id="confirmModal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div
+      id="confirmModal"
+      class="modal-overlay"
+      style="display: none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmTitle"
+    >
       <div class="modal-box">
         <div class="modal-title" id="confirmTitle">Confirm Action</div>
         <div class="modal-msg" id="confirmMsg"></div>
         <div class="modal-actions">
-          <button class="btn-modal-cancel" onclick="closeConfirm()">Cancel</button>
+          <button class="btn-modal-cancel" onclick="closeConfirm()">
+            Cancel
+          </button>
           <button class="btn-modal-confirm" id="confirmOkBtn">Confirm</button>
         </div>
       </div>
@@ -766,13 +865,20 @@
       }
 
       document.addEventListener("keydown", (e) => {
-        if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("card-header")) {
+        if (
+          (e.key === "Enter" || e.key === " ") &&
+          e.target.classList.contains("card-header")
+        ) {
           e.preventDefault();
           toggleCard(e.target);
         }
         if (e.key === "Escape") {
-          if (document.getElementById("editModal").style.display !== "none") closeEditModal();
-          else if (document.getElementById("confirmModal").style.display !== "none") closeConfirm();
+          if (document.getElementById("editModal").style.display !== "none")
+            closeEditModal();
+          else if (
+            document.getElementById("confirmModal").style.display !== "none"
+          )
+            closeConfirm();
         }
       });
 
@@ -784,7 +890,12 @@
         input.type = isHidden ? "text" : "password";
         btn.textContent = isHidden ? "🙈" : "👁";
         const label = btn.getAttribute("aria-label") || "";
-        btn.setAttribute("aria-label", label.startsWith("Hide") ? label.replace("Hide", "Show") : label.replace("Show", "Hide"));
+        btn.setAttribute(
+          "aria-label",
+          label.startsWith("Hide")
+            ? label.replace("Hide", "Show")
+            : label.replace("Show", "Hide"),
+        );
       }
 
       // ── Change Password validation ────────────────────────────────────────────
@@ -967,16 +1078,22 @@
               : "Pending"
             : "Disabled";
 
-          const roleBadge = u.is_admin === true
-            ? `<span class="badge-admin">Admin</span>`
-            : `<span style="color:#595959;font-size:0.8rem;">—</span>`;
+          const roleBadge =
+            u.is_admin === true
+              ? `<span class="badge-admin">Admin</span>`
+              : `<span style="color:#595959;font-size:0.8rem;">—</span>`;
 
           const lastMod = formatDate(u.last_modified);
 
           const isPending = u.enabled && u.status === "FORCE_CHANGE_PASSWORD";
+          const canResetPassword = u.enabled && u.status === "CONFIRMED";
           const resendBtn = isPending
             ? `<button class="btn-sm" style="background:#fff3cd;color:#7a5200;margin-left:4px"
                  data-email="${escHtml(u.email)}" data-action="resend">Resend Invite</button>`
+            : "";
+          const resetPasswordBtn = canResetPassword
+            ? `<button class="btn-sm" style="background:#e8f7ee;color:#166534;margin-left:4px"
+              data-email="${escHtml(u.email)}" data-action="reset-password">Reset Password</button>`
             : "";
 
           const toggleBtn = u.enabled
@@ -988,17 +1105,20 @@
             data-state="${escHtml(u.state || "")}"
             data-is-admin="${u.is_admin}">Edit</button>`;
 
-          const isSelf = u.email.toLowerCase() === Auth.getEmail().toLowerCase();
-          const deleteBtn = isSelf ? "" : `<button class="btn-sm" style="background:#fde8e8;color:#7a1515;margin-left:4px"
+          const isSelf =
+            u.email.toLowerCase() === Auth.getEmail().toLowerCase();
+          const deleteBtn = isSelf
+            ? ""
+            : `<button class="btn-sm" style="background:#fde8e8;color:#7a1515;margin-left:4px"
             data-action="delete" data-email="${escHtml(u.email)}">Delete</button>`;
 
-          html += `<tr${u.is_admin ? ' class="row-admin"' : ''}>
+          html += `<tr${u.is_admin ? ' class="row-admin"' : ""}>
             <td>${escHtml(u.email)}</td>
             <td>${escHtml(u.state || "—")}</td>
             <td>${roleBadge}</td>
             <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
             <td>${lastMod}</td>
-            <td style="white-space:nowrap">${editBtn}${toggleBtn}${resendBtn}${deleteBtn}</td>
+            <td style="white-space:nowrap">${editBtn}${toggleBtn}${resendBtn}${resetPasswordBtn}${deleteBtn}</td>
           </tr>`;
         });
 
@@ -1017,7 +1137,11 @@
           const email = button.dataset.email || "";
 
           if (button.dataset.action === "edit") {
-            openEditModal(email, button.dataset.state, button.dataset.isAdmin === "true");
+            openEditModal(
+              email,
+              button.dataset.state,
+              button.dataset.isAdmin === "true",
+            );
           } else if (button.dataset.action === "delete") {
             confirmAction(
               `Permanently delete the account for ${email}? This cannot be undone.`,
@@ -1026,6 +1150,12 @@
             );
           } else if (button.dataset.action === "resend") {
             resendInvite(email);
+          } else if (button.dataset.action === "reset-password") {
+            confirmAction(
+              `Send a password reset email to ${email}? They will be prompted to choose a new password.`,
+              "Reset Password",
+              () => resetPassword(email),
+            );
           } else if (button.dataset.enable !== undefined) {
             const enable = button.dataset.enable === "true";
             if (!enable) {
@@ -1042,7 +1172,8 @@
       }
 
       // ── Focus trap helpers ────────────────────────────────────────────────────
-      const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      const FOCUSABLE =
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
       function trapFocus(modalEl) {
         const els = [...modalEl.querySelectorAll(FOCUSABLE)];
@@ -1050,15 +1181,28 @@
         els[0].focus();
         modalEl._trap = (e) => {
           if (e.key !== "Tab") return;
-          const first = els[0], last = els[els.length - 1];
-          if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-          else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
+          const first = els[0],
+            last = els[els.length - 1];
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
         };
         modalEl.addEventListener("keydown", modalEl._trap);
       }
 
       function releaseTrap(modalEl, returnFocus) {
-        if (modalEl._trap) { modalEl.removeEventListener("keydown", modalEl._trap); delete modalEl._trap; }
+        if (modalEl._trap) {
+          modalEl.removeEventListener("keydown", modalEl._trap);
+          delete modalEl._trap;
+        }
         if (returnFocus) returnFocus.focus();
       }
 
@@ -1066,9 +1210,13 @@
       let _confirmTrigger = null;
       function confirmAction(message, title, onConfirm) {
         _confirmTrigger = document.activeElement;
-        document.getElementById("confirmMsg").textContent   = message;
-        document.getElementById("confirmTitle").textContent = title || "Confirm Action";
-        document.getElementById("confirmOkBtn").onclick = () => { closeConfirm(); onConfirm(); };
+        document.getElementById("confirmMsg").textContent = message;
+        document.getElementById("confirmTitle").textContent =
+          title || "Confirm Action";
+        document.getElementById("confirmOkBtn").onclick = () => {
+          closeConfirm();
+          onConfirm();
+        };
         const modal = document.getElementById("confirmModal");
         modal.style.display = "flex";
         trapFocus(modal);
@@ -1152,16 +1300,78 @@
         }
       }
 
+      async function resetPassword(email) {
+        try {
+          await Auth.ensureValidAccessToken();
+          const res = await fetch(`${API_BASE}/admin/users/reset-password`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Auth.getAccessToken()}`,
+            },
+            body: JSON.stringify({ email }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+          alert(`Password reset sent to ${email}.`);
+          loadUsers();
+        } catch (err) {
+          alert("Failed to reset password: " + err.message);
+        }
+      }
+
       // ── Edit User Modal ───────────────────────────────────────────────────────
       const US_STATES = [
-        "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut",
-        "Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa",
-        "Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan",
-        "Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada",
-        "New Hampshire","New Jersey","New Mexico","New York","North Carolina",
-        "North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island",
-        "South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont",
-        "Virginia","Washington","West Virginia","Wisconsin","Wyoming"
+        "Alabama",
+        "Alaska",
+        "Arizona",
+        "Arkansas",
+        "California",
+        "Colorado",
+        "Connecticut",
+        "Delaware",
+        "Florida",
+        "Georgia",
+        "Hawaii",
+        "Idaho",
+        "Illinois",
+        "Indiana",
+        "Iowa",
+        "Kansas",
+        "Kentucky",
+        "Louisiana",
+        "Maine",
+        "Maryland",
+        "Massachusetts",
+        "Michigan",
+        "Minnesota",
+        "Mississippi",
+        "Missouri",
+        "Montana",
+        "Nebraska",
+        "Nevada",
+        "New Hampshire",
+        "New Jersey",
+        "New Mexico",
+        "New York",
+        "North Carolina",
+        "North Dakota",
+        "Ohio",
+        "Oklahoma",
+        "Oregon",
+        "Pennsylvania",
+        "Rhode Island",
+        "South Carolina",
+        "South Dakota",
+        "Tennessee",
+        "Texas",
+        "Utah",
+        "Vermont",
+        "Virginia",
+        "Washington",
+        "West Virginia",
+        "Wisconsin",
+        "Wyoming",
       ];
 
       let _editUserEmail = null;
@@ -1172,7 +1382,8 @@
         const isChecked = document.getElementById("editIsAdmin").checked;
         const hint = document.getElementById("editAdminHint");
         if (_editUserOriginalIsAdmin && isChecked) {
-          hint.textContent = "Currently an admin — uncheck to remove from admin group";
+          hint.textContent =
+            "Currently an admin — uncheck to remove from admin group";
           hint.style.color = "#1a3a99";
         } else if (_editUserOriginalIsAdmin && !isChecked) {
           hint.textContent = "Will be removed from admin group";
@@ -1190,12 +1401,15 @@
         _editTrigger = document.activeElement;
         _editUserEmail = email;
         _editUserOriginalIsAdmin = isAdmin;
-        document.getElementById("editModalTitle").textContent = `Edit User: ${email}`;
+        document.getElementById("editModalTitle").textContent =
+          `Edit User: ${email}`;
 
         const sel = document.getElementById("editState");
-        sel.innerHTML = '<option value="">— Select —</option>' +
-          US_STATES.map(s =>
-            `<option value="${s}"${s === state ? " selected" : ""}>${s}</option>`
+        sel.innerHTML =
+          '<option value="">— Select —</option>' +
+          US_STATES.map(
+            (s) =>
+              `<option value="${s}"${s === state ? " selected" : ""}>${s}</option>`,
           ).join("");
 
         document.getElementById("editIsAdmin").checked = isAdmin;
@@ -1220,7 +1434,7 @@
       }
 
       async function saveEditUser() {
-        const state   = document.getElementById("editState").value;
+        const state = document.getElementById("editState").value;
         const isAdmin = document.getElementById("editIsAdmin").checked;
         const feedback = document.getElementById("editFeedback");
 
@@ -1245,14 +1459,21 @@
               "Content-Type": "application/json",
               Authorization: `Bearer ${Auth.getAccessToken()}`,
             },
-            body: JSON.stringify({ email: _editUserEmail, state, is_admin: isAdmin }),
+            body: JSON.stringify({
+              email: _editUserEmail,
+              state,
+              is_admin: isAdmin,
+            }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
           feedback.className = "feedback success";
           feedback.textContent = "User updated.";
-          setTimeout(() => { closeEditModal(); loadUsers(); }, 1500);
+          setTimeout(() => {
+            closeEditModal();
+            loadUsers();
+          }, 1500);
         } catch (err) {
           feedback.className = "feedback error";
           feedback.textContent = err.message || "Failed to update user.";
@@ -1265,7 +1486,11 @@
         if (!iso) return "—";
         const d = new Date(iso);
         if (isNaN(d.getTime())) return "—";
-        return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+        return d.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
       }
 
       function escHtml(str) {

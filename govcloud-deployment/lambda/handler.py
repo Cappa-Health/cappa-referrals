@@ -10,7 +10,8 @@ Routes:
   POST  /admin/users          – Create a new Cognito dashboard user (requires admin group)
   PATCH  /admin/users         – Enable/disable or edit state/admin role of a user (requires admin group)
   DELETE /admin/users         – Permanently delete a Cognito dashboard user (requires admin group)
-  POST  /admin/users/resend   – Resend temporary password to a user (requires admin group)
+    POST  /admin/users/resend   – Resend an invite to a pending user (requires admin group)
+    POST  /admin/users/reset-password – Send a password reset to a confirmed user (requires admin group)
 
 Required environment variables:
   TABLE_NAME         – DynamoDB table name
@@ -505,15 +506,58 @@ def _handle_resend_invite(body: dict) -> dict:
         return _respond(400, {"error": "Field 'email' is required"})
     try:
         pool_id = _get_user_pool_id()
-        cognito.admin_reset_user_password(UserPoolId=pool_id, Username=email)
-        logger.info("Resent temporary password for %s", email)
-        return _respond(200, {"message": f"Temporary password resent to {email}."})
+        user = cognito.admin_get_user(UserPoolId=pool_id, Username=email)
+        status = user.get("UserStatus", "")
+        enabled = user.get("Enabled", True)
+
+        if not enabled:
+            return _respond(409, {"error": f"User {email} is disabled. Re-enable the account before resending the invite."})
+        if status != "FORCE_CHANGE_PASSWORD":
+            return _respond(409, {"error": f"User {email} is not in invite-pending status."})
+
+        cognito.admin_create_user(
+            UserPoolId=pool_id,
+            Username=email,
+            MessageAction="RESEND",
+            DesiredDeliveryMediums=["EMAIL"],
+        )
+        logger.info("Resent invite for %s", email)
+        return _respond(200, {"message": f"Invite resent to {email}."})
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UserNotFoundException":
             return _respond(404, {"error": f"User {email} not found."})
-        logger.error("admin_reset_user_password failed: %s", exc)
+        logger.error("resend_invite failed: %s", exc)
         return _respond(500, {"error": "Failed to resend invite"})
+
+
+def _handle_reset_password(body: dict) -> dict:
+    email = (body.get("email") or "").strip().lower()
+    if not email:
+        return _respond(400, {"error": "Field 'email' is required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        user = cognito.admin_get_user(UserPoolId=pool_id, Username=email)
+        status = user.get("UserStatus", "")
+        enabled = user.get("Enabled", True)
+
+        if not enabled:
+            return _respond(409, {"error": f"User {email} is disabled. Re-enable the account before resetting the password."})
+        if status != "CONFIRMED":
+            if status == "FORCE_CHANGE_PASSWORD":
+                return _respond(409, {"error": f"User {email} is still pending setup. Use resend invite instead."})
+            return _respond(409, {"error": f"User {email} is not eligible for an admin password reset."})
+
+        cognito.admin_reset_user_password(UserPoolId=pool_id, Username=email)
+        logger.info("Password reset initiated for %s", email)
+        return _respond(200, {"message": f"Password reset sent to {email}."})
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": f"User {email} not found."})
+        logger.error("reset_password failed: %s", exc)
+        return _respond(500, {"error": "Failed to reset password"})
 
 
 def _handle_edit_user(body: dict) -> dict:
@@ -632,7 +676,7 @@ def lambda_handler(event, context):
     if method == "PATCH" and path.startswith("/referrals/"):
         return _handle_update_referral(event, path)
 
-    _admin_paths = {"/admin/users", "/admin/users/resend"}
+    _admin_paths = {"/admin/users", "/admin/users/resend", "/admin/users/reset-password"}
     if path in _admin_paths and method in {"GET", "POST", "PATCH", "DELETE"}:
         try:
             if not _is_admin_caller(event):
@@ -654,6 +698,9 @@ def lambda_handler(event, context):
 
     if method == "POST" and path == "/admin/users/resend":
         return _handle_resend_invite(body)
+
+    if method == "POST" and path == "/admin/users/reset-password":
+        return _handle_reset_password(body)
 
     if method == "DELETE" and path == "/admin/users":
         return _handle_delete_user(event)
