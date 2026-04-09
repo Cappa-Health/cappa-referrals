@@ -1417,15 +1417,13 @@
             );
           } else if (button.dataset.enable !== undefined) {
             const enable = button.dataset.enable === "true";
-            if (!enable) {
-              confirmAction(
-                `Disable account for ${email}? They will not be able to log in until re-enabled.`,
-                "Disable User",
-                () => _doToggleUser(email, false),
-              );
-            } else {
-              _doToggleUser(email, true);
-            }
+            confirmAction(
+              enable
+                ? `Enable account for ${email}? They will be able to log in again immediately.`
+                : `Disable account for ${email}? They will not be able to log in until re-enabled.`,
+              enable ? "Enable User" : "Disable User",
+              () => _doToggleUser(email, enable),
+            );
           }
         });
       }
