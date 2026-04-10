@@ -92,14 +92,10 @@ def _get_caller_state(event: dict) -> str:
     return claims.get("custom:state", "").strip()
 
 
-def _get_caller_username(event: dict) -> str:
+def _get_caller_sub(event: dict) -> str:
+    """Return the caller's Cognito sub (UUID). Always present and immutable."""
     claims = _get_jwt_claims(event)
-    return (
-        claims.get("cognito:username")
-        or claims.get("username")
-        or claims.get("email")
-        or ""
-    ).strip()
+    return (claims.get("sub") or "").strip()
 
 
 def _parse_group_claims(raw_groups) -> list[str]:
@@ -130,14 +126,14 @@ def _is_admin_caller(event: dict) -> bool:
     if admin_group_name in groups:
         return True
 
-    username = _get_caller_username(event)
-    if not username:
+    sub = _get_caller_sub(event)
+    if not sub:
         return False
 
     pool_id = _get_user_pool_id()
     response = cognito.admin_list_groups_for_user(
         UserPoolId=pool_id,
-        Username=username,
+        Username=sub,
         Limit=60,
     )
     return any(group.get("GroupName") == admin_group_name for group in response.get("Groups", []))
