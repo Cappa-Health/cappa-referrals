@@ -884,6 +884,11 @@
                 name="program_intake[landing_page]"
                 value="Lose Weight"
               />
+              <input
+                type="hidden"
+                name="program_intake[state]"
+                value="Alaska"
+              />
 
               <p class="modal-support">
                 Questions? Email
@@ -952,6 +957,9 @@
               ).value,
               landing_page: form.querySelector(
                 '[name="program_intake[landing_page]"]',
+              ).value,
+              state: form.querySelector(
+                '[name="program_intake[state]"]',
               ).value,
             };
 

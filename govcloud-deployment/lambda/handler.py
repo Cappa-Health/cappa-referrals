@@ -48,14 +48,6 @@ ses      = boto3.client("ses")
 cognito  = boto3.client("cognito-idp")
 ssm      = boto3.client("ssm")
 
-# Maps landing_page values (submitted by intake forms) to US states.
-# Add new entries here when programs in new states are launched.
-PROGRAM_STATE = {
-    "Lose Weight":          "Alaska",
-    "Lower Blood Pressure": "Alaska",
-    "Lower Blood Sugar":    "Alaska",
-}
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -163,7 +155,7 @@ def _handle_intake(body: dict) -> dict:
 
     zipcode      = (body.get("zipcode")      or "").strip()
     landing_page = (body.get("landing_page") or "Unknown Program").strip()
-    state        = PROGRAM_STATE.get(landing_page, "Unknown")
+    state        = (body.get("state")        or "Unknown").strip()
 
     now           = datetime.now(timezone.utc).isoformat()
     submission_id = str(uuid.uuid4())
@@ -189,7 +181,7 @@ def _handle_intake(body: dict) -> dict:
         logger.error("DynamoDB put_item failed: %s", exc)
         return _respond(500, {"error": "Failed to store submission"})
 
-    _send_notification(submission_id, landing_page)
+    _send_notification(submission_id, landing_page, state)
 
     return _respond(200, {"message": "Submission received. A team member will follow up soon."})
 
@@ -320,9 +312,9 @@ def _get_notification_emails(state: str) -> list[str]:
     ]
 
 
-def _send_notification(submission_id: str, program: str) -> None:
+def _send_notification(submission_id: str, program: str, state: str) -> None:
     sender     = os.environ.get("SENDER_EMAIL", "")
-    recipients = _get_notification_emails(PROGRAM_STATE.get(program, ""))
+    recipients = _get_notification_emails(state)
     if not sender or not recipients:
         logger.warning("SENDER_EMAIL or NOTIFICATION_EMAIL not set — skipping")
         return
