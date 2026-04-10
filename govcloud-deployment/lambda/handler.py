@@ -199,31 +199,46 @@ def _handle_intake(body: dict) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _handle_get_referrals(event: dict) -> dict:
+    is_admin  = _is_admin_caller(event)
     user_state = _get_caller_state(event)
-    if not user_state:
+
+    if not is_admin and not user_state:
         logger.error("No custom:state claim in JWT — cannot filter referrals")
         return _respond(403, {"error": "User account is missing a state assignment. Contact an administrator."})
 
     try:
-        table    = _get_table()
-        response = table.query(
-            IndexName="by-state",
-            KeyConditionExpression=Key("state").eq(user_state),
-            ScanIndexForward=False,  # newest first via submitted_at RANGE key
-        )
-        items = response.get("Items", [])
+        table = _get_table()
+        items = []
 
-        while "LastEvaluatedKey" in response:
+        if is_admin:
+            # Admins see all referrals across every state via a full table scan.
+            kwargs = {"ScanIndexForward": False}
+            response = table.scan()
+            items.extend(response.get("Items", []))
+            while "LastEvaluatedKey" in response:
+                response = table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+                items.extend(response.get("Items", []))
+            # Sort newest first by submitted_at
+            items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
+            logger.info("Admin caller — returning all %d referrals", len(items))
+            return _respond(200, {"referrals": items, "count": len(items), "state": "all"})
+        else:
             response = table.query(
                 IndexName="by-state",
                 KeyConditionExpression=Key("state").eq(user_state),
-                ExclusiveStartKey=response["LastEvaluatedKey"],
                 ScanIndexForward=False,
             )
-            items.extend(response.get("Items", []))
-
-        logger.info("Returning %d referrals for state=%s", len(items), user_state)
-        return _respond(200, {"referrals": items, "count": len(items), "state": user_state})
+            items = response.get("Items", [])
+            while "LastEvaluatedKey" in response:
+                response = table.query(
+                    IndexName="by-state",
+                    KeyConditionExpression=Key("state").eq(user_state),
+                    ExclusiveStartKey=response["LastEvaluatedKey"],
+                    ScanIndexForward=False,
+                )
+                items.extend(response.get("Items", []))
+            logger.info("Returning %d referrals for state=%s", len(items), user_state)
+            return _respond(200, {"referrals": items, "count": len(items), "state": user_state})
 
     except (ClientError, ValueError) as exc:
         logger.error("DynamoDB query failed: %s", exc)
