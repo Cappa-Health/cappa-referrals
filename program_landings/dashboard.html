@@ -682,9 +682,16 @@
       let sortDir = "desc";
       let expandedId = null;
       let linkedReferralId = getLinkedId();
+      let _isLoadingReferrals = false;
 
       // ── Auth bootstrap ────────────────────────────────────────────────────────────
       Auth.onReady(() => {
+        document.getElementById("headerEmail").textContent = Auth.getEmail();
+        document.getElementById("headerState").textContent = Auth.getState();
+        loadReferrals();
+      });
+
+      document.addEventListener("halt:authenticated", () => {
         document.getElementById("headerEmail").textContent = Auth.getEmail();
         document.getElementById("headerState").textContent = Auth.getState();
         loadReferrals();
@@ -785,6 +792,8 @@
 
       // ── Load Referrals ────────────────────────────────────────────────────────────
       async function loadReferrals() {
+        if (_isLoadingReferrals) return;
+        _isLoadingReferrals = true;
         document.getElementById("tableContainer").innerHTML =
           '<div class="state-msg"><span class="spinner"></span></div>';
         document.getElementById("rowCount").textContent = "Loading…";
@@ -827,6 +836,8 @@
           document.getElementById("tableContainer").innerHTML =
             `<div class="state-msg"><span class="icon">⚠️</span>Failed to load referrals.<br><small>${err.message}</small></div>`;
           document.getElementById("rowCount").textContent = "Error";
+        } finally {
+          _isLoadingReferrals = false;
         }
       }
 

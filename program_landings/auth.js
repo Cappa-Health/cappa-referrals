@@ -42,6 +42,10 @@ const AUTH_VIEW_IDS = [
 let _readyCallbacks = [];
 let _isReady = false;
 
+function _dispatchAuthenticated() {
+  document.dispatchEvent(new CustomEvent("halt:authenticated"));
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // JWT helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -385,6 +389,7 @@ function _onAuthenticated() {
   _isReady = true;
   _readyCallbacks.forEach((fn) => fn());
   _readyCallbacks = [];
+  _dispatchAuthenticated();
 }
 
 async function _tryRefresh() {
@@ -753,6 +758,7 @@ const Auth = {
       _hideModal();
       _readyCallbacks.forEach((fn) => fn());
       _readyCallbacks = [];
+      _dispatchAuthenticated();
     });
     return;
   }
@@ -765,6 +771,7 @@ const Auth = {
       _hideModal();
       _readyCallbacks.forEach((fn) => fn());
       _readyCallbacks = [];
+      _dispatchAuthenticated();
     });
     return;
   }
