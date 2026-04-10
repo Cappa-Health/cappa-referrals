@@ -3,15 +3,15 @@ Program Intake Form Handler
 AWS Lambda function for AWS GovCloud (us-gov-west-1 or us-gov-east-1)
 
 Routes:
-  POST  /program-intake       – Store referral in DynamoDB + send SES notification
-  GET   /referrals            – Return referrals for the caller's state (requires Cognito JWT)
-  PATCH /referrals/{id}       – Update referral status (requires Cognito JWT)
-    GET   /admin/users          – List Cognito dashboard users (supports pagination token; requires admin group)
-  POST  /admin/users          – Create a new Cognito dashboard user (requires admin group)
-  PATCH  /admin/users         – Enable/disable or edit state/admin role of a user (requires admin group)
-  DELETE /admin/users         – Permanently delete a Cognito dashboard user (requires admin group)
-    POST  /admin/users/resend   – Resend an invite to a pending user (requires admin group)
-    POST  /admin/users/reset-password – Send a password reset to a confirmed user (requires admin group)
+  POST   /program-intake            – Store referral in DynamoDB + send SES notification
+  GET    /referrals                 – Return referrals for caller's state (requires Cognito JWT)
+  PATCH  /referrals/{id}            – Update referral status (requires Cognito JWT)
+  GET    /admin/users               – List Cognito dashboard users (supports pagination; requires admin group)
+  POST   /admin/users               – Create a new Cognito dashboard user (requires admin group)
+  PATCH  /admin/users               – Enable/disable or edit state/admin role (requires admin group)
+  DELETE /admin/users               – Permanently delete a Cognito dashboard user (requires admin group)
+  POST   /admin/users/resend        – Resend an invite to a pending user (requires admin group)
+  POST   /admin/users/reset-password – Send a password reset to a confirmed user (requires admin group)
 
 Required environment variables:
   TABLE_NAME         – DynamoDB table name
