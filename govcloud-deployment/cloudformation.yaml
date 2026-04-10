@@ -76,6 +76,8 @@ Resources:
 
   IntakeSubmissionsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub "${ProjectName}-intake-submissions"
       BillingMode: PAY_PER_REQUEST
@@ -130,6 +132,8 @@ Resources:
 
   DashboardUserPool:
     Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       UserPoolName: !Sub "${ProjectName}-dashboard-users"
       UsernameAttributes:
@@ -155,7 +159,7 @@ Resources:
       Schema:
         - Name: state
           AttributeDataType: String
-          Mutable: true
+          Mutable: false
           Required: false
           StringAttributeConstraints:
             MinLength: "2"
@@ -195,7 +199,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws-us-gov:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
       Policies:
         - PolicyName: DynamoDbAccess
           PolicyDocument:
@@ -227,7 +231,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - ssm:GetParameter
-                Resource: !Sub "arn:aws-us-gov:ssm:${AWS::Region}:${AWS::AccountId}:parameter/halt-landing/notification-emails"
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/halt-landing/notification-emails"
         - PolicyName: CognitoUserManagement
           PolicyDocument:
             Version: "2012-10-17"
@@ -323,7 +327,7 @@ Resources:
       ApiId: !Ref ProgramIntakeApi
       IntegrationType: AWS_PROXY
       IntegrationUri: !Sub
-        - "arn:aws-us-gov:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
+        - "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
         - LambdaArn: !GetAtt ProgramIntakeLambda.Arn
       PayloadFormatVersion: "2.0"
 
@@ -419,7 +423,7 @@ Resources:
       FunctionName: !GetAtt ProgramIntakeLambda.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws-us-gov:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgramIntakeApi}/*"
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgramIntakeApi}/*"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Outputs
