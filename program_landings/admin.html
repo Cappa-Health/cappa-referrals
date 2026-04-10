@@ -69,6 +69,61 @@
         background: rgba(255, 255, 255, 0.25);
       }
 
+      /* ── Header nav dropdown ── */
+      .nav-dropdown {
+        position: relative;
+      }
+      .nav-dropdown-btn {
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.35);
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .nav-dropdown-btn:hover,
+      .nav-dropdown-btn[aria-expanded="true"] {
+        background: rgba(255,255,255,0.25);
+      }
+      .nav-dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 6px);
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+        min-width: 160px;
+        z-index: 200;
+        overflow: hidden;
+      }
+      .nav-dropdown-menu.open {
+        display: block;
+      }
+      .nav-dropdown-menu a {
+        display: block;
+        padding: 10px 16px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #003366;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .nav-dropdown-menu a:hover {
+        background: #f0f4f8;
+      }
+      .nav-dropdown-menu .menu-divider {
+        border: none;
+        border-top: 1px solid #e8ecf0;
+        margin: 4px 0;
+      }
+
       /* ── Layout ── */
       main {
         padding: 20px 24px;
@@ -752,7 +807,17 @@
           <strong id="headerEmail"></strong>
           <span id="headerState"></span>
         </div>
-        <button class="btn-logout" onclick="Auth.logout()">Sign Out</button>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-btn" id="navBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navMenu" onclick="toggleNavMenu()">
+            <span aria-hidden="true" style="font-size:1.1rem;line-height:1;letter-spacing:1px">☰</span>
+            <span class="sr-only">Open menu</span>
+          </button>
+          <div class="nav-dropdown-menu" id="navMenu" role="menu">
+            <a href="/program_landings/dashboard.html" role="menuitem">Dashboard</a>
+            <hr class="menu-divider" />
+            <a href="#" role="menuitem" onclick="event.preventDefault(); Auth.logout()">Sign Out</a>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -1176,6 +1241,21 @@
       let _allUsers = [];
       let _userSort = { ...USER_SORT_DEFAULT };
       let _selectedUserEmail = "";
+
+      // ── Nav dropdown ─────────────────────────────────────────────────────────
+      function toggleNavMenu() {
+        const menu = document.getElementById("navMenu");
+        const btn  = document.getElementById("navBtn");
+        const open = menu.classList.toggle("open");
+        btn.setAttribute("aria-expanded", String(open));
+      }
+      document.addEventListener("click", (e) => {
+        const dropdown = document.querySelector(".nav-dropdown");
+        if (dropdown && !dropdown.contains(e.target)) {
+          document.getElementById("navMenu").classList.remove("open");
+          document.getElementById("navBtn").setAttribute("aria-expanded", "false");
+        }
+      });
 
       Auth.onReady(() => {
         document.getElementById("headerEmail").textContent = Auth.getEmail();
