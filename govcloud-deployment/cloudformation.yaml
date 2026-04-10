@@ -374,6 +374,15 @@ Resources:
       AuthorizerId: !Ref DashboardAuthorizer
       Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
 
+  ResetPasswordRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "POST /admin/users/reset-password"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
   ProgramIntakeApiStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
