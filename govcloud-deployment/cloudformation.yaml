@@ -138,8 +138,6 @@ Resources:
       UserPoolName: !Sub "${ProjectName}-dashboard-users"
       UsernameAttributes:
         - email
-      AutoVerifiedAttributes:
-        - email
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: true
         InviteMessageTemplate:
