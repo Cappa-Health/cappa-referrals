@@ -928,8 +928,15 @@
             headers: { Authorization: `Bearer ${Auth.getToken()}` },
           });
 
-          if (res.status === 401 || res.status === 403) {
+          if (res.status === 401) {
+            // Token was rejected — force re-login.
             Auth.logout();
+            return;
+          }
+          if (res.status === 403) {
+            // Valid token but missing state assignment — re-login won't help.
+            document.getElementById("tableContainer").innerHTML =
+              '<div class="state-msg"><span class="icon">⚠️</span>Your account is not assigned to a state. Contact an administrator.</div>';
             return;
           }
 
