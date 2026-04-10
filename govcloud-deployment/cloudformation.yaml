@@ -220,6 +220,14 @@ Resources:
                   - ses:SendEmail
                   - ses:SendRawEmail
                 Resource: "*"
+        - PolicyName: SsmReadNotificationEmails
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub "arn:aws-us-gov:ssm:${AWS::Region}:${AWS::AccountId}:parameter/halt-landing/notification-emails"
         - PolicyName: CognitoUserManagement
           PolicyDocument:
             Version: "2012-10-17"
@@ -238,6 +246,21 @@ Resources:
                   - cognito-idp:AdminDisableUser
                   - cognito-idp:AdminResetUserPassword
                 Resource: !GetAtt DashboardUserPool.Arn
+
+  # ── SSM Parameter: per-state notification email map ──────────────────────
+
+  NotificationEmailsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /halt-landing/notification-emails
+      Type: String
+      Description: >
+        JSON object mapping state names to comma-separated notification email
+        addresses. Example: {"Alaska":"a@example.gov,b@example.gov","Default":"support@halt360.org"}
+        The "Default" key is used when no state-specific entry is found.
+      Value: !Sub '{"Default":"${NotificationEmail}"}'
+      Tags:
+        Project: !Ref ProjectName
 
   # ── Lambda Function ───────────────────────────────────────────────────────
 

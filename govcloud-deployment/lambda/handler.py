@@ -46,6 +46,7 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource("dynamodb")
 ses      = boto3.client("ses")
 cognito  = boto3.client("cognito-idp")
+ssm      = boto3.client("ssm")
 
 # Maps landing_page values (submitted by intake forms) to US states.
 # Add new entries here when programs in new states are launched.
@@ -279,13 +280,34 @@ def _handle_update_referral(event: dict, path: str) -> dict:
 # SES notification (no PII)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _send_notification(submission_id: str, program: str) -> None:
-    sender     = os.environ.get("SENDER_EMAIL", "")
-    recipients = [
+def _get_notification_emails(state: str) -> list[str]:
+    """
+    Look up notification recipients for the given state from SSM Parameter Store.
+    The parameter value is a JSON object keyed by state name, e.g.:
+      {"Alaska": "a@example.gov,b@example.gov", "Default": "support@halt360.org"}
+    Falls back to the "Default" key, then to the NOTIFICATION_EMAIL env var.
+    """
+    try:
+        resp  = ssm.get_parameter(Name="/halt-landing/notification-emails")
+        email_map = json.loads(resp["Parameter"]["Value"])
+        raw = email_map.get(state) or email_map.get("Default") or ""
+        recipients = [e.strip() for e in raw.split(",") if e.strip()]
+        if recipients:
+            return recipients
+    except Exception as exc:
+        logger.warning("Could not load notification emails from SSM: %s", exc)
+
+    # Fallback to environment variable
+    return [
         addr.strip()
         for addr in os.environ.get("NOTIFICATION_EMAIL", "").split(",")
         if addr.strip()
     ]
+
+
+def _send_notification(submission_id: str, program: str) -> None:
+    sender     = os.environ.get("SENDER_EMAIL", "")
+    recipients = _get_notification_emails(PROGRAM_STATE.get(program, ""))
     if not sender or not recipients:
         logger.warning("SENDER_EMAIL or NOTIFICATION_EMAIL not set — skipping")
         return
@@ -301,16 +323,16 @@ def _send_notification(submission_id: str, program: str) -> None:
     if dashboard_link:
         text_body = (
             f"A new referral has been submitted on the {program} landing page.\n\n"
-            f"Click the link below to view this referral in the secure dashboard:\n"
+            f"Click the link below to view this referral in the secure HALT dashboard:\n"
             f"{dashboard_link}\n\n"
-            f"You will be prompted to log in when the page loads.\n\n"
+            f"Sign in with your HALT dashboard email address and password when prompted.\n"
+            f"If you have not yet set up your account, contact your administrator.\n\n"
             f"Submission ID: {submission_id}\n\n"
             f"This is an automated notification. No personal information "
             f"is included in this email for security purposes."
         )
         dashboard_button = f"""
-  <p>Click the button below to view this referral directly in the secure dashboard.
-     You will be prompted to log in when the page loads.</p>
+  <p>Click the button below to view this referral in the secure HALT dashboard.</p>
   <p style="margin:28px 0;">
     <a href="{dashboard_link}"
        style="display:inline-block;background-color:#003366;color:#fff;
@@ -318,16 +340,24 @@ def _send_notification(submission_id: str, program: str) -> None:
               font-weight:bold;font-size:15px;">
       View This Referral
     </a>
+  </p>
+  <p style="font-size:13px;color:#595959;">
+    Sign in with your HALT dashboard email address and password when prompted.
+    If you have not yet set up your account, contact your administrator.
   </p>"""
     else:
         text_body = (
             f"A new referral has been submitted on the {program} landing page.\n\n"
-            f"Log in to the dashboard to view this referral.\n\n"
+            f"Sign in to the HALT dashboard with your email address and password to view this referral.\n"
+            f"If you have not yet set up your account, contact your administrator.\n\n"
             f"Submission ID: {submission_id}\n\n"
             f"This is an automated notification. No personal information "
             f"is included in this email for security purposes."
         )
-        dashboard_button = "<p>Log in to the dashboard to view this referral.</p>"
+        dashboard_button = (
+            "<p>Sign in to the HALT dashboard with your email address and password to view this referral.</p>"
+            "<p style='font-size:13px;color:#595959;'>If you have not yet set up your account, contact your administrator.</p>"
+        )
 
     html_body = f"""<!DOCTYPE html>
 <html lang="en">
@@ -337,7 +367,7 @@ def _send_notification(submission_id: str, program: str) -> None:
   {dashboard_button}
   <p style="color:#595959;font-size:13px;">Submission ID: {submission_id}</p>
   <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;"/>
-  <p style="color:#888;font-size:12px;">
+  <p style="color:#595959;font-size:12px;">
     Automated notification from the HALT referral system.
     No personal information is included in this email.
     All referral data is stored securely within the GovCloud environment.
