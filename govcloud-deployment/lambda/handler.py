@@ -116,8 +116,10 @@ def _parse_group_claims(raw: str) -> list[str]:
             return [parsed.strip()]
         return []
     except json.JSONDecodeError:
-        # Plain string (e.g. "admin") — not JSON, treat as a single group name.
-        return [raw.strip()]
+        # Cognito may deliver groups as "[admin]" or "[admin,other]" —
+        # bracket-wrapped but without JSON quoting. Strip brackets and split.
+        stripped = raw.strip().lstrip("[").rstrip("]")
+        return [g.strip() for g in stripped.split(",") if g.strip()]
 
 
 def _is_admin_caller(event: dict) -> bool:
