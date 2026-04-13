@@ -206,7 +206,7 @@ def _handle_get_referrals(event: dict) -> dict:
             # Sort newest first by submitted_at
             items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
             logger.info("Admin caller — returning all %d referrals", len(items))
-            return _respond(200, {"referrals": items, "count": len(items), "state": "all"})
+            return _respond(200, {"referrals": items, "state": "all"})
         else:
             response = table.query(
                 IndexName="by-state",
@@ -223,7 +223,7 @@ def _handle_get_referrals(event: dict) -> dict:
                 )
                 items.extend(response.get("Items", []))
             logger.info("Returning %d referrals for state=%s", len(items), user_state)
-            return _respond(200, {"referrals": items, "count": len(items), "state": user_state})
+            return _respond(200, {"referrals": items, "state": user_state})
 
     except (ClientError, ValueError) as exc:
         logger.error("DynamoDB query failed: %s", exc)
@@ -439,7 +439,6 @@ def _handle_list_users(event: dict) -> dict:
             200,
             {
                 "users": users,
-                "count": len(users),
                 "next_pagination_token": next_pagination_token,
             },
         )
