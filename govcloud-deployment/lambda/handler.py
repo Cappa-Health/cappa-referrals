@@ -678,15 +678,13 @@ def _handle_toggle_user(body: dict) -> dict:
 
 def lambda_handler(event, context):
     request_context = event.get("requestContext", {})
-    http = request_context.get("http", {})
+    http   = request_context.get("http", {})
+    method = http.get("method", "")   # API Gateway V2 always uppercases this
+    path   = http.get("path", "")
     logger.info(
         "Request received method=%s path=%s requestId=%s",
-        http.get("method", "").upper(),
-        http.get("path", ""),
-        request_context.get("requestId", ""),
+        method, path, request_context.get("requestId", ""),
     )
-    method = http.get("method", "").upper()
-    path   = http.get("path", "")
 
     # CORS pre-flight
     if method == "OPTIONS":
