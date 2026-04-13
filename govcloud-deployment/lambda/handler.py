@@ -385,18 +385,18 @@ def _handle_list_users(event: dict) -> dict:
         params = event.get("queryStringParameters") or {}
         pagination_token = (params.get("pagination_token") or "").strip()
 
-        # Fetch admin group members — use sub (UUID) for reliable cross-call matching.
-        # Email-based matching fails when the email attribute is absent or differs in
-        # casing between list_users_in_group and list_users.
-        admin_subs: set = set()
+        # Fetch admin group members by email (the Cognito username for this pool).
+        admin_emails: set = set()
         kwargs = {"UserPoolId": pool_id, "GroupName": admin_group, "Limit": 60}
         while True:
             resp = cognito.list_users_in_group(**kwargs)
             for u in resp.get("Users", []):
                 attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
-                sub = attrs.get("sub", "")
-                if sub:
-                    admin_subs.add(sub)
+                email = attrs.get("email", "").strip().lower()
+                if email:
+                    admin_emails.add(email)
+                else:
+                    logger.warning("Admin group member %s has no email attribute — skipping", u.get("Username"))
             next_token = resp.get("NextToken")
             if not next_token:
                 break
@@ -410,10 +410,12 @@ def _handle_list_users(event: dict) -> dict:
 
         resp = cognito.list_users(**kwargs)
         for u in resp.get("Users", []):
-            attrs     = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
-            email     = attrs.get("email", u["Username"])
-            sub       = attrs.get("sub", "")
-            last_mod  = u.get("UserLastModifiedDate")
+            attrs    = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+            email    = attrs.get("email", "").strip().lower()
+            if not email:
+                logger.warning("User %s has no email attribute — skipping", u.get("Username"))
+                continue
+            last_mod = u.get("UserLastModifiedDate")
             users.append({
                 "email":         email,
                 "state":         attrs.get("custom:state", ""),
@@ -421,7 +423,7 @@ def _handle_list_users(event: dict) -> dict:
                 "enabled":       u.get("Enabled", True),
                 "created":       u.get("UserCreateDate").isoformat() if u.get("UserCreateDate") else "",
                 "last_modified": last_mod.isoformat() if last_mod else "",
-                "is_admin":      bool(sub and sub in admin_subs),
+                "is_admin":      email in admin_emails,
             })
 
         next_pagination_token = resp.get("PaginationToken", "")
