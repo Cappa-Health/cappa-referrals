@@ -129,7 +129,9 @@ def _is_admin_caller(event: dict) -> bool:
     they log out and back in to get an updated token.
     """
     claims = _get_jwt_claims(event)
-    groups = _parse_group_claims(claims.get("cognito:groups") or "")
+    raw_groups = claims.get("cognito:groups") or ""
+    groups = _parse_group_claims(raw_groups)
+    logger.info("DEBUG auth: raw_groups=%r parsed=%r admin_group=%r result=%s", raw_groups, groups, ADMIN_GROUP_NAME, ADMIN_GROUP_NAME in groups)
     return ADMIN_GROUP_NAME in groups
 
 
