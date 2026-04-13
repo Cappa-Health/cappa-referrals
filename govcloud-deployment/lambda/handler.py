@@ -432,7 +432,7 @@ def _handle_list_users(event: dict) -> dict:
         logger.info(
             "Listed %d users (%d admins) next_token=%s",
             len(users),
-            len(admin_subs),
+            len(admin_emails),
             bool(next_pagination_token),
         )
         return _respond(
