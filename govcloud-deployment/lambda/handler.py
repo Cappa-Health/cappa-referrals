@@ -20,6 +20,9 @@ Required environment variables:
   NOTIFICATION_EMAIL – Notification recipient (e.g. support@halt360.org)
   ALLOWED_ORIGIN     – Site domain for CORS (e.g. https://www.haltreferral.org)
 
+Constants:
+  ADMIN_GROUP_NAME   – Cognito group name for admin users ("admin")
+
 Authentication:
   All routes except POST /program-intake are protected by an API Gateway JWT
   authorizer backed by Cognito. The Lambda receives the validated claims in
@@ -42,6 +45,8 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+ADMIN_GROUP_NAME = "admin"
 
 dynamodb = boto3.resource("dynamodb")
 ses      = boto3.client("ses")
@@ -121,19 +126,14 @@ def _is_admin_caller(event: dict) -> bool:
     they log out and back in to get an updated token.
     """
     claims = _get_jwt_claims(event)
-    admin_group_name = _get_admin_group_name()
     groups = _parse_group_claims(claims.get("cognito:groups") or "")
-    return admin_group_name in groups
+    return ADMIN_GROUP_NAME in groups
 
 
 def _authorize_admin_request(event: dict) -> dict | None:
-    try:
-        if _is_admin_caller(event):
-            return None
-        return _respond(403, {"error": "Administrator access is required."})
-    except ValueError as exc:
-        logger.error("admin authorization config error: %s", exc)
-        return _respond(500, {"error": "Admin authorization is not configured correctly."})
+    if _is_admin_caller(event):
+        return None
+    return _respond(403, {"error": "Administrator access is required."})
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -403,17 +403,11 @@ def _get_user_pool_id() -> str:
     return pool_id
 
 
-def _get_admin_group_name() -> str:
-    group_name = os.environ.get("ADMIN_GROUP_NAME", "").strip()
-    if not group_name:
-        raise ValueError("ADMIN_GROUP_NAME environment variable is not set")
-    return group_name
-
 
 def _handle_list_users(event: dict) -> dict:
     try:
         pool_id     = _get_user_pool_id()
-        admin_group = _get_admin_group_name()
+        admin_group = ADMIN_GROUP_NAME
         params = event.get("queryStringParameters") or {}
         pagination_token = (params.get("pagination_token") or "").strip()
 
@@ -508,7 +502,7 @@ def _handle_create_user(body: dict) -> dict:
             cognito.admin_add_user_to_group(
                 UserPoolId=pool_id,
                 Username=email,
-                GroupName=_get_admin_group_name(),
+                GroupName=ADMIN_GROUP_NAME,
             )
 
         logger.info("Created user %s for state %s admin=%s", email, state, is_admin)
@@ -519,7 +513,7 @@ def _handle_create_user(body: dict) -> dict:
         if code == "UsernameExistsException":
             return _respond(409, {"error": f"A user with email {email} already exists."})
         if code == "ResourceNotFoundException" and is_admin:
-            return _respond(500, {"error": f"Admin group '{_get_admin_group_name()}' not found in Cognito. Check ADMIN_GROUP_NAME."})
+            return _respond(500, {"error": f"Admin group '{ADMIN_GROUP_NAME}' not found in Cognito. Check ADMIN_GROUP_NAME."})
         logger.error("admin_create_user failed: %s", exc)
         return _respond(500, {"error": "Failed to create user"})
     except ValueError as exc:
@@ -619,7 +613,7 @@ def _handle_edit_user(body: dict) -> dict:
 
     try:
         pool_id     = _get_user_pool_id()
-        admin_group = _get_admin_group_name()
+        admin_group = ADMIN_GROUP_NAME
 
         if state is not None:
             state = state.strip()
