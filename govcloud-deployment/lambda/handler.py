@@ -384,15 +384,15 @@ def _handle_list_users(event: dict) -> dict:
         admin_emails: set = set()
         kwargs = {"UserPoolId": pool_id, "GroupName": admin_group, "Limit": 60}
         while True:
-            resp = cognito.list_users_in_group(**kwargs)
-            for u in resp.get("Users", []):
+            response = cognito.list_users_in_group(**kwargs)
+            for u in response.get("Users", []):
                 attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
                 email = attrs.get("email", "").strip().lower()
                 if email:
                     admin_emails.add(email)
                 else:
                     logger.warning("Admin group member %s has no email attribute — skipping", u.get("Username"))
-            next_token = resp.get("NextToken")
+            next_token = response.get("NextToken")
             if not next_token:
                 break
             kwargs["NextToken"] = next_token
@@ -403,8 +403,8 @@ def _handle_list_users(event: dict) -> dict:
         if pagination_token:
             kwargs["PaginationToken"] = pagination_token
 
-        resp = cognito.list_users(**kwargs)
-        for u in resp.get("Users", []):
+        response = cognito.list_users(**kwargs)
+        for u in response.get("Users", []):
             attrs    = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
             email    = attrs.get("email", "").strip().lower()
             if not email:
@@ -421,7 +421,7 @@ def _handle_list_users(event: dict) -> dict:
                 "is_admin":      email in admin_emails,
             })
 
-        next_pagination_token = resp.get("PaginationToken", "")
+        next_pagination_token = response.get("PaginationToken", "")
 
         users.sort(key=lambda u: u["email"])
         logger.info(
