@@ -1286,10 +1286,7 @@
       });
 
       Auth.onReady(() => {
-        document.getElementById("headerEmail").textContent = Auth.getEmail();
-        document.getElementById("headerState").textContent = Auth.getState();
         initUserListActions();
-        loadUsers();
       });
 
       document.addEventListener("halt:authenticated", () => {
