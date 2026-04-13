@@ -469,7 +469,7 @@ def _handle_list_users(event: dict) -> dict:
         return _respond(500, {"error": "Failed to list users"})
     except ValueError as exc:
         logger.error("list_users config error: %s", exc)
-        return _respond(500, {"error": "Admin group is not configured correctly."})
+        return _respond(500, {"error": str(exc)})
 
 
 def _handle_create_user(body: dict) -> dict:
@@ -506,12 +506,12 @@ def _handle_create_user(body: dict) -> dict:
         if code == "UsernameExistsException":
             return _respond(409, {"error": f"A user with email {email} already exists."})
         if code == "ResourceNotFoundException" and is_admin:
-            return _respond(500, {"error": "Admin group is not configured correctly."})
+            return _respond(500, {"error": f"Admin group '{_get_admin_group_name()}' not found in Cognito. Check ADMIN_GROUP_NAME."})
         logger.error("admin_create_user failed: %s", exc)
         return _respond(500, {"error": "Failed to create user"})
     except ValueError as exc:
         logger.error("create_user config error: %s", exc)
-        return _respond(500, {"error": "Admin group is not configured correctly."})
+        return _respond(500, {"error": str(exc)})
 
 
 def _handle_delete_user(event: dict) -> dict:
@@ -645,7 +645,7 @@ def _handle_edit_user(body: dict) -> dict:
         return _respond(500, {"error": "Failed to update user"})
     except ValueError as exc:
         logger.error("edit_user config error: %s", exc)
-        return _respond(500, {"error": "Admin group is not configured correctly."})
+        return _respond(500, {"error": str(exc)})
 
 
 def _handle_toggle_user(body: dict) -> dict:
