@@ -17,11 +17,11 @@ Required environment variables:
   TABLE_NAME         – DynamoDB table name
   USER_POOL_ID       – Cognito User Pool ID for admin user management
   SENDER_EMAIL       – SES-verified sender (e.g. no-reply@haltreferral.org)
-  NOTIFICATION_EMAIL – Notification recipient (e.g. support@halt360.org)
   ALLOWED_ORIGIN     – Site domain for CORS (e.g. https://www.haltreferral.org)
 
 Constants:
   ADMIN_GROUP_NAME   – Cognito group name for admin users ("admin")
+  NOTIFICATION_EMAILS – Notification recipients for new referral alerts
 
 Authentication:
   All routes except POST /program-intake are protected by an API Gateway JWT
@@ -51,8 +51,8 @@ ADMIN_GROUP_NAME = "admin"
 dynamodb = boto3.resource("dynamodb")
 ses      = boto3.client("ses")
 cognito  = boto3.client("cognito-idp")
-ssm      = boto3.client("ssm")
 
+NOTIFICATION_EMAILS = ["support@halt360.org", "jerry@cappahealth.com"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -280,36 +280,10 @@ def _handle_update_referral(event: dict, path: str) -> dict:
 # SES notification (no PII)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _get_notification_emails(state: str) -> list[str]:
-    """
-    Look up notification recipients for the given state from SSM Parameter Store.
-    The parameter value is a JSON object keyed by state name, e.g.:
-      {"Alaska": "a@example.gov,b@example.gov", "Default": "support@halt360.org"}
-    Falls back to the "Default" key, then to the NOTIFICATION_EMAIL env var.
-    """
-    try:
-        resp  = ssm.get_parameter(Name="/halt-landing/notification-emails")
-        email_map = json.loads(resp["Parameter"]["Value"])
-        raw = email_map.get(state) or email_map.get("Default") or ""
-        recipients = [e.strip() for e in raw.split(",") if e.strip()]
-        if recipients:
-            return recipients
-    except Exception as exc:
-        logger.warning("Could not load notification emails from SSM: %s", exc)
-
-    # Fallback to environment variable
-    return [
-        addr.strip()
-        for addr in os.environ.get("NOTIFICATION_EMAIL", "").split(",")
-        if addr.strip()
-    ]
-
-
 def _send_notification(submission_id: str, program: str, state: str) -> None:
     sender     = os.environ.get("SENDER_EMAIL", "")
-    recipients = _get_notification_emails(state)
-    if not sender or not recipients:
-        logger.warning("SENDER_EMAIL or NOTIFICATION_EMAIL not set — skipping")
+    if not sender:
+        logger.warning("SENDER_EMAIL not set — skipping notification")
         return
 
     allowed_origin = os.environ.get("ALLOWED_ORIGIN", "").rstrip("/")
@@ -378,7 +352,7 @@ def _send_notification(submission_id: str, program: str, state: str) -> None:
     try:
         ses.send_email(
             Source=sender,
-            Destination={"ToAddresses": recipients},
+            Destination={"ToAddresses": NOTIFICATION_EMAILS},
             Message={
                 "Subject": {"Data": subject,   "Charset": "UTF-8"},
                 "Body": {
