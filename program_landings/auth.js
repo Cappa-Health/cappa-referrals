@@ -751,10 +751,19 @@ const Auth = {
 
   const idToken = sessionStorage.getItem(SK_ID_TOKEN);
 
+  // Helper: run fn now if DOM is ready, otherwise wait for DOMContentLoaded.
+  function _whenReady(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn);
+    } else {
+      fn();
+    }
+  }
+
   if (idToken && !_isTokenExpired(idToken)) {
     // Valid token already in storage — proceed immediately
     _isReady = true;
-    document.addEventListener("DOMContentLoaded", () => {
+    _whenReady(() => {
       _hideModal();
       _readyCallbacks.forEach((fn) => fn());
       _readyCallbacks = [];
@@ -767,7 +776,7 @@ const Auth = {
   const refreshed = await _tryRefresh();
   if (refreshed) {
     _isReady = true;
-    document.addEventListener("DOMContentLoaded", () => {
+    _whenReady(() => {
       _hideModal();
       _readyCallbacks.forEach((fn) => fn());
       _readyCallbacks = [];
@@ -777,7 +786,7 @@ const Auth = {
   }
 
   // No valid token — show login modal
-  document.addEventListener("DOMContentLoaded", () => {
+  _whenReady(() => {
     _injectModal();
     _showModal();
     document.getElementById("authEmail").focus();
