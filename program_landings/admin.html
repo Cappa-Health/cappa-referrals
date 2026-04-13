@@ -1292,6 +1292,12 @@
         loadUsers();
       });
 
+      document.addEventListener("halt:authenticated", () => {
+        document.getElementById("headerEmail").textContent = Auth.getEmail();
+        document.getElementById("headerState").textContent = Auth.getState();
+        loadUsers();
+      });
+
       document.addEventListener("halt:logout", () => {
         // Clear all PII and sensitive data from the DOM before login screen appears.
         document.getElementById("headerEmail").textContent = "";
