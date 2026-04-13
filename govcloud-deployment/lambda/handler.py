@@ -713,7 +713,7 @@ def lambda_handler(event, context):
     if method == "PATCH" and path.startswith("/referrals/"):
         return _handle_update_referral(event, path)
 
-    if path == "/admin/users" or path.startswith("/admin/"):
+    if path.startswith("/admin/"):
         return _handle_admin_route(event, method, path, body)
 
     return _respond(404, {"error": "Not found"})
