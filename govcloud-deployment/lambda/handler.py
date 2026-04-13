@@ -92,11 +92,6 @@ def _get_caller_state(event: dict) -> str:
     return claims.get("custom:state", "").strip()
 
 
-def _get_caller_sub(event: dict) -> str:
-    """Return the caller's Cognito sub (UUID). Always present and immutable."""
-    claims = _get_jwt_claims(event)
-    return (claims.get("sub") or "").strip()
-
 
 def _parse_group_claims(raw_groups) -> list[str]:
     """Parse the cognito:groups claim into a list of group name strings.
@@ -125,24 +120,17 @@ def _parse_group_claims(raw_groups) -> list[str]:
 
 
 def _is_admin_caller(event: dict) -> bool:
+    """Check whether the caller is in the admin group using their JWT claims.
+
+    API Gateway validates the token before Lambda is invoked, so the
+    cognito:groups claim is authoritative. No secondary Cognito API call
+    is needed — if a user is added to admin after their token was issued,
+    they log out and back in to get an updated token.
+    """
     claims = _get_jwt_claims(event)
     admin_group_name = _get_admin_group_name()
-    groups = _parse_group_claims(claims.get("cognito:groups") or claims.get("groups") or "")
-
-    if admin_group_name in groups:
-        return True
-
-    sub = _get_caller_sub(event)
-    if not sub:
-        return False
-
-    pool_id = _get_user_pool_id()
-    response = cognito.admin_list_groups_for_user(
-        UserPoolId=pool_id,
-        Username=sub,
-        Limit=60,
-    )
-    return any(group.get("GroupName") == admin_group_name for group in response.get("Groups", []))
+    groups = _parse_group_claims(claims.get("cognito:groups") or "")
+    return admin_group_name in groups
 
 
 # ─────────────────────────────────────────────────────────────────────────────
