@@ -641,10 +641,11 @@ def _handle_toggle_user(body: dict) -> dict:
         if enabled:
             cognito.admin_enable_user(UserPoolId=pool_id, Username=email)
             logger.info("Enabled user %s", email)
+            return _respond(200, {"message": f"User {email} enabled."})
         else:
             cognito.admin_disable_user(UserPoolId=pool_id, Username=email)
             logger.info("Disabled user %s", email)
-        return _respond(200, {"message": f"User {email} {'enabled' if enabled else 'disabled'}."})
+            return _respond(200, {"message": f"User {email} disabled."})
 
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
