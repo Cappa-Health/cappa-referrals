@@ -126,6 +126,16 @@ def _is_admin_caller(event: dict) -> bool:
     return admin_group_name in groups
 
 
+def _authorize_admin_request(event: dict) -> dict | None:
+    try:
+        if _is_admin_caller(event):
+            return None
+        return _respond(403, {"error": "Administrator access is required."})
+    except ValueError as exc:
+        logger.error("admin authorization config error: %s", exc)
+        return _respond(500, {"error": "Admin authorization is not configured correctly."})
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Route: POST /program-intake
 # ─────────────────────────────────────────────────────────────────────────────
@@ -672,6 +682,33 @@ def _handle_toggle_user(body: dict) -> dict:
         return _respond(500, {"error": "Failed to update user"})
 
 
+def _handle_admin_route(event: dict, method: str, path: str, body: dict) -> dict:
+    """All admin endpoints must be registered here so the /admin namespace stays protected."""
+    auth_error = _authorize_admin_request(event)
+    if auth_error is not None:
+        return auth_error
+
+    if path == "/admin/users":
+        if method == "GET":
+            return _handle_list_users(event)
+        if method == "POST":
+            return _handle_create_user(body)
+        if method == "PATCH":
+            if "enabled" in body:
+                return _handle_toggle_user(body)
+            return _handle_edit_user(body)
+        if method == "DELETE":
+            return _handle_delete_user(event)
+
+    if method == "POST" and path == "/admin/users/resend":
+        return _handle_resend_invite(body)
+
+    if method == "POST" and path == "/admin/users/reset-password":
+        return _handle_reset_password(body)
+
+    return _respond(404, {"error": "Not found"})
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Main handler — route dispatcher
 # ─────────────────────────────────────────────────────────────────────────────
@@ -708,33 +745,7 @@ def lambda_handler(event, context):
     if method == "PATCH" and path.startswith("/referrals/"):
         return _handle_update_referral(event, path)
 
-    _admin_paths = {"/admin/users", "/admin/users/resend", "/admin/users/reset-password"}
-    if path in _admin_paths and method in {"GET", "POST", "PATCH", "DELETE"}:
-        try:
-            if not _is_admin_caller(event):
-                return _respond(403, {"error": "Administrator access is required."})
-        except ValueError as exc:
-            logger.error("admin authorization config error: %s", exc)
-            return _respond(500, {"error": "Admin authorization is not configured correctly."})
-
-    if method == "GET" and path == "/admin/users":
-        return _handle_list_users(event)
-
-    if method == "POST" and path == "/admin/users":
-        return _handle_create_user(body)
-
-    if method == "PATCH" and path == "/admin/users":
-        if "enabled" in body:
-            return _handle_toggle_user(body)
-        return _handle_edit_user(body)
-
-    if method == "POST" and path == "/admin/users/resend":
-        return _handle_resend_invite(body)
-
-    if method == "POST" and path == "/admin/users/reset-password":
-        return _handle_reset_password(body)
-
-    if method == "DELETE" and path == "/admin/users":
-        return _handle_delete_user(event)
+    if path == "/admin/users" or path.startswith("/admin/"):
+        return _handle_admin_route(event, method, path, body)
 
     return _respond(404, {"error": "Not found"})
