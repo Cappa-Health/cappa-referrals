@@ -485,7 +485,10 @@ def _handle_list_users(event: dict) -> dict:
 def _handle_create_user(body: dict) -> dict:
     email = (body.get("email") or "").strip().lower()
     state = (body.get("state") or "").strip()
-    is_admin = body.get("is_admin") is True
+    is_admin_raw = body.get("is_admin")
+    if is_admin_raw is not None and not isinstance(is_admin_raw, bool):
+        return _respond(400, {"error": "'is_admin' must be a boolean"})
+    is_admin = is_admin_raw is True
     if not email or not state:
         return _respond(400, {"error": "Fields 'email' and 'state' are required"})
 
