@@ -93,30 +93,23 @@ def _get_caller_state(event: dict) -> str:
 
 
 
-def _parse_group_claims(raw_groups) -> list[str]:
-    """Parse the cognito:groups claim into a list of group name strings.
+def _parse_group_claims(raw: str) -> list[str]:
+    """Parse the cognito:groups JWT claim into a list of group name strings.
 
-    API Gateway V2 JWT authorizer stringifies all JWT claims, so a Cognito
-    array claim like ["admin"] arrives as the JSON string '["admin"]'.
-    An unexpected format is treated as no groups — the safe default for
-    access control.
+    API Gateway V2 JWT authorizer delivers all claims as strings, so the
+    Cognito array claim ["admin"] arrives as the JSON string '["admin"]'.
+    Any unexpected format returns [] — the safe default for access control.
     """
-    if isinstance(raw_groups, list):
-        return [str(g).strip() for g in raw_groups if str(g).strip()]
-
-    if isinstance(raw_groups, str):
-        raw_groups = raw_groups.strip()
-        if not raw_groups:
-            return []
-        try:
-            parsed = json.loads(raw_groups)
-        except json.JSONDecodeError:
-            logger.warning("Unexpected format for cognito:groups claim — treating as no groups")
-            return []
-        if isinstance(parsed, list):
-            return [str(g).strip() for g in parsed if str(g).strip()]
-
-    return []
+    if not raw or not isinstance(raw, str):
+        return []
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.warning("Unexpected format for cognito:groups claim — treating as no groups")
+        return []
+    if not isinstance(parsed, list):
+        return []
+    return [str(g).strip() for g in parsed if str(g).strip()]
 
 
 def _is_admin_caller(event: dict) -> bool:
