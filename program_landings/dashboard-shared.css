@@ -1,0 +1,169 @@
+/*
+ * dashboard-shared.css
+ * Shared styles for HALT dashboard pages.
+ * Loaded by: dashboard.html, admin.html
+ *
+ * Each page sets CSS custom properties in its own <style> block before
+ * loading this file to control per-page sizing:
+ *
+ *   dashboard.html:
+ *     :root {
+ *       --header-padding: 16px 32px;
+ *       --nav-btn-padding: 6px 14px;
+ *       --nav-btn-size: 0.8rem;
+ *     }
+ *
+ *   admin.html:
+ *     :root {
+ *       --header-padding: 12px 24px;
+ *       --nav-btn-padding: 5px 12px;
+ *       --nav-btn-size: 0.78rem;
+ *     }
+ */
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #1a2a3a;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  background: #003366;
+  color: #fff;
+  padding: var(--header-padding, 16px 32px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* ── User Info ── */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+}
+.user-info .user-detail {
+  text-align: right;
+  opacity: 0.85;
+  line-height: 1.3;
+}
+.user-info .user-detail strong {
+  display: block;
+  font-size: 0.82rem;
+}
+
+/* ── Logout button ── */
+.btn-logout {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: var(--nav-btn-padding, 6px 14px);
+  border-radius: 6px;
+  font-size: var(--nav-btn-size, 0.8rem);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Header nav dropdown ── */
+.nav-dropdown {
+  position: relative;
+}
+.nav-dropdown-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: var(--nav-btn-padding, 6px 14px);
+  border-radius: 6px;
+  font-size: var(--nav-btn-size, 0.8rem);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-dropdown-btn:hover,
+.nav-dropdown-btn[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.25);
+}
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  min-width: 160px;
+  z-index: 200;
+  overflow: hidden;
+}
+.nav-dropdown-menu.open {
+  display: block;
+}
+.nav-dropdown-menu a {
+  display: block;
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #003366;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav-dropdown-menu a:hover {
+  background: #f0f4f8;
+}
+.nav-dropdown-menu .menu-divider {
+  border: none;
+  border-top: 1px solid #e8ecf0;
+  margin: 4px 0;
+}
+
+/* ── Spinner ── */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Screen-reader only utility ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
