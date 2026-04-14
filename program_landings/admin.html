@@ -1147,10 +1147,18 @@
       });
 
       Auth.onReady(() => {
+        if (!Auth.isAdmin()) {
+          window.location.replace("/program_landings/dashboard.html");
+          return;
+        }
         initUserListActions();
       });
 
       document.addEventListener("halt:authenticated", () => {
+        if (!Auth.isAdmin()) {
+          window.location.replace("/program_landings/dashboard.html");
+          return;
+        }
         document.getElementById("headerEmail").textContent = Auth.getEmail();
         document.getElementById("headerState").textContent = Auth.getState();
         loadUsers();
