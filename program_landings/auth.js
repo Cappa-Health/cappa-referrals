@@ -276,7 +276,7 @@ function _injectModal() {
         <h2>Reset Password</h2>
         <p class="auth-sub">Enter the verification code sent to your email.</p>
         <label for="authResetCode">Verification Code</label>
-        <input type="text" id="authResetCode" autocomplete="one-time-code" placeholder="6-digit code" />
+        <input type="text" id="authResetCode" autocomplete="one-time-code" placeholder="6-digit code" oninput="Auth._validateResetPw()" />
         <label for="authResetPw1">New Password</label>
         <div class="pw-wrap">
           <input type="password" id="authResetPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="Auth._validateResetPw()" />
@@ -329,13 +329,17 @@ function _injectModal() {
   `;
   document.body.appendChild(overlay);
 
-  // Submit on Enter key
+  // Submit on Enter key — route to whichever view is currently visible
   overlay.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
-    const loginVisible =
-      document.getElementById("authLogin").style.display !== "none";
-    if (loginVisible) Auth._submitLogin();
-    else Auth._submitNewPassword();
+    if (document.getElementById("authLogin").style.display !== "none")
+      Auth._submitLogin();
+    else if (document.getElementById("authForgotPassword").style.display !== "none")
+      Auth._submitForgotPassword();
+    else if (document.getElementById("authConfirmReset").style.display !== "none")
+      Auth._submitConfirmReset();
+    else
+      Auth._submitNewPassword();
   });
 }
 
