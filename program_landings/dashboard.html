@@ -692,17 +692,9 @@
       });
 
       function _showAdminLinkIfAdmin() {
-        const token = Auth.getToken();
-        if (!token) return;
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));
-          const groups = payload["cognito:groups"] || [];
-          const isAdmin = Array.isArray(groups)
-            ? groups.includes("admin")
-            : String(groups).split(",").map(s => s.trim()).includes("admin");
-          document.getElementById("adminNavLink").style.display   = isAdmin ? "block" : "none";
-          document.getElementById("adminNavDivider").style.display = isAdmin ? "block" : "none";
-        } catch { /* token not yet available — link stays hidden */ }
+        const isAdmin = Auth.isAdmin();
+        document.getElementById("adminNavLink").style.display    = isAdmin ? "block" : "none";
+        document.getElementById("adminNavDivider").style.display = isAdmin ? "block" : "none";
       }
 
       // ── Auth bootstrap ────────────────────────────────────────────────────────────
