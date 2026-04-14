@@ -253,11 +253,11 @@ function _injectModal() {
         <label for="authPassword">Password</label>
         <div class="pw-wrap">
           <input type="password" id="authPassword" autocomplete="current-password" placeholder="Password" />
-          <button type="button" class="pw-toggle" onclick="Auth._togglePw('authPassword', this)" tabindex="-1">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authPassword', this)">👁</button>
         </div>
         <button class="auth-submit" data-idle-label="Sign In" onclick="Auth._submitLogin()">Sign In</button>
         <button class="auth-link" onclick="Auth._showForgotPassword()">Forgot password?</button>
-        <div class="auth-error"></div>
+        <div class="auth-error" role="alert"></div>
       </div>
 
       <!-- Forgot password — step 1: enter email -->
@@ -268,7 +268,7 @@ function _injectModal() {
         <input type="email" id="authForgotEmail" autocomplete="username" placeholder="you@example.gov" />
         <button class="auth-submit" data-idle-label="Send Code" onclick="Auth._submitForgotPassword()">Send Code</button>
         <button class="auth-link" onclick="Auth._showLogin()">Back to sign in</button>
-        <div class="auth-error"></div>
+        <div class="auth-error" role="alert"></div>
       </div>
 
       <!-- Forgot password — step 2: enter code + new password -->
@@ -280,24 +280,24 @@ function _injectModal() {
         <label for="authResetPw1">New Password</label>
         <div class="pw-wrap">
           <input type="password" id="authResetPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="Auth._validateResetPw()" />
-          <button type="button" class="pw-toggle" onclick="Auth._togglePw('authResetPw1', this)" tabindex="-1">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authResetPw1', this)">👁</button>
         </div>
         <div id="authPwReqs" style="font-size:0.78rem;margin:-8px 0 12px;line-height:1.7;">
-          <span id="reqLen"  style="color:#aaa;">✗ At least 12 characters</span><br>
-          <span id="reqUpper" style="color:#aaa;">✗ Uppercase letter</span><br>
-          <span id="reqLower" style="color:#aaa;">✗ Lowercase letter</span><br>
-          <span id="reqNum"   style="color:#aaa;">✗ Number</span><br>
-          <span id="reqSym"   style="color:#aaa;">✗ Symbol (!@#$%…)</span>
+          <span id="reqLen"  style="color:#767676;">✗ At least 12 characters</span><br>
+          <span id="reqUpper" style="color:#767676;">✗ Uppercase letter</span><br>
+          <span id="reqLower" style="color:#767676;">✗ Lowercase letter</span><br>
+          <span id="reqNum"   style="color:#767676;">✗ Number</span><br>
+          <span id="reqSym"   style="color:#767676;">✗ Symbol (!@#$%…)</span>
         </div>
         <label for="authResetPw2">Confirm Password</label>
         <div class="pw-wrap">
           <input type="password" id="authResetPw2" autocomplete="new-password" placeholder="Confirm password" oninput="Auth._validateResetPw()" />
-          <button type="button" class="pw-toggle" onclick="Auth._togglePw('authResetPw2', this)" tabindex="-1">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authResetPw2', this)">👁</button>
         </div>
-        <div id="authPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#aaa;">✗ Passwords match</div>
+        <div id="authPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#767676;">✗ Passwords match</div>
         <button class="auth-submit" data-idle-label="Reset Password" onclick="Auth._submitConfirmReset()" disabled>Reset Password</button>
         <button class="auth-link" onclick="Auth._showLogin()">Back to sign in</button>
-        <div class="auth-error"></div>
+        <div class="auth-error" role="alert"></div>
       </div>
 
       <!-- New password required form (first login) -->
@@ -307,23 +307,23 @@ function _injectModal() {
         <label for="authNewPw1">New Password</label>
         <div class="pw-wrap">
           <input type="password" id="authNewPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="Auth._validateNewPw()" />
-          <button type="button" class="pw-toggle" onclick="Auth._togglePw('authNewPw1', this)" tabindex="-1">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authNewPw1', this)">👁</button>
         </div>
         <div id="authNewPwReqs" style="font-size:0.78rem;margin:-8px 0 12px;line-height:1.7;">
-          <span id="newReqLen"   style="color:#aaa;">✗ At least 12 characters</span><br>
-          <span id="newReqUpper" style="color:#aaa;">✗ Uppercase letter</span><br>
-          <span id="newReqLower" style="color:#aaa;">✗ Lowercase letter</span><br>
-          <span id="newReqNum"   style="color:#aaa;">✗ Number</span><br>
-          <span id="newReqSym"   style="color:#aaa;">✗ Symbol (!@#$%…)</span>
+          <span id="newReqLen"   style="color:#767676;">✗ At least 12 characters</span><br>
+          <span id="newReqUpper" style="color:#767676;">✗ Uppercase letter</span><br>
+          <span id="newReqLower" style="color:#767676;">✗ Lowercase letter</span><br>
+          <span id="newReqNum"   style="color:#767676;">✗ Number</span><br>
+          <span id="newReqSym"   style="color:#767676;">✗ Symbol (!@#$%…)</span>
         </div>
         <label for="authNewPw2">Confirm Password</label>
         <div class="pw-wrap">
           <input type="password" id="authNewPw2" autocomplete="new-password" placeholder="Confirm password" oninput="Auth._validateNewPw()" />
-          <button type="button" class="pw-toggle" onclick="Auth._togglePw('authNewPw2', this)" tabindex="-1">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authNewPw2', this)">👁</button>
         </div>
-        <div id="authNewPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#aaa;">✗ Passwords match</div>
+        <div id="authNewPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#767676;">✗ Passwords match</div>
         <button class="auth-submit" data-idle-label="Set Password" onclick="Auth._submitNewPassword()" disabled>Set Password</button>
-        <div class="auth-error"></div>
+        <div class="auth-error" role="alert"></div>
       </div>
     </div>
   `;
@@ -344,6 +344,12 @@ function _showModal() {
 }
 function _hideModal() {
   document.getElementById("authOverlay").style.display = "none";
+}
+function _focusView(viewId) {
+  const view = document.getElementById(viewId);
+  if (!view) return;
+  const first = view.querySelector("input:not([type=hidden]), button:not([disabled])");
+  if (first) first.focus();
 }
 function _getVisibleAuthView() {
   return (
@@ -499,6 +505,7 @@ const Auth = {
         document.getElementById("authLogin").style.display = "none";
         document.getElementById("authNewPassword").style.display = "block";
         _setBusy(false);
+        _focusView("authNewPassword");
         return;
       }
 
@@ -563,6 +570,8 @@ const Auth = {
     const isHidden = input.type === "password";
     input.type = isHidden ? "text" : "password";
     btn.textContent = isHidden ? "🙈" : "👁";
+    btn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+    btn.setAttribute("aria-pressed", isHidden ? "true" : "false");
   },
 
   _validateNewPw() {
@@ -582,7 +591,7 @@ const Auth = {
       if (!el) return;
       const label = el.textContent.slice(2);
       el.textContent = (pass ? "✓ " : "✗ ") + label;
-      el.style.color = pass ? "#1a7a3c" : "#aaa";
+      el.style.color = pass ? "#1a7a3c" : "#767676";
     });
 
     const allPass = Object.values(checks).every(Boolean);
@@ -590,7 +599,7 @@ const Auth = {
     const matchEl = document.getElementById("authNewPwMatch");
     if (matchEl) {
       matchEl.textContent = matches ? "✓ Passwords match" : "✗ Passwords match";
-      matchEl.style.color = matches ? "#1a7a3c" : "#aaa";
+      matchEl.style.color = matches ? "#1a7a3c" : "#767676";
     }
 
     const btn = document.querySelector("#authNewPassword .auth-submit");
@@ -616,7 +625,7 @@ const Auth = {
       if (!el) return;
       const label = el.textContent.slice(2);
       el.textContent = (pass ? "✓ " : "✗ ") + label;
-      el.style.color = pass ? "#1a7a3c" : "#aaa";
+      el.style.color = pass ? "#1a7a3c" : "#767676";
     });
 
     const allPass = Object.values(checks).every(Boolean);
@@ -624,7 +633,7 @@ const Auth = {
     const matchEl = document.getElementById("authPwMatch");
     if (matchEl) {
       matchEl.textContent = matches ? "✓ Passwords match" : "✗ Passwords match";
-      matchEl.style.color = matches ? "#1a7a3c" : "#aaa";
+      matchEl.style.color = matches ? "#1a7a3c" : "#767676";
     }
 
     const btn = document.querySelector("#authConfirmReset .auth-submit");
@@ -649,6 +658,7 @@ const Auth = {
       btn.disabled = false;
       btn.textContent = btn.dataset.idleLabel || "Sign In";
     }
+    _focusView("authLogin");
   },
 
   _showForgotPassword() {
@@ -659,6 +669,7 @@ const Auth = {
     document.getElementById("authForgotPassword").style.display = "block";
     _setError("");
     _setBusy(false);
+    _focusView("authForgotPassword");
   },
 
   async _submitForgotPassword() {
@@ -678,6 +689,7 @@ const Auth = {
       document.getElementById("authForgotPassword").style.display = "none";
       document.getElementById("authConfirmReset").style.display = "block";
       _setBusy(false);
+      _focusView("authConfirmReset");
     } catch (err) {
       _setBusy(false);
       _setError(err.message || "Failed to send code. Please try again.");
@@ -789,6 +801,6 @@ const Auth = {
   _whenReady(() => {
     _injectModal();
     _showModal();
-    document.getElementById("authEmail").focus();
+    _focusView("authLogin");
   });
 })();

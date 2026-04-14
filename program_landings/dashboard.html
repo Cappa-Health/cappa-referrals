@@ -279,6 +279,21 @@
       thead th.sorted .sort-icon {
         opacity: 1;
       }
+      .sort-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+      }
+      .sort-btn:focus-visible {
+        outline: 2px solid #003366;
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
       tbody tr {
         border-bottom: 1px solid #f0f4f8;
         cursor: pointer;
@@ -1085,13 +1100,14 @@
           const cls = sortCol === c.key ? " sorted" : "";
           const arrow =
             sortCol === c.key ? (sortDir === "asc" ? "▲" : "▼") : "⇅";
-          html += `<th class="${cls}" onclick="sortBy('${c.key}')">${c.label} <span class="sort-icon">${arrow}</span></th>`;
+          const sortDesc = sortCol === c.key ? (sortDir === "asc" ? ", sorted ascending" : ", sorted descending") : "";
+          html += `<th class="${cls}"><button class="sort-btn" onclick="sortBy('${c.key}')">${c.label} <span class="sort-icon" aria-hidden="true">${arrow}</span><span class="sr-only">${sortDesc}</span></button></th>`;
         });
         html += "<th>Actions</th></tr></thead><tbody>";
 
         filtered.forEach((r) => {
           const expanded = expandedId === r.submission_id;
-          html += `<tr onclick="toggleExpand('${r.submission_id}')" class="${expanded ? "expanded" : ""}">`;
+          html += `<tr onclick="toggleExpand('${r.submission_id}')" onkeydown="if(event.key==='Enter'||event.key===' '){toggleExpand('${r.submission_id}');event.preventDefault();}" tabindex="0" role="row" aria-expanded="${expanded}" class="${expanded ? "expanded" : ""}">`;
           COLS.forEach((c) => {
             if (c.key === "status") html += `<td>${statusBadge(r.status)}</td>`;
             else if (c.key === "landing_page")
@@ -1149,7 +1165,7 @@
             .join("")}
         </select>
         <button class="btn btn-save" onclick="saveStatus('${r.submission_id}', event)">Save</button>
-        <span class="save-msg" id="msg_${r.submission_id}">✓ Saved</span>
+        <span class="save-msg" role="status" id="msg_${r.submission_id}">✓ Saved</span>
       </div>
     </div>
   </div>`;

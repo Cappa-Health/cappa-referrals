@@ -983,6 +983,7 @@
                 submitBtn.value = origVal;
                 var errMsg = document.createElement("p");
                 errMsg.id = "form-error-msg";
+                errMsg.setAttribute("role", "alert");
                 errMsg.style.color = "#a94442";
                 errMsg.textContent =
                   "Something went wrong. Please try again or email support@HALT360.org.";
