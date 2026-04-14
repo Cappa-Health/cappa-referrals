@@ -1334,6 +1334,7 @@
             body: JSON.stringify({ email, state, is_admin: isAdmin }),
           });
 
+          if (res.status === 401) { Auth.logout(); return; }
           const data = await res.json();
           if (res.status === 403) {
             throw new Error(
@@ -1815,6 +1816,7 @@
             },
             body: JSON.stringify({ email, enabled: enable }),
           });
+          if (res.status === 401) { Auth.logout(); return; }
           if (res.status === 403) {
             const d = await res.json();
             throw new Error(d.error || "Administrator access is required.");
@@ -1840,6 +1842,7 @@
               headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
             },
           );
+          if (res.status === 401) { Auth.logout(); return; }
           if (res.status === 403) {
             const d = await res.json();
             throw new Error(d.error || "Administrator access is required.");
@@ -1866,6 +1869,7 @@
             },
             body: JSON.stringify({ email }),
           });
+          if (res.status === 401) { Auth.logout(); return; }
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
           alert(`Temporary password resent to ${email}.`);
@@ -1886,6 +1890,7 @@
             },
             body: JSON.stringify({ email }),
           });
+          if (res.status === 401) { Auth.logout(); return; }
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
           alert(`Password reset sent to ${email}.`);
@@ -2040,6 +2045,7 @@
               is_admin: isAdmin,
             }),
           });
+          if (res.status === 401) { Auth.logout(); return; }
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
