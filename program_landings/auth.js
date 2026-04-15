@@ -533,7 +533,18 @@ const Auth = {
       } else if (err.code === "UserNotFoundException") {
         _setError("No account found for that email address.");
       } else if (err.code === "PasswordResetRequiredException") {
-        _setError("A password reset is required. Contact an administrator.");
+        _pendingEmail = email;
+        AUTH_VIEW_IDS.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = "none";
+        });
+        document.getElementById("authConfirmReset").style.display = "block";
+        _setBusy(false);
+        _setError(
+          "Your password has been reset by an administrator. Enter the verification code sent to your email and choose a new password.",
+          "#b05a00",
+        );
+        _focusView("authConfirmReset");
       } else {
         _setError(err.message || "Sign-in failed. Please try again.");
       }

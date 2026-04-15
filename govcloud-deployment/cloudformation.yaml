@@ -139,6 +139,16 @@ Resources:
             Priority: 1
           - Name: verified_phone_number
             Priority: 2
+      EmailVerificationSubject: "Your HALT Referral Dashboard verification code"
+      EmailVerificationMessage: >
+        <p>Your HALT Referral Dashboard password reset code is: <strong>{####}</strong></p>
+        <p>To set your new password:</p>
+        <ol>
+          <li>Go to <a href="https://www.haltreferral.org/program_landings/dashboard.html">https://www.haltreferral.org/program_landings/dashboard.html</a></li>
+          <li>Sign in with your email — you will be automatically prompted to enter this code and choose a new password.</li>
+        </ol>
+        <p>If you do not remember your current password, click <strong>Forgot password?</strong> on the sign-in screen and request a new code.</p>
+        <p>This code expires in 24 hours. If you did not request this reset, contact your administrator.</p>
       Schema:
         - Name: state
           AttributeDataType: String
