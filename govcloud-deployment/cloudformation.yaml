@@ -52,9 +52,9 @@ Resources:
       BucketName: "www.haltreferral.org"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
+        BlockPublicPolicy: false
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        RestrictPublicBuckets: false
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
@@ -131,6 +131,22 @@ Resources:
       UserPoolName: !Sub "${ProjectName}-dashboard-users"
       UsernameAttributes:
         - email
+      AutoVerifiedAttributes:
+        - email
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      Schema:
+        - Name: state
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: "2"
+            MaxLength: "50"
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: true
         InviteMessageTemplate:
@@ -147,14 +163,6 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
           TemporaryPasswordValidityDays: 1
-      Schema:
-        - Name: state
-          AttributeDataType: String
-          Mutable: false
-          Required: false
-          StringAttributeConstraints:
-            MinLength: "2"
-            MaxLength: "50"
       UserPoolTags:
         Project: !Ref ProjectName
 
@@ -269,7 +277,7 @@ Resources:
         AllowOrigins:
           - !Ref AllowedOrigin
         AllowMethods: [GET, POST, PATCH, DELETE, OPTIONS]
-        AllowHeaders: [Content-Type, Authorization]
+        AllowHeaders: [content-type, authorization]
         MaxAge: 300
 
   DashboardAuthorizer:

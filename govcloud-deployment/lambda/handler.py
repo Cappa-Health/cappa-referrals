@@ -565,9 +565,32 @@ def _handle_reset_password(body: dict) -> dict:
         return _respond(200, {"message": f"Password reset sent to {email}."})
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
+        message = exc.response["Error"].get("Message", "")
         if code == "UserNotFoundException":
             return _respond(404, {"error": f"User {email} not found."})
-        logger.error("reset_password failed: %s", exc)
+        if code == "InvalidParameterException":
+            if "verified" in message.lower() and "email" in message.lower():
+                return _respond(
+                    409,
+                    {
+                        "error": (
+                            f"User {email} cannot receive a password reset because Cognito does not have a "
+                            "verified email recovery channel for this account."
+                        )
+                    },
+                )
+            return _respond(409, {"error": message or f"User {email} is not eligible for an admin password reset."})
+        if code == "CodeDeliveryFailureException":
+            return _respond(
+                502,
+                {
+                    "error": (
+                        f"Cognito could not deliver the password reset message to {email}. "
+                        "Check the user pool email delivery configuration."
+                    )
+                },
+            )
+        logger.error("reset_password failed code=%s message=%s", code, message)
         return _respond(500, {"error": "Failed to reset password"})
 
 

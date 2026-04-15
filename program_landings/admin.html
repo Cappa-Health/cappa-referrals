@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
       default-src 'none';
       script-src 'self' 'unsafe-inline';
       style-src 'self' 'unsafe-inline';
@@ -14,7 +16,8 @@
       object-src 'none';
       base-uri 'self';
       form-action 'self';
-    " />
+    "
+    />
     <title>HALT Admin — Manage Users</title>
     <link rel="stylesheet" href="/program_landings/dashboard-shared.css" />
     <style>
@@ -687,14 +690,35 @@
           <span id="headerState"></span>
         </div>
         <div class="nav-dropdown">
-          <button class="nav-dropdown-btn" id="navBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navMenu" onclick="toggleNavMenu()">
-            <span aria-hidden="true" style="font-size:1.1rem;line-height:1;letter-spacing:1px">☰</span>
+          <button
+            class="nav-dropdown-btn"
+            id="navBtn"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="navMenu"
+            onclick="toggleNavMenu()"
+          >
+            <span
+              aria-hidden="true"
+              style="font-size: 1.1rem; line-height: 1; letter-spacing: 1px"
+              >☰</span
+            >
             <span class="sr-only">Open menu</span>
           </button>
           <div class="nav-dropdown-menu" id="navMenu" role="menu">
-            <a href="/program_landings/dashboard.html" role="menuitem">Dashboard</a>
+            <a href="/program_landings/dashboard.html" role="menuitem"
+              >Dashboard</a
+            >
             <hr class="menu-divider" />
-            <a href="#" role="menuitem" onclick="event.preventDefault(); Auth.logout()">Sign Out</a>
+            <a
+              href="#"
+              role="menuitem"
+              onclick="
+                event.preventDefault();
+                Auth.logout();
+              "
+              >Sign Out</a
+            >
           </div>
         </div>
       </div>
@@ -793,8 +817,12 @@
                     <span>Add user to admin group.</span>
                   </label>
                 </div>
-                <p class="form-hint" style="margin-top:6px;font-style:italic;color:#7a5200;">
-                  Only Cappa Health employees should be added to the admin group.
+                <p
+                  class="form-hint"
+                  style="margin-top: 6px; font-style: italic; color: #7a5200"
+                >
+                  Only Cappa Health employees should be added to the admin
+                  group.
                 </p>
               </div>
             </div>
@@ -822,7 +850,14 @@
           >
             <div>
               <h2>Change My Password</h2>
-              <div style="font-size:0.72rem;color:#595959;margin-top:2px;font-weight:400;">
+              <div
+                style="
+                  font-size: 0.72rem;
+                  color: #595959;
+                  margin-top: 2px;
+                  font-weight: 400;
+                "
+              >
                 Update your HALT dashboard login password
               </div>
             </div>
@@ -927,7 +962,14 @@
         >
           <div>
             <h2>User List</h2>
-            <div style="font-size:0.72rem;color:#595959;margin-top:2px;font-weight:400;">
+            <div
+              style="
+                font-size: 0.72rem;
+                color: #595959;
+                margin-top: 2px;
+                font-weight: 400;
+              "
+            >
               Manage who can access the HALT referral dashboard
             </div>
           </div>
@@ -1134,7 +1176,7 @@
       // ── Nav dropdown ─────────────────────────────────────────────────────────
       function toggleNavMenu() {
         const menu = document.getElementById("navMenu");
-        const btn  = document.getElementById("navBtn");
+        const btn = document.getElementById("navBtn");
         const open = menu.classList.toggle("open");
         btn.setAttribute("aria-expanded", String(open));
       }
@@ -1142,7 +1184,9 @@
         const dropdown = document.querySelector(".nav-dropdown");
         if (dropdown && !dropdown.contains(e.target)) {
           document.getElementById("navMenu").classList.remove("open");
-          document.getElementById("navBtn").setAttribute("aria-expanded", "false");
+          document
+            .getElementById("navBtn")
+            .setAttribute("aria-expanded", "false");
         }
       });
 
@@ -1342,7 +1386,10 @@
             body: JSON.stringify({ email, state, is_admin: isAdmin }),
           });
 
-          if (res.status === 401) { Auth.logout(); return; }
+          if (res.status === 401) {
+            Auth.logout();
+            return;
+          }
           const data = await res.json();
           if (res.status === 403) {
             throw new Error(
@@ -1824,7 +1871,10 @@
             },
             body: JSON.stringify({ email, enabled: enable }),
           });
-          if (res.status === 401) { Auth.logout(); return; }
+          if (res.status === 401) {
+            Auth.logout();
+            return;
+          }
           if (res.status === 403) {
             const d = await res.json();
             throw new Error(d.error || "Administrator access is required.");
@@ -1850,7 +1900,10 @@
               headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
             },
           );
-          if (res.status === 401) { Auth.logout(); return; }
+          if (res.status === 401) {
+            Auth.logout();
+            return;
+          }
           if (res.status === 403) {
             const d = await res.json();
             throw new Error(d.error || "Administrator access is required.");
@@ -1862,6 +1915,18 @@
           loadUsers();
         } catch (err) {
           alert("Failed to delete user: " + err.message);
+        }
+      }
+
+      async function getApiErrorMessage(res) {
+        const raw = await res.text();
+        if (!raw) return `HTTP ${res.status}`;
+
+        try {
+          const data = JSON.parse(raw);
+          return data.error || data.message || `HTTP ${res.status}`;
+        } catch {
+          return `${res.status}: ${raw}`;
         }
       }
 
@@ -1877,13 +1942,17 @@
             },
             body: JSON.stringify({ email }),
           });
-          if (res.status === 401) { Auth.logout(); return; }
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+          if (res.status === 401) {
+            Auth.logout();
+            return;
+          }
+          if (!res.ok) {
+            throw new Error(await getApiErrorMessage(res));
+          }
           alert(`Temporary password resent to ${email}.`);
           loadUsers();
         } catch (err) {
-          alert("Failed to resend invite: " + err.message);
+          alert(err.message || "Failed to resend invite.");
         }
       }
 
@@ -1898,13 +1967,17 @@
             },
             body: JSON.stringify({ email }),
           });
-          if (res.status === 401) { Auth.logout(); return; }
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+          if (res.status === 401) {
+            Auth.logout();
+            return;
+          }
+          if (!res.ok) {
+            throw new Error(await getApiErrorMessage(res));
+          }
           alert(`Password reset sent to ${email}.`);
           loadUsers();
         } catch (err) {
-          alert("Failed to reset password: " + err.message);
+          alert(err.message || "Failed to reset password.");
         }
       }
 
@@ -2053,7 +2126,10 @@
               is_admin: isAdmin,
             }),
           });
-          if (res.status === 401) { Auth.logout(); return; }
+          if (res.status === 401) {
+            Auth.logout();
+            return;
+          }
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
