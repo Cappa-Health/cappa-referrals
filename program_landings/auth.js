@@ -529,7 +529,11 @@ const Auth = {
     } catch (err) {
       _setBusy(false);
       if (err.code === "NotAuthorizedException") {
-        _setError("Incorrect email or password.");
+        if (err.message && err.message.toLowerCase().includes("disabled")) {
+          _setError("Your account has been disabled. Contact your administrator.");
+        } else {
+          _setError("Incorrect email or password.");
+        }
       } else if (err.code === "UserNotFoundException") {
         _setError("No account found for that email address.");
       } else if (err.code === "PasswordResetRequiredException") {
