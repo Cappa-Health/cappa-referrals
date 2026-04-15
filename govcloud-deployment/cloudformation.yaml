@@ -231,6 +231,7 @@ Resources:
                 Action:
                   - cognito-idp:ListUsers
                   - cognito-idp:ListUsersInGroup
+                  - cognito-idp:AdminGetUser
                   - cognito-idp:AdminCreateUser
                   - cognito-idp:AdminAddUserToGroup
                   - cognito-idp:AdminRemoveUserFromGroup
