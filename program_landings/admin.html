@@ -1377,7 +1377,7 @@
 
         try {
           await Auth.ensureValidAccessToken();
-          const res = await fetch(`${API_BASE}/admin/users`, {
+          const create_user_response = await fetch(`${API_BASE}/admin/users`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1386,18 +1386,18 @@
             body: JSON.stringify({ email, state, is_admin: isAdmin }),
           });
 
-          if (res.status === 401) {
+          if (create_user_response.status === 401) {
             Auth.logout();
             return;
           }
-          const data = await res.json();
-          if (res.status === 403) {
+          const data = await create_user_response.json();
+          if (create_user_response.status === 403) {
             throw new Error(
               data.error ||
                 "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
             );
           }
-          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+          if (!create_user_response.ok) throw new Error(data.error || `HTTP ${create_user_response.status}`);
 
           feedback.className = "feedback success";
           feedback.textContent = `User ${email} created. A temporary password has been sent to their email.`;
@@ -1428,15 +1428,15 @@
             const query = nextPaginationToken
               ? `?pagination_token=${encodeURIComponent(nextPaginationToken)}`
               : "";
-            const res = await fetch(`${API_BASE}/admin/users${query}`, {
+            const list_users_response = await fetch(`${API_BASE}/admin/users${query}`, {
               headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
             });
-            if (res.status === 401) {
+            if (list_users_response.status === 401) {
               Auth.logout();
               return;
             }
-            if (res.status === 403) {
-              const data = await res.json();
+            if (list_users_response.status === 403) {
+              const data = await list_users_response.json();
               document.getElementById("userFilterSummary").textContent = "";
               document.getElementById("userListContainer").innerHTML =
                 `<div class="empty-state">${escHtml(
@@ -1445,9 +1445,9 @@
                 )}</div>`;
               return;
             }
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!list_users_response.ok) throw new Error(`HTTP ${list_users_response.status}`);
 
-            const data = await res.json();
+            const data = await list_users_response.json();
             _allUsers.push(...(data.users || []));
             nextPaginationToken = data.next_pagination_token || "";
           } while (nextPaginationToken);
@@ -1863,7 +1863,7 @@
       async function _doToggleUser(email, enable) {
         try {
           await Auth.ensureValidAccessToken();
-          const res = await fetch(`${API_BASE}/admin/users`, {
+          const toggle_user_response = await fetch(`${API_BASE}/admin/users`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
@@ -1871,17 +1871,17 @@
             },
             body: JSON.stringify({ email, enabled: enable }),
           });
-          if (res.status === 401) {
+          if (toggle_user_response.status === 401) {
             Auth.logout();
             return;
           }
-          if (res.status === 403) {
-            const d = await res.json();
+          if (toggle_user_response.status === 403) {
+            const d = await toggle_user_response.json();
             throw new Error(d.error || "Administrator access is required.");
           }
-          if (!res.ok) {
-            const d = await res.json();
-            throw new Error(d.error || `HTTP ${res.status}`);
+          if (!toggle_user_response.ok) {
+            const d = await toggle_user_response.json();
+            throw new Error(d.error || `HTTP ${toggle_user_response.status}`);
           }
           loadUsers();
         } catch (err) {
@@ -1893,24 +1893,24 @@
       async function _doDeleteUser(email) {
         try {
           await Auth.ensureValidAccessToken();
-          const res = await fetch(
+          const delete_user_response = await fetch(
             `${API_BASE}/admin/users?email=${encodeURIComponent(email)}`,
             {
               method: "DELETE",
               headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
             },
           );
-          if (res.status === 401) {
+          if (delete_user_response.status === 401) {
             Auth.logout();
             return;
           }
-          if (res.status === 403) {
-            const d = await res.json();
+          if (delete_user_response.status === 403) {
+            const d = await delete_user_response.json();
             throw new Error(d.error || "Administrator access is required.");
           }
-          if (!res.ok) {
-            const d = await res.json();
-            throw new Error(d.error || `HTTP ${res.status}`);
+          if (!delete_user_response.ok) {
+            const d = await delete_user_response.json();
+            throw new Error(d.error || `HTTP ${delete_user_response.status}`);
           }
           loadUsers();
         } catch (err) {
@@ -1918,15 +1918,15 @@
         }
       }
 
-      async function getApiErrorMessage(res) {
-        const raw = await res.text();
-        if (!raw) return `HTTP ${res.status}`;
+      async function getApiErrorMessage(failed_response) {
+        const raw = await failed_response.text();
+        if (!raw) return `HTTP ${failed_response.status}`;
 
         try {
           const data = JSON.parse(raw);
-          return data.error || data.message || `HTTP ${res.status}`;
+          return data.error || data.message || `HTTP ${failed_response.status}`;
         } catch {
-          return `${res.status}: ${raw}`;
+          return `${failed_response.status}: ${raw}`;
         }
       }
 
@@ -1934,7 +1934,7 @@
       async function resendInvite(email) {
         try {
           await Auth.ensureValidAccessToken();
-          const res = await fetch(`${API_BASE}/admin/users/resend`, {
+          const resend_invite_response = await fetch(`${API_BASE}/admin/users/resend`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1942,12 +1942,12 @@
             },
             body: JSON.stringify({ email }),
           });
-          if (res.status === 401) {
+          if (resend_invite_response.status === 401) {
             Auth.logout();
             return;
           }
-          if (!res.ok) {
-            throw new Error(await getApiErrorMessage(res));
+          if (!resend_invite_response.ok) {
+            throw new Error(await getApiErrorMessage(resend_invite_response));
           }
           alert(`Temporary password resent to ${email}.`);
           loadUsers();
@@ -1959,7 +1959,7 @@
       async function resetPassword(email) {
         try {
           await Auth.ensureValidAccessToken();
-          const res = await fetch(`${API_BASE}/admin/users/reset-password`, {
+          const reset_password_response = await fetch(`${API_BASE}/admin/users/reset-password`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1967,12 +1967,12 @@
             },
             body: JSON.stringify({ email }),
           });
-          if (res.status === 401) {
+          if (reset_password_response.status === 401) {
             Auth.logout();
             return;
           }
-          if (!res.ok) {
-            throw new Error(await getApiErrorMessage(res));
+          if (!reset_password_response.ok) {
+            throw new Error(await getApiErrorMessage(reset_password_response));
           }
           alert(`Password reset sent to ${email}.`);
           loadUsers();
@@ -2114,7 +2114,7 @@
 
         try {
           await Auth.ensureValidAccessToken();
-          const res = await fetch(`${API_BASE}/admin/users`, {
+          const update_user_response = await fetch(`${API_BASE}/admin/users`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
@@ -2126,12 +2126,12 @@
               is_admin: isAdmin,
             }),
           });
-          if (res.status === 401) {
+          if (update_user_response.status === 401) {
             Auth.logout();
             return;
           }
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+          const data = await update_user_response.json();
+          if (!update_user_response.ok) throw new Error(data.error || `HTTP ${update_user_response.status}`);
 
           feedback.className = "feedback success";
           feedback.textContent = "User updated.";

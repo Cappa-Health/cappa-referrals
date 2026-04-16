@@ -74,7 +74,7 @@ function _isTokenExpired(token) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function _cognitoRequest(target, body) {
-  const resp = await fetch(COGNITO_ENDPOINT, {
+  const cognito_response = await fetch(COGNITO_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-amz-json-1.1",
@@ -82,13 +82,13 @@ async function _cognitoRequest(target, body) {
     },
     body: JSON.stringify(body),
   });
-  const data = await resp.json();
-  if (!resp.ok) {
+  const data = await cognito_response.json();
+  if (!cognito_response.ok) {
     const err = new Error(
       data.message || data.__type || "Authentication error",
     );
     err.code = data.__type || "";
-    err.status = resp.status;
+    err.status = cognito_response.status;
     throw err;
   }
   return data;

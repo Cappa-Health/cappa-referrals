@@ -819,24 +819,24 @@
 
         try {
           await Auth.ensureValidToken();
-          const res = await fetch(`${API_BASE}/referrals`, {
+          const fetch_referrals_response = await fetch(`${API_BASE}/referrals`, {
             headers: { Authorization: `Bearer ${Auth.getToken()}` },
           });
 
-          if (res.status === 401) {
+          if (fetch_referrals_response.status === 401) {
             // Token was rejected — force re-login.
             Auth.logout();
             return;
           }
-          if (res.status === 403) {
+          if (fetch_referrals_response.status === 403) {
             // Valid token but missing state assignment — re-login won't help.
             document.getElementById("tableContainer").innerHTML =
               '<div class="state-msg"><span class="icon">⚠️</span>Your account is not assigned to a state. Contact an administrator.</div>';
             return;
           }
 
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
+          if (!fetch_referrals_response.ok) throw new Error(`HTTP ${fetch_referrals_response.status}`);
+          const data = await fetch_referrals_response.json();
           allReferrals = data.referrals || data.items || [];
           updateStats();
 
@@ -1066,7 +1066,7 @@
 
         try {
           await Auth.ensureValidToken();
-          const res = await fetch(`${API_BASE}/referrals/${id}`, {
+          const update_referral_response = await fetch(`${API_BASE}/referrals/${id}`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
@@ -1074,7 +1074,7 @@
             },
             body: JSON.stringify({ status: newStatus }),
           });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          if (!update_referral_response.ok) throw new Error(`HTTP ${update_referral_response.status}`);
 
           // Update local data
           const idx = allReferrals.findIndex((r) => r.submission_id === id);
