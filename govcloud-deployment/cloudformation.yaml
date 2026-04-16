@@ -160,11 +160,39 @@ Resources:
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: true
         InviteMessageTemplate:
-          EmailSubject: "Your HALT Dashboard Login"
-          EmailMessage: >
-            You have been invited to access the HALT Referral Dashboard.
-            Your username is {username} and your temporary password is {####}.
-            Please log in and change your password on first sign-in.
+          EmailSubject: "You've been invited to the HALT Referral Dashboard"
+          EmailMessage: !Sub |
+            <!DOCTYPE html>
+            <html lang="en">
+            <body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6;max-width:560px;margin:0 auto;padding:24px;">
+              <h2 style="color:#003366;">Welcome to the HALT Referral Dashboard</h2>
+              <p>You have been invited to access the HALT Referral Dashboard, where you can view and manage referrals for your state.</p>
+              <p>Use the credentials below to sign in for the first time. You will be prompted to set a new password on your first login.</p>
+              <table style="background:#f5f7fa;border-radius:6px;padding:16px 20px;margin:20px 0;width:100%;border-collapse:collapse;">
+                <tr><td style="padding:4px 0;color:#595959;font-size:13px;">Username</td></tr>
+                <tr><td style="padding:4px 0;font-weight:bold;">{username}</td></tr>
+                <tr><td style="padding:12px 0 4px;color:#595959;font-size:13px;">Temporary Password</td></tr>
+                <tr><td style="padding:4px 0;font-weight:bold;letter-spacing:1px;">{####}</td></tr>
+              </table>
+              <p style="color:#a94442;font-size:13px;">&#9888; This temporary password expires in 24 hours.</p>
+              <p style="margin:28px 0;">
+                <a href="${AllowedOrigin}/program_landings/dashboard.html"
+                   style="display:inline-block;background-color:#003366;color:#fff;
+                          padding:12px 28px;text-decoration:none;border-radius:6px;
+                          font-weight:bold;font-size:15px;">
+                  Sign In to Dashboard
+                </a>
+              </p>
+              <p style="font-size:13px;color:#595959;">
+                Or copy and paste this URL into your browser:<br/>
+                ${AllowedOrigin}/program_landings/dashboard.html
+              </p>
+              <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;"/>
+              <p style="color:#595959;font-size:12px;">
+                If you were not expecting this invitation, please disregard this email or contact your administrator.
+              </p>
+            </body>
+            </html>
       Policies:
         PasswordPolicy:
           MinimumLength: 12
