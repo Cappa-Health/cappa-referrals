@@ -3,16 +3,14 @@
  * Shared modal and form-submission logic for all HALT intake landing pages.
  *
  * Each page must define window.HALT_INTAKE_API_URL before loading this file:
- *   <script>window.HALT_INTAKE_API_URL = "https://…/program-intake";</script>
+ *   <script>window.HALT_INTAKE_API_URL = "https://api.example.com/program-intake";</script>
  *   <script src="/program_landings/intake-shared.js"></script>
  */
 
 // ── Open modal ────────────────────────────────────────────────────────
-document
-  .getElementById("get-started")
-  .addEventListener("click", function () {
-    window.jQuery("#inquiry-form").modal("show");
-  });
+document.getElementById("get-started").addEventListener("click", function () {
+  window.jQuery("#inquiry-form").modal("show");
+});
 
 // ── Sync aria-hidden with modal visibility ─────────────────────────────
 window
@@ -52,8 +50,11 @@ window
         email: form.querySelector('[name="program_intake[email]"]').value,
         phone: form.querySelector('[name="program_intake[phone]"]').value,
         zipcode: form.querySelector('[name="program_intake[zipcode]"]').value,
-        motivation: form.querySelector('[name="program_intake[motivation]"]').value,
-        landing_page: form.querySelector('[name="program_intake[landing_page]"]').value,
+        motivation: form.querySelector('[name="program_intake[motivation]"]')
+          .value,
+        landing_page: form.querySelector(
+          '[name="program_intake[landing_page]"]',
+        ).value,
         state: form.querySelector('[name="program_intake[state]"]').value,
       };
 
