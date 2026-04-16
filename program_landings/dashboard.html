@@ -138,6 +138,9 @@
       .filter-group input {
         min-width: 220px;
       }
+      .filter-group input::placeholder {
+        color: #696969; /* 5.30:1 on #fafbfc — passes WCAG AA */
+      }
       .btn {
         padding: 8px 20px;
         border: none;
@@ -264,12 +267,12 @@
         background: #eef1f5;
       }
       thead th .sort-icon {
-        opacity: 0.4;
-        font-size: 0.65rem;
+        color: #596572;
+        font-size: 0.75rem;
         margin-left: 4px;
       }
       thead th.sorted .sort-icon {
-        opacity: 1;
+        color: #003366;
       }
       .sort-btn {
         background: none;
@@ -314,7 +317,7 @@
       }
       .badge-new {
         background: #fef3e2;
-        color: #b75e0a;
+        color: #92400e;
       }
       .badge-contacted {
         background: #e3f0fb;
@@ -351,7 +354,7 @@
       }
       .prog-bs {
         background: #fff3e0;
-        color: #e65100;
+        color: #9a3400;
       }
 
       /* ── Detail Row ── */
@@ -369,7 +372,7 @@
       .detail-section h3 {
         font-size: 0.7rem;
         font-weight: 700;
-        color: #888;
+        color: #595959;
         text-transform: uppercase;
         letter-spacing: 0.07em;
         margin-bottom: 10px;
@@ -379,7 +382,7 @@
       }
       .detail-field .field-label {
         font-size: 0.7rem;
-        color: #888;
+        color: #595959;
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -404,16 +407,16 @@
         color: #1a2a3a;
       }
       .btn-save {
-        background: #27ae60;
+        background: #1a7a3c;
         color: #fff;
         padding: 7px 18px;
       }
       .btn-save:hover {
-        background: #219150;
+        background: #145e2f;
       }
       .save-msg {
         font-size: 0.8rem;
-        color: #27ae60;
+        color: #1a7a3c;
         align-self: center;
         display: none;
       }
@@ -422,7 +425,7 @@
       .state-msg {
         text-align: center;
         padding: 60px 20px;
-        color: #888;
+        color: #595959;
         font-size: 0.95rem;
       }
       .state-msg .icon {
@@ -609,7 +612,7 @@
       <!-- Filters -->
       <div class="filter-bar">
         <div class="filter-group">
-          <label>Program</label>
+          <label for="filterProgram">Program</label>
           <select id="filterProgram" onchange="applyFilters()">
             <option value="">All Programs</option>
             <option value="Lose Weight">Lose Weight</option>
@@ -618,7 +621,7 @@
           </select>
         </div>
         <div class="filter-group">
-          <label>Status</label>
+          <label for="filterStatus">Status</label>
           <select id="filterStatus" onchange="applyFilters()">
             <option value="">All Statuses</option>
             <option value="new">New</option>
@@ -629,7 +632,7 @@
           </select>
         </div>
         <div class="filter-group">
-          <label>Search</label>
+          <label for="filterSearch">Search</label>
           <input
             type="text"
             id="filterSearch"
@@ -654,7 +657,7 @@
       <!-- Table -->
       <div class="table-wrap">
         <div class="table-meta">
-          <span class="count" id="rowCount">Loading…</span>
+          <span class="count" id="rowCount" role="status" aria-live="polite">Loading…</span>
         </div>
         <div id="tableContainer">
           <div class="state-msg"><span class="spinner"></span></div>
@@ -975,7 +978,7 @@
           return;
         }
 
-        let html = "<table><thead><tr>";
+        let html = `<table aria-label="Referral records"><caption class="sr-only">Referral records</caption><thead><tr>`;
         COLS.forEach((c) => {
           const cls = sortCol === c.key ? " sorted" : "";
           const arrow =
@@ -1027,7 +1030,7 @@
       <div class="detail-field"><div class="field-label">Program of Interest</div><div class="field-value">${escHtml(r.program_of_interest || r.landing_page || "–")}</div></div>
       <div class="detail-field"><div class="field-label">Landing Page</div><div class="field-value">${escHtml(r.landing_page || "–")}</div></div>
       <div class="detail-field"><div class="field-label">Submitted</div><div class="field-value">${escHtml(r.submitted_at || "–")}</div></div>
-      <div class="detail-field"><div class="field-label">Submission ID</div><div class="field-value" style="font-size:.75rem;color:#888;">${escHtml(r.submission_id || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">Submission ID</div><div class="field-value" style="font-size:.75rem;color:#595959;">${escHtml(r.submission_id || "–")}</div></div>
     </div>
     <div class="detail-section">
       <h3>Motivation</h3>
@@ -1036,7 +1039,7 @@
       </div>
       <h3 style="margin-top:20px;">Update Status</h3>
       <div class="detail-actions">
-        <select class="status-select" id="sel_${r.submission_id}">
+        <select class="status-select" id="sel_${r.submission_id}" aria-label="Status for ${escHtml(r.name || r.submission_id)}">
           ${["new", "contacted", "enrolled", "not_eligible", "no_response"]
             .map(
               (s) =>
@@ -1044,7 +1047,7 @@
             )
             .join("")}
         </select>
-        <button class="btn btn-save" onclick="saveStatus('${r.submission_id}', event)">Save</button>
+        <button class="btn btn-save" onclick="saveStatus('${r.submission_id}', event)" aria-label="Save status for ${escHtml(r.name || r.submission_id)}">Save</button>
         <span class="save-msg" role="status" id="msg_${r.submission_id}">✓ Saved</span>
       </div>
     </div>

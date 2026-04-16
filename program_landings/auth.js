@@ -233,14 +233,17 @@ function _injectModal() {
       }
       .pw-wrap input {
         margin-bottom: 0 !important;
-        padding-right: 40px !important;
+        padding-right: 60px !important;
       }
       .pw-toggle {
         position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-        background: none; border: none; cursor: pointer;
-        color: #888; font-size: 1rem; padding: 0; line-height: 1;
+        min-width: 44px; min-height: 28px; padding: 4px 8px;
+        background: #fff; border: 1px solid transparent; border-radius: 4px; cursor: pointer;
+        color: #003366; font-size: 0.72rem; font-weight: 700; line-height: 1;
       }
-      .pw-toggle:hover { color: #003366; }
+      .pw-toggle[aria-pressed="true"] { background: #e8f1fb; border-color: #7a9cbf; }
+      .pw-toggle:hover { background: #f2f7fb; }
+      .pw-toggle:focus-visible { outline: 2px solid #003366; outline-offset: 2px; }
     </style>
 
     <div id="authBox">
@@ -253,7 +256,7 @@ function _injectModal() {
         <label for="authPassword">Password</label>
         <div class="pw-wrap">
           <input type="password" id="authPassword" autocomplete="current-password" placeholder="Password" />
-          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authPassword', this)">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authPassword', this)">Show</button>
         </div>
         <button class="auth-submit" data-idle-label="Sign In" onclick="Auth._submitLogin()">Sign In</button>
         <button class="auth-link" onclick="Auth._showForgotPassword()">Forgot password?</button>
@@ -280,7 +283,7 @@ function _injectModal() {
         <label for="authResetPw1">New Password</label>
         <div class="pw-wrap">
           <input type="password" id="authResetPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="Auth._validateResetPw()" />
-          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authResetPw1', this)">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authResetPw1', this)">Show</button>
         </div>
         <div id="authPwReqs" style="font-size:0.78rem;margin:-8px 0 12px;line-height:1.7;">
           <span id="reqLen"  style="color:#767676;">✗ At least 12 characters</span><br>
@@ -292,7 +295,7 @@ function _injectModal() {
         <label for="authResetPw2">Confirm Password</label>
         <div class="pw-wrap">
           <input type="password" id="authResetPw2" autocomplete="new-password" placeholder="Confirm password" oninput="Auth._validateResetPw()" />
-          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authResetPw2', this)">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authResetPw2', this)">Show</button>
         </div>
         <div id="authPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#767676;">✗ Passwords match</div>
         <button class="auth-submit" data-idle-label="Reset Password" onclick="Auth._submitConfirmReset()" disabled>Reset Password</button>
@@ -307,7 +310,7 @@ function _injectModal() {
         <label for="authNewPw1">New Password</label>
         <div class="pw-wrap">
           <input type="password" id="authNewPw1" autocomplete="new-password" placeholder="Min 12 chars, upper, lower, number, symbol" oninput="Auth._validateNewPw()" />
-          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authNewPw1', this)">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authNewPw1', this)">Show</button>
         </div>
         <div id="authNewPwReqs" style="font-size:0.78rem;margin:-8px 0 12px;line-height:1.7;">
           <span id="newReqLen"   style="color:#767676;">✗ At least 12 characters</span><br>
@@ -319,7 +322,7 @@ function _injectModal() {
         <label for="authNewPw2">Confirm Password</label>
         <div class="pw-wrap">
           <input type="password" id="authNewPw2" autocomplete="new-password" placeholder="Confirm password" oninput="Auth._validateNewPw()" />
-          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authNewPw2', this)">👁</button>
+          <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="Auth._togglePw('authNewPw2', this)">Show</button>
         </div>
         <div id="authNewPwMatch" style="font-size:0.78rem;margin:-8px 0 12px;color:#767676;">✗ Passwords match</div>
         <button class="auth-submit" data-idle-label="Set Password" onclick="Auth._submitNewPassword()" disabled>Set Password</button>
@@ -603,7 +606,7 @@ const Auth = {
     if (!input) return;
     const isHidden = input.type === "password";
     input.type = isHidden ? "text" : "password";
-    btn.textContent = isHidden ? "🙈" : "👁";
+    btn.textContent = isHidden ? "Hide" : "Show";
     btn.setAttribute(
       "aria-label",
       isHidden ? "Hide password" : "Show password",
