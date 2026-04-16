@@ -492,14 +492,15 @@ def _handle_create_user(body: dict) -> dict:
             )
 
         logger.info("Created user %s for state %s admin=%s", email, state, is_admin)
-        return _respond(200, {"message": f"User {email} created. Temporary password sent by email."})
+        return _respond(200, {"message": "User created. Temporary password sent by email."})
 
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UsernameExistsException":
-            return _respond(409, {"error": f"A user with email {email} already exists."})
+            return _respond(409, {"error": "A user with this email already exists."})
         if code == "ResourceNotFoundException" and is_admin:
-            return _respond(500, {"error": f"Admin group '{ADMIN_GROUP_NAME}' not found in Cognito. Check ADMIN_GROUP_NAME."})
+            logger.error("Admin group not found. Check ADMIN_GROUP_NAME configuration.")
+            return _respond(500, {"error": "Server configuration error. Contact an administrator."})
         logger.error("admin_create_user failed: %s", exc)
         return _respond(500, {"error": "Failed to create user"})
     except ValueError as exc:
@@ -517,12 +518,12 @@ def _handle_delete_user(event: dict) -> dict:
         pool_id = _get_user_pool_id()
         cognito.admin_delete_user(UserPoolId=pool_id, Username=email)
         logger.info("Deleted user %s", email)
-        return _respond(200, {"message": f"User {email} deleted."})
+        return _respond(200, {"message": "User deleted."})
 
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UserNotFoundException":
-            return _respond(404, {"error": f"User {email} not found."})
+            return _respond(404, {"error": "User not found."})
         logger.error("admin_delete_user failed: %s", exc)
         return _respond(500, {"error": "Failed to delete user"})
 
@@ -538,9 +539,9 @@ def _handle_resend_invite(body: dict) -> dict:
         enabled = user.get("Enabled", True)
 
         if not enabled:
-            return _respond(409, {"error": f"User {email} is disabled. Re-enable the account before resending the invite."})
+            return _respond(409, {"error": "This account is disabled. Re-enable it before resending the invite."})
         if status != "FORCE_CHANGE_PASSWORD":
-            return _respond(409, {"error": f"User {email} is not in invite-pending status."})
+            return _respond(409, {"error": "This user is not in invite-pending status."})
 
         cognito.admin_create_user(
             UserPoolId=pool_id,
@@ -549,11 +550,11 @@ def _handle_resend_invite(body: dict) -> dict:
             DesiredDeliveryMediums=["EMAIL"],
         )
         logger.info("Resent invite for %s", email)
-        return _respond(200, {"message": f"Invite resent to {email}."})
+        return _respond(200, {"message": "Invite resent."})
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UserNotFoundException":
-            return _respond(404, {"error": f"User {email} not found."})
+            return _respond(404, {"error": "User not found."})
         logger.error("resend_invite failed: %s", exc)
         return _respond(500, {"error": "Failed to resend invite"})
 
@@ -570,41 +571,31 @@ def _handle_reset_password(body: dict) -> dict:
         enabled = user.get("Enabled", True)
 
         if not enabled:
-            return _respond(409, {"error": f"User {email} is disabled. Re-enable the account before resetting the password."})
+            return _respond(409, {"error": "This account is disabled. Re-enable it before resetting the password."})
         if status != "CONFIRMED":
             if status == "FORCE_CHANGE_PASSWORD":
-                return _respond(409, {"error": f"User {email} is still pending setup. Use resend invite instead."})
-            return _respond(409, {"error": f"User {email} is not eligible for an admin password reset."})
+                return _respond(409, {"error": "This user is still pending setup. Use resend invite instead."})
+            return _respond(409, {"error": "This user is not eligible for an admin password reset."})
 
         cognito.admin_reset_user_password(UserPoolId=pool_id, Username=email)
         logger.info("Password reset initiated for %s", email)
-        return _respond(200, {"message": f"Password reset sent to {email}."})
+        return _respond(200, {"message": "Password reset sent."})
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UserNotFoundException":
-            return _respond(404, {"error": f"User {email} not found."})
+            return _respond(404, {"error": "User not found."})
         if code == "InvalidParameterException":
             # User existence, enabled state, and CONFIRMED status are all pre-checked above,
-            # so InvalidParameterException here means Cognito has no verified email delivery
+            # so InvalidParameterException here means there is no verified email delivery
             # channel for this account.
             return _respond(
                 409,
-                {
-                    "error": (
-                        f"User {email} cannot receive a password reset because Cognito does not have a "
-                        "verified email recovery channel for this account."
-                    )
-                },
+                {"error": "This account cannot receive a password reset because there is no verified email recovery channel."},
             )
         if code == "CodeDeliveryFailureException":
             return _respond(
                 502,
-                {
-                    "error": (
-                        f"Cognito could not deliver the password reset message to {email}. "
-                        "Check the user pool email delivery configuration."
-                    )
-                },
+                {"error": "Failed to deliver the password reset message. Check the email delivery configuration."},
             )
         logger.error("reset_password failed: %s", exc)
         return _respond(500, {"error": "Failed to reset password"})
@@ -651,12 +642,12 @@ def _handle_edit_user(body: dict) -> dict:
                 )
                 logger.info("Removed user %s from admin group", email)
 
-        return _respond(200, {"message": f"User {email} updated."})
+        return _respond(200, {"message": "User updated."})
 
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UserNotFoundException":
-            return _respond(404, {"error": f"User {email} not found."})
+            return _respond(404, {"error": "User not found."})
         logger.error("edit_user failed: %s", exc)
         return _respond(500, {"error": "Failed to update user"})
     except ValueError as exc:
@@ -675,16 +666,16 @@ def _handle_toggle_user(body: dict) -> dict:
         if enabled:
             cognito.admin_enable_user(UserPoolId=pool_id, Username=email)
             logger.info("Enabled user %s", email)
-            return _respond(200, {"message": f"User {email} enabled."})
+            return _respond(200, {"message": "User enabled."})
         else:
             cognito.admin_disable_user(UserPoolId=pool_id, Username=email)
             logger.info("Disabled user %s", email)
-            return _respond(200, {"message": f"User {email} disabled."})
+            return _respond(200, {"message": "User disabled."})
 
     except ClientError as exc:
         code = exc.response["Error"]["Code"]
         if code == "UserNotFoundException":
-            return _respond(404, {"error": f"User {email} not found."})
+            return _respond(404, {"error": "User not found."})
         logger.error("admin_enable/disable_user failed: %s", exc)
         return _respond(500, {"error": "Failed to update user"})
 

@@ -539,7 +539,8 @@ const Auth = {
           _setError("Incorrect email or password.");
         }
       } else if (err.code === "UserNotFoundException") {
-        _setError("No account found for that email address.");
+        // Use the same message as NotAuthorizedException to prevent email enumeration.
+        _setError("Incorrect email or password.");
       } else if (err.code === "PasswordResetRequiredException") {
         _pendingEmail = email;
         AUTH_VIEW_IDS.forEach((id) => {
@@ -554,7 +555,7 @@ const Auth = {
         );
         _focusView("authConfirmReset");
       } else {
-        _setError(err.message || "Sign-in failed. Please try again.");
+        _setError("Sign-in failed. Please try again.");
       }
     }
   },
@@ -590,7 +591,7 @@ const Auth = {
           "Password does not meet requirements: min 12 chars, upper, lower, number, symbol.",
         );
       } else {
-        _setError(err.message || "Failed to set password. Please try again.");
+        _setError("Failed to set password. Please try again.");
       }
     }
   },
@@ -732,7 +733,7 @@ const Auth = {
       _focusView("authConfirmReset");
     } catch (err) {
       _setBusy(false);
-      _setError(err.message || "Failed to send code. Please try again.");
+      _setError("Failed to send code. Please try again.");
     }
   },
 
@@ -775,7 +776,7 @@ const Auth = {
           "Password does not meet requirements: min 12 chars, upper, lower, number, symbol.",
         );
       } else {
-        _setError(err.message || "Failed to reset password. Please try again.");
+        _setError("Failed to reset password. Please try again.");
       }
     }
   },

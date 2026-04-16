@@ -1404,7 +1404,7 @@
           if (!create_user_response.ok) throw new Error(data.error || `HTTP ${create_user_response.status}`);
 
           feedback.className = "feedback success";
-          feedback.textContent = `User ${email} created. A temporary password has been sent to their email.`;
+          feedback.textContent = "User created. A temporary password has been sent to their email.";
           document.getElementById("newEmail").value = "";
           document.getElementById("newState").value = "";
           document.getElementById("newIsAdmin").checked = false;
@@ -1467,7 +1467,7 @@
         } catch (err) {
           document.getElementById("userFilterSummary").textContent = "";
           document.getElementById("userListContainer").innerHTML =
-            `<div class="empty-state">Failed to load users: ${escHtml(err.message)}</div>`;
+            `<div class="empty-state">Failed to load users. Please refresh and try again.</div>`;
         }
       }
 
@@ -1889,7 +1889,7 @@
           }
           loadUsers();
         } catch (err) {
-          alert("Failed to update user: " + err.message);
+          alert("Failed to update user. Please try again.");
         }
       }
 
@@ -1918,7 +1918,7 @@
           }
           loadUsers();
         } catch (err) {
-          alert("Failed to delete user: " + err.message);
+          alert("Failed to delete user. Please try again.");
         }
       }
 
@@ -1953,10 +1953,10 @@
           if (!resend_invite_response.ok) {
             throw new Error(await getApiErrorMessage(resend_invite_response));
           }
-          alert(`Temporary password resent to ${email}.`);
+          alert("Temporary password resent.");
           loadUsers();
         } catch (err) {
-          alert(err.message || "Failed to resend invite.");
+          alert("Failed to resend invite. Please try again.");
         }
       }
 
@@ -1978,10 +1978,10 @@
           if (!reset_password_response.ok) {
             throw new Error(await getApiErrorMessage(reset_password_response));
           }
-          alert(`Password reset sent to ${email}.`);
+          alert("Password reset sent.");
           loadUsers();
         } catch (err) {
-          alert(err.message || "Failed to reset password.");
+          alert("Failed to reset password. Please try again.");
         }
       }
 
