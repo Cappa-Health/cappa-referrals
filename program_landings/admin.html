@@ -1191,6 +1191,9 @@
       });
 
       Auth.onReady(() => {
+        // UX shortcut only — not a security control. All admin API endpoints enforce
+        // authorization server-side and return 403 for non-admin callers regardless
+        // of what the frontend does.
         if (!Auth.isAdmin()) {
           window.location.replace("/program_landings/dashboard.html");
           return;
@@ -1199,6 +1202,7 @@
       });
 
       document.addEventListener("halt:authenticated", () => {
+        // Same UX shortcut as above — server-side enforcement is the real control.
         if (!Auth.isAdmin()) {
           window.location.replace("/program_landings/dashboard.html");
           return;

@@ -248,8 +248,24 @@ def _handle_update_referral(event: dict, path: str) -> dict:
             "error": f"Invalid status. Must be one of: {', '.join(sorted(VALID_STATUSES))}"
         })
 
+    is_admin   = _is_admin_caller(event)
+    caller_state = _get_caller_state(event)
+
     try:
         table = _get_table()
+
+        # Verify the referral exists and that the caller is authorized to update it.
+        # Admins can update any referral; non-admins are restricted to their assigned state.
+        existing_item = table.get_item(Key={"submission_id": submission_id}).get("Item")
+        if not existing_item:
+            return _respond(404, {"error": "Submission not found"})
+        if not is_admin and existing_item.get("state") != caller_state:
+            logger.warning(
+                "State mismatch: caller_state=%s referral_state=%s submission_id=%s",
+                caller_state, existing_item.get("state"), submission_id,
+            )
+            return _respond(403, {"error": "You are not authorized to update this referral."})
+
         table.update_item(
             Key={"submission_id": submission_id},
             UpdateExpression="SET #s = :s, updated_at = :u",
@@ -260,7 +276,7 @@ def _handle_update_referral(event: dict, path: str) -> dict:
             },
             ConditionExpression=Attr("submission_id").exists(),
         )
-        logger.info("Submission %s status updated to %s", submission_id, new_status)
+        logger.info("Submission %s status updated to %s by %s", submission_id, new_status, "admin" if is_admin else caller_state)
         return _respond(200, {"message": f"Status updated to '{new_status}'"})
 
     except ClientError as exc:
