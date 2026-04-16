@@ -122,7 +122,6 @@ def _is_admin_caller(event: dict) -> bool:
     claims = _get_jwt_claims(event)
     raw_groups = claims.get("cognito:groups") or ""
     groups = _parse_group_claims(raw_groups)
-    logger.info("DEBUG auth: raw_groups=%r parsed=%r admin_group=%r result=%s", raw_groups, groups, ADMIN_GROUP_NAME, ADMIN_GROUP_NAME in groups)
     return ADMIN_GROUP_NAME in groups
 
 
@@ -218,7 +217,6 @@ def _handle_get_referrals(event: dict) -> dict:
 
         if is_admin:
             # Admins see all referrals across every state via a full table scan.
-            kwargs = {"ScanIndexForward": False}
             response = table.scan()
             items.extend(response.get("Items", []))
             while "LastEvaluatedKey" in response:
