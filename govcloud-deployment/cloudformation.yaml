@@ -423,7 +423,7 @@ Outputs:
     Value: !Ref IntakeSubmissionsTable
 
   ApiGatewayEndpoint:
-    Description: API Gateway endpoint – replace YOUR_API_GATEWAY_URL in the 3 HTML files
+    Description: API Gateway base URL – used by generate_auth_config.py to set intakeApiUrl in auth-config.js
     Value: !Sub "https://${ProgramIntakeApi}.execute-api.${AWS::Region}.amazonaws.com"
 
   LambdaFunctionName:

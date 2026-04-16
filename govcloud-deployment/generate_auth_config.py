@@ -65,11 +65,12 @@ def _load_stack_outputs(stack_name: str, region: str, profile: str | None) -> di
     }
 
 
-def _render_config(region: str, user_pool_client_id: str) -> str:
+def _render_config(region: str, user_pool_client_id: str, intake_api_url: str) -> str:
     return (
         "window.HALT_AUTH_CONFIG = Object.freeze({\n"
         f'  cognitoRegion: {json.dumps(region)},\n'
         f'  userPoolClient: {json.dumps(user_pool_client_id)},\n'
+        f'  intakeApiUrl: {json.dumps(intake_api_url)},\n'
         "});\n"
     )
 
@@ -77,18 +78,22 @@ def _render_config(region: str, user_pool_client_id: str) -> str:
 def main() -> int:
     args = _parse_args()
     outputs = _load_stack_outputs(args.stack_name, args.region, args.profile)
+
     user_pool_client_id = outputs.get("UserPoolClientId", "").strip()
     if not user_pool_client_id:
-        print(
-            "CloudFormation output UserPoolClientId was not found.",
-            file=sys.stderr,
-        )
+        print("CloudFormation output UserPoolClientId was not found.", file=sys.stderr)
         return 1
+
+    api_gateway_endpoint = outputs.get("ApiGatewayEndpoint", "").strip()
+    if not api_gateway_endpoint:
+        print("CloudFormation output ApiGatewayEndpoint was not found.", file=sys.stderr)
+        return 1
+    intake_api_url = api_gateway_endpoint.rstrip("/") + "/program-intake"
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        _render_config(args.region, user_pool_client_id),
+        _render_config(args.region, user_pool_client_id, intake_api_url),
         encoding="utf-8",
     )
     print(f"Wrote {output_path}")

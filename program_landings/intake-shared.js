@@ -2,9 +2,7 @@
  * intake-shared.js
  * Shared modal and form-submission logic for all HALT intake landing pages.
  *
- * Each page must define window.HALT_INTAKE_API_URL before loading this file:
- *   <script>window.HALT_INTAKE_API_URL = "https://api.example.com/program-intake";</script>
- *   <script src="/program_landings/intake-shared.js"></script>
+ * Requires auth-config.js to be loaded first (provides window.HALT_AUTH_CONFIG.intakeApiUrl).
  */
 
 // ── Open modal ────────────────────────────────────────────────────────
@@ -24,7 +22,7 @@ window
 
 // ── Submit form via fetch → API Gateway → Lambda → SES ───────────────
 (function () {
-  var API_URL = window.HALT_INTAKE_API_URL || "";
+  var API_URL = (window.HALT_AUTH_CONFIG && window.HALT_AUTH_CONFIG.intakeApiUrl) || "";
 
   document
     .getElementById("intake-form")
