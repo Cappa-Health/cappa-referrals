@@ -329,20 +329,19 @@ function _injectModal() {
   `;
   document.body.appendChild(overlay);
 
-  // Submit on Enter key — route to whichever view is currently visible
+  // Submit on Enter key — delegate to the handler for the currently active view
+  const enter_key_submit_handlers = {
+    authLogin: () => Auth._submitLogin(),
+    authForgotPassword: () => Auth._submitForgotPassword(),
+    authConfirmReset: () => Auth._submitConfirmReset(),
+    authNewPassword: () => Auth._submitNewPassword(),
+  };
   overlay.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
-    if (document.getElementById("authLogin").style.display !== "none")
-      Auth._submitLogin();
-    else if (
-      document.getElementById("authForgotPassword").style.display !== "none"
-    )
-      Auth._submitForgotPassword();
-    else if (
-      document.getElementById("authConfirmReset").style.display !== "none"
-    )
-      Auth._submitConfirmReset();
-    else Auth._submitNewPassword();
+    const active_view = _getVisibleAuthView();
+    if (!active_view) return;
+    const handler = enter_key_submit_handlers[active_view.id];
+    if (handler) handler();
   });
 }
 
