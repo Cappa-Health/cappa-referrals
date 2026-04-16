@@ -334,12 +334,15 @@ function _injectModal() {
     if (e.key !== "Enter") return;
     if (document.getElementById("authLogin").style.display !== "none")
       Auth._submitLogin();
-    else if (document.getElementById("authForgotPassword").style.display !== "none")
+    else if (
+      document.getElementById("authForgotPassword").style.display !== "none"
+    )
       Auth._submitForgotPassword();
-    else if (document.getElementById("authConfirmReset").style.display !== "none")
+    else if (
+      document.getElementById("authConfirmReset").style.display !== "none"
+    )
       Auth._submitConfirmReset();
-    else
-      Auth._submitNewPassword();
+    else Auth._submitNewPassword();
   });
 }
 
@@ -352,7 +355,9 @@ function _hideModal() {
 function _focusView(viewId) {
   const view = document.getElementById(viewId);
   if (!view) return;
-  const first = view.querySelector("input:not([type=hidden]), button:not([disabled])");
+  const first = view.querySelector(
+    "input:not([type=hidden]), button:not([disabled])",
+  );
   if (first) first.focus();
 }
 function _getVisibleAuthView() {
@@ -460,7 +465,10 @@ const Auth = {
     const groups = claims["cognito:groups"] || [];
     return Array.isArray(groups)
       ? groups.includes("admin")
-      : String(groups).split(",").map(s => s.trim()).includes("admin");
+      : String(groups)
+          .split(",")
+          .map((s) => s.trim())
+          .includes("admin");
   },
 
   /** Signs the user out and shows the login form. */
@@ -530,7 +538,9 @@ const Auth = {
       _setBusy(false);
       if (err.code === "NotAuthorizedException") {
         if (err.message && err.message.toLowerCase().includes("disabled")) {
-          _setError("Your account has been disabled. Contact your administrator.");
+          _setError(
+            "Your account has been disabled. Contact your administrator.",
+          );
         } else {
           _setError("Incorrect email or password.");
         }
@@ -599,7 +609,10 @@ const Auth = {
     const isHidden = input.type === "password";
     input.type = isHidden ? "text" : "password";
     btn.textContent = isHidden ? "🙈" : "👁";
-    btn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+    btn.setAttribute(
+      "aria-label",
+      isHidden ? "Hide password" : "Show password",
+    );
     btn.setAttribute("aria-pressed", isHidden ? "true" : "false");
   },
 
@@ -627,7 +640,9 @@ const Auth = {
     const matches = pw1 && pw1 === pw2;
     const matchEl = document.getElementById("authNewPwMatch");
     if (matchEl) {
-      matchEl.textContent = matches ? "✓ Passwords match" : "✗ Passwords match";
+      matchEl.textContent = matches
+        ? "✓ Passwords match"
+        : "✗ Passwords must match";
       matchEl.style.color = matches ? "#1a7a3c" : "#767676";
     }
 
@@ -661,7 +676,9 @@ const Auth = {
     const matches = pw1 && pw1 === pw2;
     const matchEl = document.getElementById("authPwMatch");
     if (matchEl) {
-      matchEl.textContent = matches ? "✓ Passwords match" : "✗ Passwords match";
+      matchEl.textContent = matches
+        ? "✓ Passwords match"
+        : "✗ Passwords must match";
       matchEl.style.color = matches ? "#1a7a3c" : "#767676";
     }
 
