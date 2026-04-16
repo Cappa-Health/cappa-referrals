@@ -463,12 +463,7 @@ const Auth = {
     const claims = _decodeJwt(this.getToken());
     if (!claims) return false;
     const groups = claims["cognito:groups"] || [];
-    return Array.isArray(groups)
-      ? groups.includes("admin")
-      : String(groups)
-          .split(",")
-          .map((s) => s.trim())
-          .includes("admin");
+    return groups.includes("admin");
   },
 
   /** Signs the user out and shows the login form. */
