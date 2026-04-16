@@ -36,6 +36,7 @@ Authentication:
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 
@@ -135,15 +136,40 @@ def _authorize_admin_request(event: dict) -> dict | None:
 # Route: POST /program-intake
 # ─────────────────────────────────────────────────────────────────────────────
 
+_EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,255}$")
+
+_FIELD_MAX_LENGTHS = {
+    "name":         200,
+    "email":        254,   # RFC 5321 maximum
+    "phone":         30,
+    "zipcode":       20,
+    "state":         100,
+    "landing_page":  200,
+    "motivation":  2_000,
+}
+
+
 def _handle_intake(body: dict) -> dict:
     name  = (body.get("name")  or "").strip()
     email = (body.get("email") or "").strip()
     if not name or not email:
         return _respond(400, {"error": "Fields 'name' and 'email' are required"})
 
+    if not _EMAIL_RE.match(email):
+        return _respond(400, {"error": "Field 'email' must be a valid email address"})
+
     zipcode      = (body.get("zipcode")      or "").strip()
     landing_page = (body.get("landing_page") or "Unknown Program").strip()
     state        = (body.get("state")        or "Unknown").strip()
+
+    fields = {
+        "name": name, "email": email, "phone": (body.get("phone") or "").strip(),
+        "zipcode": zipcode, "state": state, "landing_page": landing_page,
+        "motivation": (body.get("motivation") or "").strip(),
+    }
+    for field, max_len in _FIELD_MAX_LENGTHS.items():
+        if len(fields.get(field, "")) > max_len:
+            return _respond(400, {"error": f"Field '{field}' exceeds maximum length of {max_len} characters"})
 
     now           = datetime.now(timezone.utc).isoformat()
     submission_id = str(uuid.uuid4())
@@ -151,14 +177,14 @@ def _handle_intake(body: dict) -> dict:
     item = {
         "submission_id":       submission_id,
         "submitted_at":        now,
-        "landing_page":        landing_page,
-        "program_of_interest": landing_page,
-        "state":               state,
-        "name":                name,
-        "email":               email,
-        "phone":               (body.get("phone")      or "").strip(),
-        "zipcode":             zipcode,
-        "motivation":          (body.get("motivation") or "").strip(),
+        "landing_page":        fields["landing_page"],
+        "program_of_interest": fields["landing_page"],
+        "state":               fields["state"],
+        "name":                fields["name"],
+        "email":               fields["email"],
+        "phone":               fields["phone"],
+        "zipcode":             fields["zipcode"],
+        "motivation":          fields["motivation"],
         "status":              "new",
     }
 
