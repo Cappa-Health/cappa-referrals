@@ -1,24 +1,8 @@
 /*
  * dashboard-shared.css
- * Shared styles for HALT dashboard pages.
- * Loaded by: dashboard.html, admin.html
- *
- * Each page sets CSS custom properties in its own <style> block before
- * loading this file to control per-page sizing:
- *
- *   dashboard.html:
- *     :root {
- *       --header-padding: 16px 32px;
- *       --nav-btn-padding: 6px 14px;
- *       --nav-btn-size: 0.8rem;
- *     }
- *
- *   admin.html:
- *     :root {
- *       --header-padding: 12px 24px;
- *       --nav-btn-padding: 5px 12px;
- *       --nav-btn-size: 0.78rem;
- *     }
+ * Shared styles for the HALT Referral Dashboard and Admin pages.
+ * Page-specific styles live in dashboard.css and admin.css respectively,
+ * which also define the :root custom properties consumed here.
  */
 
 /* ── Reset & Base ── */
@@ -154,6 +138,32 @@ header {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ── Table base ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+thead th {
+  background: #f6f8fa;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e8ecf0;
+  white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 1px solid #f0f4f8;
+}
+tbody tr:hover {
+  background: #f6f8fa;
+}
+tbody td {
+  vertical-align: middle;
 }
 
 /* ── Reduced motion ── */

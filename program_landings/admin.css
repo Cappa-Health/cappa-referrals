@@ -349,21 +349,10 @@ main {
   background: #dbe9ff;
 }
 table {
-  width: 100%;
-  border-collapse: collapse;
   font-size: 0.85rem;
 }
 thead th {
-  background: #f6f8fa;
   padding: 9px 14px;
-  text-align: left;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 2px solid #e8ecf0;
-  white-space: nowrap;
 }
 .sort-button {
   display: inline-flex;
@@ -394,15 +383,8 @@ thead th {
 .sort-button.active .sort-indicator {
   color: #003366;
 }
-tbody tr {
-  border-bottom: 1px solid #f0f4f8;
-}
-tbody tr:hover {
-  background: #f6f8fa;
-}
 tbody td {
   padding: 9px 14px;
-  vertical-align: middle;
 }
 .user-cell-actions {
   display: flex;
