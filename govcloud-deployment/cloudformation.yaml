@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  HALT Program Landing Pages – AWS GovCloud
+  HALT Program Referral Pages – AWS GovCloud
   Resources: S3 static site bucket, DynamoDB submissions table,
   HTTP API Gateway, Lambda form handler with SES notification,
-  Cognito User Pool for dashboard authentication.
+  Cognito User Pool for HALT Referral Dashboard authentication.
   PII is stored in DynamoDB (GovCloud). Notification emails
-  contain no PII — only a link to the secure dashboard.
+  contain no PII — only a link to the secure HALT Referral Dashboard.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Parameters
