@@ -249,7 +249,7 @@ function _injectModal() {
     <div id="authBox">
       <!-- Login form -->
       <div id="authLogin">
-        <h2>HALT Dashboard</h2>
+        <h2>HALT Referral Dashboard</h2>
         <p class="auth-sub">Sign in to access referrals</p>
         <label for="authEmail">Email</label>
         <input type="email" id="authEmail" autocomplete="username" placeholder="you@example.gov" />
