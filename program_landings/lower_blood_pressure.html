@@ -3,6 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'none';
+      script-src 'self' 'unsafe-inline' https://code.jquery.com https://maxcdn.bootstrapcdn.com https://player.vimeo.com;
+      style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com;
+      connect-src https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com;
+      img-src 'self' data:;
+      font-src 'self' https://maxcdn.bootstrapcdn.com;
+      frame-src https://player.vimeo.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    " />
     <title>Lower Blood Pressure</title>
     <link rel="icon" href="/program_landings/assets/images/favicon.ico" />
     <link
@@ -11,152 +23,7 @@
     />
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <style>
-      .btn,
-      .btn-success,
-      .panel,
-      .panel-heading,
-      .panel-title > a,
-      .modal-content,
-      .modal-header {
-        background-image: none !important;
-      }
-
-      a {
-        text-decoration: underline;
-      }
-
-      .panel-title > a::before {
-        content: "+ ";
-        font-weight: 700;
-      }
-
-      .panel-title > a[aria-expanded="true"]::before {
-        content: "− ";
-      }
-
-      .panel,
-      .panel-default,
-      .panel-default > .panel-heading,
-      .modal-content {
-        border-color: #595959 !important;
-      }
-
-      .btn,
-      .btn-success {
-        border: 2px solid #ffffff !important;
-      }
-
-      input[type="text"],
-      input[type="email"],
-      input[type="tel"] {
-        border: 2px solid #595959;
-      }
-
-      a:focus,
-      button:focus,
-      input:focus,
-      .panel-title > a:focus {
-        outline: 3px solid #1a1a1a;
-        outline-offset: 2px;
-      }
-
-      .panel-body {
-        text-align: left;
-      }
-
-      #get-started {
-        background-color: #3a7a3a !important;
-        color: #ffffff !important;
-        border: 2px solid #ffffff !important;
-        opacity: 1 !important;
-        box-shadow: 0 0 0 2px #f2f2f2;
-      }
-
-      #get-started:hover,
-      #get-started:focus {
-        background-color: #3a7a3a !important;
-        color: #ffffff !important;
-      }
-
-
-      /* ── Modal layout ── */
-      .modal-header {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        padding: 20px 24px 16px;
-        border-bottom: 2px solid #e0e0e0;
-      }
-
-      .modal-title {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0;
-        line-height: 1.35;
-        color: #1a1a1a;
-        width: 100%;
-      }
-
-      .modal-header .close {
-        font-size: 2.4rem;
-        line-height: 1;
-        padding: 0 4px;
-        margin: 0;
-        opacity: 0.5;
-      }
-
-      .modal-header .close:hover,
-      .modal-header .close:focus {
-        opacity: 1;
-      }
-
-      .modal-body {
-        padding: 20px 24px 24px;
-      }
-
-      /* ── Modal form fields ── */
-      .modal-body form label {
-        display: block;
-        font-weight: 600;
-        font-size: 0.9em;
-        margin-top: 14px;
-        margin-bottom: 4px;
-        color: #1a1a1a;
-      }
-
-      .modal-body form input[type="text"],
-      .modal-body form input[type="email"],
-      .modal-body form input[type="tel"] {
-        display: block;
-        width: 100%;
-        padding: 8px 12px;
-        border-radius: 4px;
-        box-sizing: border-box;
-      }
-
-      .modal-body form input[type="submit"] {
-        display: block;
-        width: 100%;
-        margin-top: 20px;
-        padding: 12px;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 4px;
-      }
-
-      .modal-support {
-        margin-top: 16px;
-        font-size: 0.9em;
-        color: #444;
-      }
-
-      @media (max-width: 767px) {
-        .hero-image {
-          display: none;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="/program_landings/intake-shared.css" />
   </head>
   <body>
 
@@ -243,6 +110,7 @@
                   class="btn btn-success"
                   style="min-height: 44px; width: auto; padding: 10px 24px"
                   type="button"
+                  aria-label="Get Started — sign up for a free blood pressure program"
                 >
                   Get Started
                 </button>
@@ -872,6 +740,11 @@
                 name="program_intake[landing_page]"
                 value="Lower Blood Pressure"
               />
+              <input
+                type="hidden"
+                name="program_intake[state]"
+                value="Alaska"
+              />
 
               <p class="modal-support">
                 Questions? Email
@@ -885,91 +758,7 @@
       </div>
     </div>
 
-    <script>
-      // ── Open modal ────────────────────────────────────────────────────────
-      document
-        .getElementById("get-started")
-        .addEventListener("click", function () {
-          window.jQuery("#inquiry-form").modal("show");
-        });
-
-      // ── Sync aria-hidden with modal visibility ─────────────────────────────
-      window
-        .jQuery("#inquiry-form")
-        .on("show.bs.modal", function () {
-          window.jQuery(this).removeAttr("aria-hidden");
-        })
-        .on("hidden.bs.modal", function () {
-          window.jQuery(this).attr("aria-hidden", "true");
-        });
-
-      // ── Submit form via fetch → API Gateway → Lambda → SES ───────────────
-      (function () {
-        // Replace this value with the API Gateway endpoint from the
-        // CloudFormation output "ApiGatewayEndpoint" after deployment.
-        var API_URL =
-          "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com/program-intake";
-
-        document
-          .getElementById("intake-form")
-          .addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            var form = e.target;
-            var submitBtn = form.querySelector('input[type="submit"]');
-            var origVal = submitBtn.value;
-
-            submitBtn.disabled = true;
-            submitBtn.value = "Submitting…";
-
-            var prevErr = document.getElementById("form-error-msg");
-            if (prevErr) {
-              prevErr.parentNode.removeChild(prevErr);
-            }
-
-            var data = {
-              name: form.querySelector('[name="program_intake[name]"]').value,
-              email: form.querySelector('[name="program_intake[email]"]').value,
-              phone: form.querySelector('[name="program_intake[phone]"]').value,
-              zipcode: form.querySelector('[name="program_intake[zipcode]"]')
-                .value,
-              motivation: form.querySelector(
-                '[name="program_intake[motivation]"]',
-              ).value,
-              landing_page: form.querySelector(
-                '[name="program_intake[landing_page]"]',
-              ).value,
-            };
-
-            fetch(API_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data),
-            })
-              .then(function (response) {
-                if (response.ok) {
-                  form.innerHTML =
-                    '<div class="alert alert-success" role="alert">' +
-                    "<strong>Thank you!</strong> We received your information and a " +
-                    "team member will follow up with program details and your " +
-                    "potential start date." +
-                    "</div>";
-                } else {
-                  throw new Error("Server returned " + response.status);
-                }
-              })
-              .catch(function () {
-                submitBtn.disabled = false;
-                submitBtn.value = origVal;
-                var errMsg = document.createElement("p");
-                errMsg.id = "form-error-msg";
-                errMsg.style.color = "#a94442";
-                errMsg.textContent =
-                  "Something went wrong. Please try again or email support@HALT360.org.";
-                form.appendChild(errMsg);
-              });
-          });
-      })();
-    </script>
+    <script src="/program_landings/auth-config.js"></script>
+    <script src="/program_landings/intake-shared.js"></script>
   </body>
 </html>

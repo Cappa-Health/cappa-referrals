@@ -3,36 +3,57 @@ Program Intake Form Handler
 AWS Lambda function for AWS GovCloud (us-gov-west-1 or us-gov-east-1)
 
 Routes:
-  POST  /program-intake    – Store referral in DynamoDB + send SES notification
-  GET   /referrals         – Return all referrals (requires x-api-key header)
-  PATCH /referrals/{id}    – Update referral status (requires x-api-key header)
+  POST   /program-intake            – Store referral in DynamoDB + send SES notification
+  GET    /referrals                 – Return referrals for caller's state (requires Cognito JWT)
+  PATCH  /referrals/{id}            – Update referral status (requires Cognito JWT)
+  GET    /admin/users               – List Cognito dashboard users (supports pagination; requires admin group)
+  POST   /admin/users               – Create a new Cognito dashboard user (requires admin group)
+  PATCH  /admin/users               – Enable/disable or edit state/admin role (requires admin group)
+  DELETE /admin/users               – Permanently delete a Cognito dashboard user (requires admin group)
+  POST   /admin/users/resend        – Resend an invite to a pending user (requires admin group)
+  POST   /admin/users/reset-password – Send a password reset to a confirmed user (requires admin group)
 
 Required environment variables:
   TABLE_NAME         – DynamoDB table name
+  USER_POOL_ID       – Cognito User Pool ID for admin user management
   SENDER_EMAIL       – SES-verified sender (e.g. no-reply@haltreferral.org)
-  NOTIFICATION_EMAIL – Notification recipient (e.g. support@halt360.org)
   ALLOWED_ORIGIN     – Site domain for CORS (e.g. https://www.haltreferral.org)
-  DASHBOARD_API_KEY  – Secret key required to access GET/PATCH /referrals
+
+Constants:
+  ADMIN_GROUP_NAME   – Cognito group name for admin users ("admin")
+  NOTIFICATION_EMAILS – Notification recipients for new referral alerts
+
+Authentication:
+  All routes except POST /program-intake are protected by an API Gateway JWT
+  authorizer backed by Cognito. The Lambda receives the validated claims in
+  event["requestContext"]["authorizer"]["jwt"]["claims"]. No auth code is needed
+  here — API Gateway rejects unauthenticated requests before Lambda is invoked.
+
+  Each Cognito user has a custom:state attribute (e.g. "Alaska") that determines
+  which referrals they can see. The by-state GSI is queried using this value.
 """
 
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+ADMIN_GROUP_NAME = "admin"
+
 dynamodb = boto3.resource("dynamodb")
 ses      = boto3.client("ses")
+cognito  = boto3.client("cognito-idp")
 
-GOVCLOUD_CONSOLE = "https://console.amazonaws-us-gov.com"
-
+NOTIFICATION_EMAILS = ["support@halt360.org", "jerry@cappahealth.com"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -41,9 +62,9 @@ GOVCLOUD_CONSOLE = "https://console.amazonaws-us-gov.com"
 def _cors_headers() -> dict:
     return {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin":  os.environ.get("ALLOWED_ORIGIN", "*"),
-        "Access-Control-Allow-Headers": "Content-Type,x-api-key",
-        "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
+        "Access-Control-Allow-Origin":  os.environ.get("ALLOWED_ORIGIN", ""),
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     }
 
 
@@ -55,16 +76,6 @@ def _respond(status_code: int, body: dict) -> dict:
     }
 
 
-def _check_api_key(event: dict) -> bool:
-    """Validate the x-api-key header against the DASHBOARD_API_KEY env var."""
-    expected = os.environ.get("DASHBOARD_API_KEY", "")
-    if not expected:
-        logger.error("DASHBOARD_API_KEY env var is not set")
-        return False
-    provided = (event.get("headers") or {}).get("x-api-key", "")
-    return provided == expected
-
-
 def _get_table():
     table_name = os.environ.get("TABLE_NAME", "")
     if not table_name:
@@ -72,9 +83,70 @@ def _get_table():
     return dynamodb.Table(table_name)
 
 
+def _get_jwt_claims(event: dict) -> dict:
+    return (
+        event.get("requestContext", {})
+             .get("authorizer", {})
+             .get("jwt", {})
+             .get("claims", {})
+    )
+
+
+def _get_caller_state(event: dict) -> str:
+    """Extract the custom:state claim from the Cognito JWT (already validated by API GW)."""
+    claims = _get_jwt_claims(event)
+    return claims.get("custom:state", "").strip()
+
+
+
+def _parse_group_claims(raw: str) -> list[str]:
+    """Parse the cognito:groups JWT claim into a list of group name strings.
+
+    API Gateway V2 JWT authorizer delivers this claim as a bracket-wrapped,
+    comma-separated string without JSON quoting, e.g. '[admin]' or '[admin,other]'.
+    """
+    if not raw or not isinstance(raw, str):
+        return []
+    stripped = raw.strip().lstrip("[").rstrip("]")
+    return [g.strip() for g in stripped.split(",") if g.strip()]
+
+
+def _is_admin_caller(event: dict) -> bool:
+    """Check whether the caller is in the admin group using their JWT claims.
+
+    API Gateway validates the token before Lambda is invoked, so the
+    cognito:groups claim is authoritative. No secondary Cognito API call
+    is needed — if a user is added to admin after their token was issued,
+    they log out and back in to get an updated token.
+    """
+    claims = _get_jwt_claims(event)
+    raw_groups = claims.get("cognito:groups") or ""
+    groups = _parse_group_claims(raw_groups)
+    return ADMIN_GROUP_NAME in groups
+
+
+def _authorize_admin_request(event: dict) -> dict | None:
+    if _is_admin_caller(event):
+        return None
+    return _respond(403, {"error": "Administrator access is required."})
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Route: POST /program-intake
 # ─────────────────────────────────────────────────────────────────────────────
+
+_EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,255}$")
+
+_FIELD_MAX_LENGTHS = {
+    "name":         200,
+    "email":        254,   # RFC 5321 maximum
+    "phone":         30,
+    "zipcode":       20,
+    "state":         100,
+    "landing_page":  200,
+    "motivation":  2_000,
+}
+
 
 def _handle_intake(body: dict) -> dict:
     name  = (body.get("name")  or "").strip()
@@ -82,38 +154,47 @@ def _handle_intake(body: dict) -> dict:
     if not name or not email:
         return _respond(400, {"error": "Fields 'name' and 'email' are required"})
 
-    zipcode             = (body.get("zipcode")      or "").strip()
-    landing_page        = (body.get("landing_page") or "Unknown Program").strip()
-    program_of_interest = landing_page
-    state               = "Alaska"
-    
+    if not _EMAIL_RE.match(email):
+        return _respond(400, {"error": "Field 'email' must be a valid email address"})
+
+    zipcode      = (body.get("zipcode")      or "").strip()
+    landing_page = (body.get("landing_page") or "Unknown Program").strip()
+    state        = (body.get("state")        or "Unknown").strip()
+
+    fields = {
+        "name": name, "email": email, "phone": (body.get("phone") or "").strip(),
+        "zipcode": zipcode, "state": state, "landing_page": landing_page,
+        "motivation": (body.get("motivation") or "").strip(),
+    }
+    for field, max_len in _FIELD_MAX_LENGTHS.items():
+        if len(fields.get(field, "")) > max_len:
+            return _respond(400, {"error": f"Field '{field}' exceeds maximum length of {max_len} characters"})
+
     now           = datetime.now(timezone.utc).isoformat()
     submission_id = str(uuid.uuid4())
 
     item = {
         "submission_id":       submission_id,
         "submitted_at":        now,
-        "landing_page":        landing_page,
-        "program_of_interest": program_of_interest,
-        "state":               state,
-        "name":                name,
-        "email":               email,
-        "phone":               (body.get("phone")      or "").strip(),
-        "zipcode":             zipcode,
-        "motivation":          (body.get("motivation") or "").strip(),
+        "landing_page":        fields["landing_page"],
+        "program_of_interest": fields["landing_page"],
+        "state":               fields["state"],
+        "name":                fields["name"],
+        "email":               fields["email"],
+        "phone":               fields["phone"],
+        "zipcode":             fields["zipcode"],
+        "motivation":          fields["motivation"],
         "status":              "new",
     }
 
-    # Step 1 — Store in DynamoDB
     try:
         _get_table().put_item(Item=item)
-        logger.info("Submission %s stored | program: %s", submission_id, program_of_interest)
+        logger.info("Submission %s stored | program: %s | state: %s", submission_id, landing_page, state)
     except (ClientError, ValueError) as exc:
         logger.error("DynamoDB put_item failed: %s", exc)
         return _respond(500, {"error": "Failed to store submission"})
 
-    # Step 2 — Send PII-free notification
-    _send_notification(submission_id, program_of_interest)
+    _send_notification(submission_id, landing_page, state)
 
     return _respond(200, {"message": "Submission received. A team member will follow up soon."})
 
@@ -123,27 +204,48 @@ def _handle_intake(body: dict) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _handle_get_referrals(event: dict) -> dict:
-    if not _check_api_key(event):
-        return _respond(401, {"error": "Unauthorized"})
+    is_admin  = _is_admin_caller(event)
+    user_state = _get_caller_state(event)
+
+    if not is_admin and not user_state:
+        logger.error("No custom:state claim in JWT — cannot filter referrals")
+        return _respond(403, {"error": "User account is missing a state assignment. Contact an administrator."})
 
     try:
-        table    = _get_table()
-        response = table.scan()
-        items    = response.get("Items", [])
+        table = _get_table()
+        items = []
 
-        # Handle DynamoDB pagination
-        while "LastEvaluatedKey" in response:
-            response = table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+        if is_admin:
+            # Admins see all referrals across every state via a full table scan.
+            response = table.scan()
             items.extend(response.get("Items", []))
-
-        # Sort newest first
-        items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
-
-        logger.info("Returning %d referrals", len(items))
-        return _respond(200, {"referrals": items, "count": len(items)})
+            while "LastEvaluatedKey" in response:
+                response = table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+                items.extend(response.get("Items", []))
+            # Sort newest first by submitted_at
+            items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
+            logger.info("Admin caller — returning all %d referrals", len(items))
+            return _respond(200, {"referrals": items, "state": "all"})
+        else:
+            response = table.query(
+                IndexName="by-state",
+                KeyConditionExpression=Key("state").eq(user_state),
+                ScanIndexForward=False,
+            )
+            items = response.get("Items", [])
+            while "LastEvaluatedKey" in response:
+                response = table.query(
+                    IndexName="by-state",
+                    KeyConditionExpression=Key("state").eq(user_state),
+                    ExclusiveStartKey=response["LastEvaluatedKey"],
+                    ScanIndexForward=False,
+                )
+                items.extend(response.get("Items", []))
+            logger.info("Returning %d referrals for state=%s", len(items), user_state)
+            return _respond(200, {"referrals": items, "state": user_state})
 
     except (ClientError, ValueError) as exc:
-        logger.error("DynamoDB scan failed: %s", exc)
+        logger.error("DynamoDB query failed: %s", exc)
         return _respond(500, {"error": "Failed to retrieve referrals"})
 
 
@@ -154,10 +256,6 @@ def _handle_get_referrals(event: dict) -> dict:
 VALID_STATUSES = {"new", "contacted", "enrolled", "not_eligible", "no_response"}
 
 def _handle_update_referral(event: dict, path: str) -> dict:
-    if not _check_api_key(event):
-        return _respond(401, {"error": "Unauthorized"})
-
-    # Extract submission_id from path e.g. /referrals/abc-123
     parts         = path.rstrip("/").split("/")
     submission_id = parts[-1] if len(parts) >= 2 else ""
     if not submission_id:
@@ -174,8 +272,24 @@ def _handle_update_referral(event: dict, path: str) -> dict:
             "error": f"Invalid status. Must be one of: {', '.join(sorted(VALID_STATUSES))}"
         })
 
+    is_admin   = _is_admin_caller(event)
+    caller_state = _get_caller_state(event)
+
     try:
         table = _get_table()
+
+        # Verify the referral exists and that the caller is authorized to update it.
+        # Admins can update any referral; non-admins are restricted to their assigned state.
+        existing_item = table.get_item(Key={"submission_id": submission_id}).get("Item")
+        if not existing_item:
+            return _respond(404, {"error": "Submission not found"})
+        if not is_admin and existing_item.get("state") != caller_state:
+            logger.warning(
+                "State mismatch: caller_state=%s referral_state=%s submission_id=%s",
+                caller_state, existing_item.get("state"), submission_id,
+            )
+            return _respond(403, {"error": "You are not authorized to update this referral."})
+
         table.update_item(
             Key={"submission_id": submission_id},
             UpdateExpression="SET #s = :s, updated_at = :u",
@@ -186,7 +300,7 @@ def _handle_update_referral(event: dict, path: str) -> dict:
             },
             ConditionExpression=Attr("submission_id").exists(),
         )
-        logger.info("Submission %s status updated to %s", submission_id, new_status)
+        logger.info("Submission %s status updated to %s by %s", submission_id, new_status, "admin" if is_admin else caller_state)
         return _respond(200, {"message": f"Status updated to '{new_status}'"})
 
     except ClientError as exc:
@@ -201,15 +315,10 @@ def _handle_update_referral(event: dict, path: str) -> dict:
 # SES notification (no PII)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _send_notification(submission_id: str, program: str) -> None:
+def _send_notification(submission_id: str, program: str, state: str) -> None:
     sender     = os.environ.get("SENDER_EMAIL", "")
-    recipients = [
-        addr.strip()
-        for addr in os.environ.get("NOTIFICATION_EMAIL", "").split(",")
-        if addr.strip()
-    ]
-    if not sender or not recipients:
-        logger.warning("SENDER_EMAIL or NOTIFICATION_EMAIL not set — skipping")
+    if not sender:
+        logger.warning("SENDER_EMAIL not set — skipping notification")
         return
 
     allowed_origin = os.environ.get("ALLOWED_ORIGIN", "").rstrip("/")
@@ -219,20 +328,20 @@ def _send_notification(submission_id: str, program: str) -> None:
     else:
         dashboard_link = f"{allowed_origin}/program_landings/dashboard.html?id={submission_id}"
 
-    subject   = "New Referral Received"
+    subject = "New Referral Received"
     if dashboard_link:
         text_body = (
             f"A new referral has been submitted on the {program} landing page.\n\n"
-            f"Click the link below to view this referral in the secure dashboard:\n"
+            f"Click the link below to view this referral in the secure HALT dashboard:\n"
             f"{dashboard_link}\n\n"
-            f"You will be prompted for your dashboard API key when the page loads.\n\n"
+            f"Sign in with your HALT dashboard email address and password when prompted.\n"
+            f"If you have not yet set up your account, contact your administrator.\n\n"
             f"Submission ID: {submission_id}\n\n"
             f"This is an automated notification. No personal information "
             f"is included in this email for security purposes."
         )
         dashboard_button = f"""
-  <p>Click the button below to view this referral directly in the secure dashboard.
-     You will be prompted for your dashboard API key when the page loads.</p>
+  <p>Click the button below to view this referral in the secure HALT dashboard.</p>
   <p style="margin:28px 0;">
     <a href="{dashboard_link}"
        style="display:inline-block;background-color:#003366;color:#fff;
@@ -240,16 +349,24 @@ def _send_notification(submission_id: str, program: str) -> None:
               font-weight:bold;font-size:15px;">
       View This Referral
     </a>
+  </p>
+  <p style="font-size:13px;color:#595959;">
+    Sign in with your HALT dashboard email address and password when prompted.
+    If you have not yet set up your account, contact your administrator.
   </p>"""
     else:
         text_body = (
             f"A new referral has been submitted on the {program} landing page.\n\n"
-            f"Log in to the dashboard to view this referral.\n\n"
+            f"Sign in to the HALT dashboard with your email address and password to view this referral.\n"
+            f"If you have not yet set up your account, contact your administrator.\n\n"
             f"Submission ID: {submission_id}\n\n"
             f"This is an automated notification. No personal information "
             f"is included in this email for security purposes."
         )
-        dashboard_button = "<p>Log in to the dashboard to view this referral.</p>"
+        dashboard_button = (
+            "<p>Sign in to the HALT dashboard with your email address and password to view this referral.</p>"
+            "<p style='font-size:13px;color:#595959;'>If you have not yet set up your account, contact your administrator.</p>"
+        )
 
     html_body = f"""<!DOCTYPE html>
 <html lang="en">
@@ -259,7 +376,7 @@ def _send_notification(submission_id: str, program: str) -> None:
   {dashboard_button}
   <p style="color:#595959;font-size:13px;">Submission ID: {submission_id}</p>
   <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;"/>
-  <p style="color:#888;font-size:12px;">
+  <p style="color:#595959;font-size:12px;">
     Automated notification from the HALT referral system.
     No personal information is included in this email.
     All referral data is stored securely within the GovCloud environment.
@@ -270,7 +387,7 @@ def _send_notification(submission_id: str, program: str) -> None:
     try:
         ses.send_email(
             Source=sender,
-            Destination={"ToAddresses": recipients},
+            Destination={"ToAddresses": NOTIFICATION_EMAILS},
             Message={
                 "Subject": {"Data": subject,   "Charset": "UTF-8"},
                 "Body": {
@@ -285,20 +402,348 @@ def _send_notification(submission_id: str, program: str) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Routes: GET / POST / PATCH /admin/users
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _get_user_pool_id() -> str:
+    pool_id = os.environ.get("USER_POOL_ID", "")
+    if not pool_id:
+        raise ValueError("USER_POOL_ID environment variable is not set")
+    return pool_id
+
+
+
+def _handle_list_users(event: dict) -> dict:
+    try:
+        pool_id     = _get_user_pool_id()
+        admin_group = ADMIN_GROUP_NAME
+        params = event.get("queryStringParameters") or {}
+        pagination_token = (params.get("pagination_token") or "").strip()
+
+        # Fetch admin group members by email (the Cognito username for this pool).
+        admin_emails: set = set()
+        kwargs = {"UserPoolId": pool_id, "GroupName": admin_group, "Limit": 60}
+        while True:
+            response = cognito.list_users_in_group(**kwargs)
+            for u in response.get("Users", []):
+                attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+                email = attrs.get("email", "").strip().lower()
+                if email:
+                    admin_emails.add(email)
+                else:
+                    logger.warning("Admin group member %s has no email attribute — skipping", u.get("Username"))
+            next_token = response.get("NextToken")
+            if not next_token:
+                break
+            kwargs["NextToken"] = next_token
+
+        # Fetch one page of users and annotate with group membership.
+        users  = []
+        kwargs = {"UserPoolId": pool_id, "Limit": 60}
+        if pagination_token:
+            kwargs["PaginationToken"] = pagination_token
+
+        response = cognito.list_users(**kwargs)
+        for u in response.get("Users", []):
+            attrs    = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+            email    = attrs.get("email", "").strip().lower()
+            if not email:
+                logger.warning("User %s has no email attribute — skipping", u.get("Username"))
+                continue
+            last_mod = u.get("UserLastModifiedDate")
+            users.append({
+                "email":         email,
+                "state":         attrs.get("custom:state", ""),
+                "status":        u.get("UserStatus", ""),
+                "enabled":       u.get("Enabled", True),
+                "created":       u.get("UserCreateDate").isoformat() if u.get("UserCreateDate") else "",
+                "last_modified": last_mod.isoformat() if last_mod else "",
+                "is_admin":      email in admin_emails,
+            })
+
+        next_pagination_token = response.get("PaginationToken", "")
+
+        users.sort(key=lambda u: u["email"])
+        logger.info(
+            "Listed %d users (%d admins) next_token=%s",
+            len(users),
+            len(admin_emails),
+            bool(next_pagination_token),
+        )
+        return _respond(
+            200,
+            {
+                "users": users,
+                "next_pagination_token": next_pagination_token,
+            },
+        )
+
+    except ClientError as exc:
+        logger.error("list_users failed: %s", exc)
+        return _respond(500, {"error": "Failed to list users"})
+    except ValueError as exc:
+        logger.error("list_users config error: %s", exc)
+        return _respond(500, {"error": str(exc)})
+
+
+def _handle_create_user(body: dict) -> dict:
+    email = (body.get("email") or "").strip().lower()
+    state = (body.get("state") or "").strip()
+    is_admin_raw = body.get("is_admin")
+    if is_admin_raw is not None and not isinstance(is_admin_raw, bool):
+        return _respond(400, {"error": "'is_admin' must be a boolean"})
+    is_admin = is_admin_raw is True
+    if not email or not state:
+        return _respond(400, {"error": "Fields 'email' and 'state' are required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        cognito.admin_create_user(
+            UserPoolId=pool_id,
+            Username=email,
+            UserAttributes=[
+                {"Name": "email",         "Value": email},
+                {"Name": "email_verified", "Value": "true"},
+                {"Name": "custom:state",  "Value": state},
+            ],
+            DesiredDeliveryMediums=["EMAIL"],
+        )
+        if is_admin:
+            cognito.admin_add_user_to_group(
+                UserPoolId=pool_id,
+                Username=email,
+                GroupName=ADMIN_GROUP_NAME,
+            )
+
+        logger.info("Created user %s for state %s admin=%s", email, state, is_admin)
+        return _respond(200, {"message": "User created. Temporary password sent by email."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UsernameExistsException":
+            return _respond(409, {"error": "A user with this email already exists."})
+        if code == "ResourceNotFoundException" and is_admin:
+            logger.error("Admin group not found. Check ADMIN_GROUP_NAME configuration.")
+            return _respond(500, {"error": "Server configuration error. Contact an administrator."})
+        logger.error("admin_create_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to create user"})
+    except ValueError as exc:
+        logger.error("create_user config error: %s", exc)
+        return _respond(500, {"error": str(exc)})
+
+
+def _handle_delete_user(event: dict) -> dict:
+    params = event.get("queryStringParameters") or {}
+    email  = (params.get("email") or "").strip().lower()
+    if not email:
+        return _respond(400, {"error": "Query parameter 'email' is required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        cognito.admin_delete_user(UserPoolId=pool_id, Username=email)
+        logger.info("Deleted user %s", email)
+        return _respond(200, {"message": "User deleted."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": "User not found."})
+        logger.error("admin_delete_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to delete user"})
+
+
+def _handle_resend_invite(body: dict) -> dict:
+    email = (body.get("email") or "").strip().lower()
+    if not email:
+        return _respond(400, {"error": "Field 'email' is required"})
+    try:
+        pool_id = _get_user_pool_id()
+        user = cognito.admin_get_user(UserPoolId=pool_id, Username=email)
+        status = user.get("UserStatus", "")
+        enabled = user.get("Enabled", True)
+
+        if not enabled:
+            return _respond(409, {"error": "This account is disabled. Re-enable it before resending the invite."})
+        if status != "FORCE_CHANGE_PASSWORD":
+            return _respond(409, {"error": "This user is not in invite-pending status."})
+
+        cognito.admin_create_user(
+            UserPoolId=pool_id,
+            Username=email,
+            MessageAction="RESEND",
+            DesiredDeliveryMediums=["EMAIL"],
+        )
+        logger.info("Resent invite for %s", email)
+        return _respond(200, {"message": "Invite resent."})
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": "User not found."})
+        logger.error("resend_invite failed: %s", exc)
+        return _respond(500, {"error": "Failed to resend invite"})
+
+
+def _handle_reset_password(body: dict) -> dict:
+    email = (body.get("email") or "").strip().lower()
+    if not email:
+        return _respond(400, {"error": "Field 'email' is required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        user = cognito.admin_get_user(UserPoolId=pool_id, Username=email)
+        status = user.get("UserStatus", "")
+        enabled = user.get("Enabled", True)
+
+        if not enabled:
+            return _respond(409, {"error": "This account is disabled. Re-enable it before resetting the password."})
+        if status != "CONFIRMED":
+            if status == "FORCE_CHANGE_PASSWORD":
+                return _respond(409, {"error": "This user is still pending setup. Use resend invite instead."})
+            return _respond(409, {"error": "This user is not eligible for an admin password reset."})
+
+        cognito.admin_reset_user_password(UserPoolId=pool_id, Username=email)
+        logger.info("Password reset initiated for %s", email)
+        return _respond(200, {"message": "Password reset sent."})
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": "User not found."})
+        if code == "InvalidParameterException":
+            # User existence, enabled state, and CONFIRMED status are all pre-checked above,
+            # so InvalidParameterException here means there is no verified email delivery
+            # channel for this account.
+            return _respond(
+                409,
+                {"error": "This account cannot receive a password reset because there is no verified email recovery channel."},
+            )
+        if code == "CodeDeliveryFailureException":
+            return _respond(
+                502,
+                {"error": "Failed to deliver the password reset message. Check the email delivery configuration."},
+            )
+        logger.error("reset_password failed: %s", exc)
+        return _respond(500, {"error": "Failed to reset password"})
+
+
+def _handle_edit_user(body: dict) -> dict:
+    email    = (body.get("email") or "").strip().lower()
+    state    = body.get("state")    # None means don't change
+    is_admin = body.get("is_admin") # None means don't change
+
+    if not email:
+        return _respond(400, {"error": "Field 'email' is required"})
+    if state is None and is_admin is None:
+        return _respond(400, {"error": "At least one of 'state' or 'is_admin' must be provided"})
+
+    try:
+        pool_id     = _get_user_pool_id()
+        admin_group = ADMIN_GROUP_NAME
+
+        if state is not None:
+            state = state.strip()
+            if not state:
+                return _respond(400, {"error": "Field 'state' cannot be empty"})
+            cognito.admin_update_user_attributes(
+                UserPoolId=pool_id,
+                Username=email,
+                UserAttributes=[{"Name": "custom:state", "Value": state}],
+            )
+            logger.info("Updated state for user %s to %s", email, state)
+
+        if is_admin is not None:
+            if is_admin:
+                cognito.admin_add_user_to_group(
+                    UserPoolId=pool_id,
+                    Username=email,
+                    GroupName=admin_group,
+                )
+                logger.info("Added user %s to admin group", email)
+            else:
+                cognito.admin_remove_user_from_group(
+                    UserPoolId=pool_id,
+                    Username=email,
+                    GroupName=admin_group,
+                )
+                logger.info("Removed user %s from admin group", email)
+
+        return _respond(200, {"message": "User updated."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": "User not found."})
+        logger.error("edit_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to update user"})
+    except ValueError as exc:
+        logger.error("edit_user config error: %s", exc)
+        return _respond(500, {"error": str(exc)})
+
+
+def _handle_toggle_user(body: dict) -> dict:
+    email   = (body.get("email") or "").strip().lower()
+    enabled = body.get("enabled")
+    if not email or enabled is None:
+        return _respond(400, {"error": "Fields 'email' and 'enabled' are required"})
+
+    try:
+        pool_id = _get_user_pool_id()
+        if enabled:
+            cognito.admin_enable_user(UserPoolId=pool_id, Username=email)
+            logger.info("Enabled user %s", email)
+            return _respond(200, {"message": "User enabled."})
+        else:
+            cognito.admin_disable_user(UserPoolId=pool_id, Username=email)
+            logger.info("Disabled user %s", email)
+            return _respond(200, {"message": "User disabled."})
+
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        if code == "UserNotFoundException":
+            return _respond(404, {"error": "User not found."})
+        logger.error("admin_enable/disable_user failed: %s", exc)
+        return _respond(500, {"error": "Failed to update user"})
+
+
+def _handle_admin_route(event: dict, method: str, path: str, body: dict) -> dict:
+    """All admin endpoints must be registered here so the /admin namespace stays protected."""
+    auth_error = _authorize_admin_request(event)
+    if auth_error is not None:
+        return auth_error
+
+    if path == "/admin/users":
+        if method == "GET":
+            return _handle_list_users(event)
+        if method == "POST":
+            return _handle_create_user(body)
+        if method == "PATCH":
+            if "enabled" in body:
+                return _handle_toggle_user(body)
+            return _handle_edit_user(body)
+        if method == "DELETE":
+            return _handle_delete_user(event)
+
+    if method == "POST" and path == "/admin/users/resend":
+        return _handle_resend_invite(body)
+
+    if method == "POST" and path == "/admin/users/reset-password":
+        return _handle_reset_password(body)
+
+    return _respond(404, {"error": "Not found"})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main handler — route dispatcher
 # ─────────────────────────────────────────────────────────────────────────────
 
 def lambda_handler(event, context):
     request_context = event.get("requestContext", {})
-    http = request_context.get("http", {})
+    http   = request_context.get("http", {})
+    method = http.get("method", "")   # API Gateway V2 always uppercases this
+    path   = http.get("path", "")
     logger.info(
         "Request received method=%s path=%s requestId=%s",
-        http.get("method", "").upper(),
-        http.get("path", ""),
-        request_context.get("requestId", ""),
+        method, path, request_context.get("requestId", ""),
     )
-    method  = http.get("method", "").upper()
-    path    = http.get("path", "")
 
     # CORS pre-flight
     if method == "OPTIONS":
@@ -321,5 +766,8 @@ def lambda_handler(event, context):
 
     if method == "PATCH" and path.startswith("/referrals/"):
         return _handle_update_referral(event, path)
+
+    if path.startswith("/admin/"):
+        return _handle_admin_route(event, method, path, body)
 
     return _respond(404, {"error": "Not found"})

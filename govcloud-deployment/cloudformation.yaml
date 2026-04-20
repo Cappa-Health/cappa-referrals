@@ -1,16 +1,16 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  HALT Program Landing Pages – AWS GovCloud
+  HALT Program Referral Pages – AWS GovCloud
   Resources: S3 static site bucket, DynamoDB submissions table,
-  HTTP API Gateway, Lambda form handler with SES notification.
+  HTTP API Gateway, Lambda form handler with SES notification,
+  Cognito User Pool for HALT Referral Dashboard authentication.
   PII is stored in DynamoDB (GovCloud). Notification emails
-  contain no PII — only a link to the secure dashboard.
+  contain no PII — only a link to the secure HALT Referral Dashboard.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Parameters
 # ─────────────────────────────────────────────────────────────────────────────
 Parameters:
-
   ProjectName:
     Type: String
     Default: halt-landing
@@ -40,27 +40,10 @@ Parameters:
       SES-verified sender address for notification emails.
       Must be verified in SES before use (domain or individual address).
 
-  NotificationEmail:
-    Type: String
-    Default: support@halt360.org
-    Description: >
-      Where to send new-referral notifications. No PII is included
-      in the email — only a link to the GovCloud dashboard.
-
-  DashboardApiKey:
-    Type: String
-    NoEcho: true
-    MinLength: 16
-    Description: >
-      Secret API key required by support staff to access GET /referrals and
-      PATCH /referrals/{id}. Choose a strong random string (≥ 16 characters).
-      Store this value securely — it is not recoverable from CloudFormation.
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Resources
 # ─────────────────────────────────────────────────────────────────────────────
 Resources:
-
   # ── S3 Bucket for static site ─────────────────────────────────────────────
 
   StaticSiteBucket:
@@ -69,9 +52,9 @@ Resources:
       BucketName: "www.haltreferral.org"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
+        BlockPublicPolicy: false
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        RestrictPublicBuckets: false
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
@@ -86,6 +69,8 @@ Resources:
 
   IntakeSubmissionsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub "${ProjectName}-intake-submissions"
       BillingMode: PAY_PER_REQUEST
@@ -101,6 +86,8 @@ Resources:
         - AttributeName: landing_page
           AttributeType: S
         - AttributeName: status
+          AttributeType: S
+        - AttributeName: state
           AttributeType: S
       KeySchema:
         - AttributeName: submission_id
@@ -122,9 +109,118 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+        - IndexName: by-state
+          KeySchema:
+            - AttributeName: state
+              KeyType: HASH
+            - AttributeName: submitted_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       Tags:
         - Key: Project
           Value: !Ref ProjectName
+
+  # ── Cognito User Pool ─────────────────────────────────────────────────────
+
+  DashboardUserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: !Sub "${ProjectName}-dashboard-users"
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      EmailVerificationSubject: "Your HALT Referral Dashboard verification code"
+      EmailVerificationMessage: >
+        <p>Your HALT Referral Dashboard password reset code is: <strong>{####}</strong></p>
+        <p>To set your new password:</p>
+        <ol>
+          <li>Go to <a href="https://www.haltreferral.org/program_landings/dashboard.html">https://www.haltreferral.org/program_landings/dashboard.html</a></li>
+          <li>Sign in with your email — you will be automatically prompted to enter this code and choose a new password.</li>
+        </ol>
+        <p>If you do not remember your current password, click <strong>Forgot password?</strong> on the sign-in screen and request a new code.</p>
+        <p>This code expires in 24 hours. If you did not request this reset, contact your administrator.</p>
+      Schema:
+        - Name: state
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: "2"
+            MaxLength: "50"
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        InviteMessageTemplate:
+          EmailSubject: "You've been invited to the HALT Referral Dashboard"
+          EmailMessage: !Sub |
+            <!DOCTYPE html>
+            <html lang="en">
+            <body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6;max-width:560px;margin:0 auto;padding:24px;">
+              <h2 style="color:#003366;">Welcome to the HALT Referral Dashboard</h2>
+              <p>You have been invited to access the HALT Referral Dashboard, where you can view and manage referrals for your state.</p>
+              <p>Use the credentials below to sign in for the first time. You will be prompted to set a new password on your first login.</p>
+              <table style="background:#f5f7fa;border-radius:6px;padding:16px 20px;margin:20px 0;width:100%;border-collapse:collapse;">
+                <tr><td style="padding:4px 0;color:#595959;font-size:13px;">Username</td></tr>
+                <tr><td style="padding:4px 0;font-weight:bold;">{username}</td></tr>
+                <tr><td style="padding:12px 0 4px;color:#595959;font-size:13px;">Temporary Password</td></tr>
+                <tr><td style="padding:4px 0;font-weight:bold;letter-spacing:1px;">{####}</td></tr>
+              </table>
+              <p style="color:#a94442;font-size:13px;">&#9888; This temporary password expires in 24 hours.</p>
+              <p style="margin:28px 0;">
+                <a href="${AllowedOrigin}/program_landings/dashboard.html"
+                   style="display:inline-block;background-color:#003366;color:#fff;
+                          padding:12px 28px;text-decoration:none;border-radius:6px;
+                          font-weight:bold;font-size:15px;">
+                  Sign In to HALT Referral Dashboard
+                </a>
+              </p>
+              <p style="font-size:13px;color:#595959;">
+                Or copy and paste this URL into your browser:<br/>
+                ${AllowedOrigin}/program_landings/dashboard.html
+              </p>
+              <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;"/>
+              <p style="color:#595959;font-size:12px;">
+                If you were not expecting this invitation, please disregard this email or contact your administrator.
+              </p>
+            </body>
+            </html>
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 1
+      UserPoolTags:
+        Project: !Ref ProjectName
+
+  DashboardUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "${ProjectName}-dashboard-client"
+      UserPoolId: !Ref DashboardUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      TokenValidityUnits:
+        IdToken: hours
+        AccessToken: hours
+        RefreshToken: days
+      IdTokenValidity: 1
+      AccessTokenValidity: 1
+      RefreshTokenValidity: 30
+      PreventUserExistenceErrors: ENABLED
 
   # ── Lambda Execution Role ─────────────────────────────────────────────────
 
@@ -140,7 +236,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws-us-gov:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
       Policies:
         - PolicyName: DynamoDbAccess
           PolicyDocument:
@@ -165,6 +261,25 @@ Resources:
                   - ses:SendEmail
                   - ses:SendRawEmail
                 Resource: "*"
+        - PolicyName: CognitoUserManagement
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:ListUsers
+                  - cognito-idp:ListUsersInGroup
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminRemoveUserFromGroup
+                  - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:AdminDeleteUser
+                  - cognito-idp:AdminListGroupsForUser
+                  - cognito-idp:AdminEnableUser
+                  - cognito-idp:AdminDisableUser
+                  - cognito-idp:AdminResetUserPassword
+                Resource: !GetAtt DashboardUserPool.Arn
 
   # ── Lambda Function ───────────────────────────────────────────────────────
 
@@ -182,11 +297,10 @@ Resources:
         S3Key: !Ref LambdaZipS3Key
       Environment:
         Variables:
-          TABLE_NAME:           !Ref IntakeSubmissionsTable
-          SENDER_EMAIL:         !Ref SenderEmail
-          NOTIFICATION_EMAIL:   !Ref NotificationEmail
-          ALLOWED_ORIGIN:       !Ref AllowedOrigin
-          DASHBOARD_API_KEY:    !Ref DashboardApiKey
+          TABLE_NAME: !Ref IntakeSubmissionsTable
+          USER_POOL_ID: !Ref DashboardUserPool
+          SENDER_EMAIL: !Ref SenderEmail
+          ALLOWED_ORIGIN: !Ref AllowedOrigin
       Tags:
         - Key: Project
           Value: !Ref ProjectName
@@ -201,9 +315,24 @@ Resources:
       CorsConfiguration:
         AllowOrigins:
           - !Ref AllowedOrigin
-        AllowMethods: [GET, POST, PATCH, OPTIONS]
-        AllowHeaders: [Content-Type, x-api-key]
+        AllowMethods: [GET, POST, PATCH, DELETE, OPTIONS]
+        AllowHeaders: [content-type, authorization]
         MaxAge: 300
+
+  DashboardAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: !Sub "${ProjectName}-cognito-authorizer"
+      ApiId: !Ref ProgramIntakeApi
+      AuthorizerType: JWT
+      IdentitySource:
+        - "$request.header.Authorization"
+      JwtConfiguration:
+        Audience:
+          - !Ref DashboardUserPoolClient
+        Issuer: !Sub
+          - "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPoolId}"
+          - UserPoolId: !Ref DashboardUserPool
 
   ProgramIntakeLambdaIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -211,7 +340,7 @@ Resources:
       ApiId: !Ref ProgramIntakeApi
       IntegrationType: AWS_PROXY
       IntegrationUri: !Sub
-        - "arn:aws-us-gov:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
+        - "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
         - LambdaArn: !GetAtt ProgramIntakeLambda.Arn
       PayloadFormatVersion: "2.0"
 
@@ -227,6 +356,8 @@ Resources:
     Properties:
       ApiId: !Ref ProgramIntakeApi
       RouteKey: "GET /referrals"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
       Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
 
   UpdateReferralRoute:
@@ -234,6 +365,62 @@ Resources:
     Properties:
       ApiId: !Ref ProgramIntakeApi
       RouteKey: "PATCH /referrals/{id}"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  ListUsersRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "GET /admin/users"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  CreateUserRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "POST /admin/users"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  ToggleUserRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "PATCH /admin/users"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  ResendInviteRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "POST /admin/users/resend"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  DeleteUserRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "DELETE /admin/users"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
+      Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
+
+  ResetPasswordRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgramIntakeApi
+      RouteKey: "POST /admin/users/reset-password"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref DashboardAuthorizer
       Target: !Sub "integrations/${ProgramIntakeLambdaIntegration}"
 
   ProgramIntakeApiStage:
@@ -249,13 +436,12 @@ Resources:
       FunctionName: !GetAtt ProgramIntakeLambda.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws-us-gov:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgramIntakeApi}/*"
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgramIntakeApi}/*"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Outputs
 # ─────────────────────────────────────────────────────────────────────────────
 Outputs:
-
   StaticSiteBucketName:
     Description: S3 bucket for your HTML/CSS/JS files
     Value: !Ref StaticSiteBucket
@@ -265,7 +451,7 @@ Outputs:
     Value: !Ref IntakeSubmissionsTable
 
   ApiGatewayEndpoint:
-    Description: API Gateway endpoint – replace YOUR_API_GATEWAY_URL in the 3 HTML files
+    Description: API Gateway base URL – used by generate_auth_config.py to set intakeApiUrl in auth-config.js
     Value: !Sub "https://${ProgramIntakeApi}.execute-api.${AWS::Region}.amazonaws.com"
 
   LambdaFunctionName:
@@ -275,3 +461,11 @@ Outputs:
   ApiGatewayId:
     Description: API Gateway ID – used to update CORS settings
     Value: !Ref ProgramIntakeApi
+
+  UserPoolId:
+    Description: Cognito User Pool ID – needed in auth.js
+    Value: !Ref DashboardUserPool
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID – needed in auth.js
+    Value: !Ref DashboardUserPoolClient

@@ -3,540 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'none';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline';
+      connect-src https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com https://cognito-idp.us-gov-west-1.amazonaws.com;
+      img-src 'self' data:;
+      font-src 'self';
+      frame-src 'none';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    " />
     <title>HALT Referral Dashboard</title>
-    <style>
-      /* ── Reset & Base ── */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f0f4f8;
-        color: #1a2a3a;
-        min-height: 100vh;
-      }
-
-      /* ── Header ── */
-      header {
-        background: #003366;
-        color: #fff;
-        padding: 16px 32px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-      }
-      header .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      header .logo img {
-        height: 40px;
-      }
-      header h1 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-      }
-      header .meta {
-        font-size: 0.8rem;
-        opacity: 0.7;
-      }
-
-      /* ── Layout ── */
-      main {
-        padding: 28px 32px;
-        max-width: 1400px;
-        margin: 0 auto;
-      }
-
-      /* ── Stats Bar ── */
-      .stats-bar {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 24px;
-      }
-      .stat-card {
-        background: #fff;
-        border-radius: 10px;
-        padding: 16px 24px;
-        flex: 1;
-        min-width: 150px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-        border-left: 4px solid #003366;
-      }
-      .stat-card.new {
-        border-color: #e67e22;
-      }
-      .stat-card.contacted {
-        border-color: #2980b9;
-      }
-      .stat-card.enrolled {
-        border-color: #27ae60;
-      }
-      .stat-card.other {
-        border-color: #7f8c8d;
-      }
-      .stat-card .label {
-        font-size: 0.75rem;
-        color: #666;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
-      .stat-card .value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1a2a3a;
-        line-height: 1.1;
-      }
-
-      /* ── Filter Bar ── */
-      .filter-bar {
-        background: #fff;
-        border-radius: 10px;
-        padding: 16px 20px;
-        display: flex;
-        gap: 16px;
-        align-items: flex-end;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-      }
-      .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      .filter-group label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-      .filter-group select,
-      .filter-group input {
-        padding: 8px 12px;
-        border: 1px solid #d0d7de;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        background: #fafbfc;
-        min-width: 160px;
-        color: #1a2a3a;
-      }
-      .filter-group input {
-        min-width: 220px;
-      }
-      .btn {
-        padding: 8px 20px;
-        border: none;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s;
-      }
-      .btn-primary {
-        background: #003366;
-        color: #fff;
-      }
-      .btn-primary:hover {
-        background: #004488;
-      }
-      .btn-secondary {
-        background: #e8ecf0;
-        color: #1a2a3a;
-      }
-      .btn-secondary:hover {
-        background: #d0d7de;
-      }
-      .btn-secondary:disabled {
-        background: #f3f5f7;
-        color: #94a0ad;
-        cursor: default;
-      }
-      .btn-refresh {
-        margin-left: auto;
-      }
-      .filter-summary {
-        background: #f8fbff;
-        border: 1px solid #d6e4f5;
-        border-radius: 10px;
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin: -8px 0 20px;
-      }
-      .filter-summary[hidden] {
-        display: none;
-      }
-      .filter-summary-label {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #003366;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
-      .filter-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: #e7f0fa;
-        color: #1a2a3a;
-        font-size: 0.82rem;
-        font-weight: 600;
-      }
-      .filter-chip strong {
-        color: #003366;
-      }
-      .filter-summary-hint {
-        font-size: 0.82rem;
-        color: #5d6b79;
-        margin-left: auto;
-      }
-      .filter-chip-linked {
-        background: #fff3cd;
-        border: 1px solid #f0c040;
-        color: #7a5200;
-      }
-      .filter-chip-linked strong {
-        color: #7a5200;
-      }
-
-      /* ── Table ── */
-      .table-wrap {
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-      }
-      .table-meta {
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid #e8ecf0;
-      }
-      .table-meta .count {
-        font-size: 0.85rem;
-        color: #666;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-      }
-      thead th {
-        background: #f6f8fa;
-        padding: 11px 16px;
-        text-align: left;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-bottom: 2px solid #e8ecf0;
-        cursor: pointer;
-        user-select: none;
-        white-space: nowrap;
-      }
-      thead th:hover {
-        background: #eef1f5;
-      }
-      thead th .sort-icon {
-        opacity: 0.4;
-        font-size: 0.65rem;
-        margin-left: 4px;
-      }
-      thead th.sorted .sort-icon {
-        opacity: 1;
-      }
-      tbody tr {
-        border-bottom: 1px solid #f0f4f8;
-        cursor: pointer;
-        transition: background 0.1s;
-      }
-      tbody tr:hover {
-        background: #f6f8fa;
-      }
-      tbody tr.expanded {
-        background: #eef3fb;
-      }
-      tbody td {
-        padding: 11px 16px;
-        vertical-align: middle;
-      }
-
-      /* Status badge */
-      .badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
-      .badge-new {
-        background: #fef3e2;
-        color: #b75e0a;
-      }
-      .badge-contacted {
-        background: #e3f0fb;
-        color: #1a5f9e;
-      }
-      .badge-enrolled {
-        background: #e2f5ea;
-        color: #1a7a3c;
-      }
-      .badge-not_eligible {
-        background: #fde8e8;
-        color: #9b1c1c;
-      }
-      .badge-no_response {
-        background: #f0f0f0;
-        color: #555;
-      }
-
-      /* Program badge */
-      .prog {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 0.72rem;
-        font-weight: 600;
-      }
-      .prog-lw {
-        background: #e8f5e9;
-        color: #2e7d32;
-      }
-      .prog-bp {
-        background: #e3f2fd;
-        color: #1565c0;
-      }
-      .prog-bs {
-        background: #fff3e0;
-        color: #e65100;
-      }
-
-      /* ── Detail Row ── */
-      .detail-row td {
-        padding: 0 !important;
-        background: #eef3fb !important;
-        border-bottom: 2px solid #c8d8f0 !important;
-      }
-      .detail-panel {
-        padding: 20px 24px 24px;
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 20px;
-      }
-      .detail-section h3 {
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #888;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
-        margin-bottom: 10px;
-      }
-      .detail-field {
-        margin-bottom: 8px;
-      }
-      .detail-field .field-label {
-        font-size: 0.7rem;
-        color: #888;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-      .detail-field .field-value {
-        font-size: 0.9rem;
-        color: #1a2a3a;
-        font-weight: 500;
-        word-break: break-word;
-      }
-      .detail-actions {
-        display: flex;
-        gap: 10px;
-        align-items: flex-start;
-        flex-wrap: wrap;
-      }
-      .status-select {
-        padding: 7px 10px;
-        border: 1px solid #c8d8f0;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        background: #fff;
-        color: #1a2a3a;
-      }
-      .btn-save {
-        background: #27ae60;
-        color: #fff;
-        padding: 7px 18px;
-      }
-      .btn-save:hover {
-        background: #219150;
-      }
-      .save-msg {
-        font-size: 0.8rem;
-        color: #27ae60;
-        align-self: center;
-        display: none;
-      }
-
-      /* ── Empty / Loading / Error ── */
-      .state-msg {
-        text-align: center;
-        padding: 60px 20px;
-        color: #888;
-        font-size: 0.95rem;
-      }
-      .state-msg .icon {
-        font-size: 2.5rem;
-        display: block;
-        margin-bottom: 8px;
-      }
-      .spinner {
-        display: inline-block;
-        width: 28px;
-        height: 28px;
-        border: 3px solid #d0d7de;
-        border-top-color: #003366;
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      /* ── API Key Modal ── */
-      .overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 51, 0.55);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-      }
-      .modal {
-        background: #fff;
-        border-radius: 12px;
-        padding: 36px 40px;
-        width: 100%;
-        max-width: 420px;
-        text-align: center;
-        box-shadow: 0 12px 40px rgba(0, 0, 51, 0.3);
-      }
-      .modal h2 {
-        font-size: 1.2rem;
-        margin-bottom: 8px;
-        color: #003366;
-      }
-      .modal p {
-        font-size: 0.875rem;
-        color: #555;
-        margin-bottom: 24px;
-      }
-      .modal input {
-        width: 100%;
-        padding: 11px 14px;
-        font-size: 1rem;
-        letter-spacing: 0.12em;
-        border: 1.5px solid #d0d7de;
-        border-radius: 8px;
-        text-align: center;
-        margin-bottom: 16px;
-        outline: none;
-      }
-      .modal input:focus {
-        border-color: #003366;
-      }
-      .modal .error {
-        color: #c0392b;
-        font-size: 0.8rem;
-        margin-top: -10px;
-        margin-bottom: 12px;
-        min-height: 18px;
-      }
-      .modal .btn-primary {
-        width: 100%;
-        padding: 12px;
-        font-size: 1rem;
-        border-radius: 8px;
-      }
-
-      /* ── Responsive ── */
-      @media (max-width: 900px) {
-        main {
-          padding: 16px;
-        }
-        .detail-panel {
-          grid-template-columns: 1fr 1fr;
-        }
-        .filter-summary-hint {
-          margin-left: 0;
-          width: 100%;
-        }
-      }
-      @media (max-width: 600px) {
-        header {
-          padding: 12px 16px;
-        }
-        .detail-panel {
-          grid-template-columns: 1fr;
-        }
-        thead th:nth-child(4),
-        thead th:nth-child(5),
-        tbody td:nth-child(4),
-        tbody td:nth-child(5) {
-          display: none;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="/program_landings/dashboard-shared.css" />
+    <link rel="stylesheet" href="/program_landings/dashboard.css" />
   </head>
   <body>
-    <!-- ── API Key Modal ───────────────────────────────────────────────────────── -->
-    <div class="overlay" id="keyOverlay">
-      <div class="modal">
-        <h2>🔒 HALT Dashboard</h2>
-        <p>Enter your dashboard API key to view referral submissions.</p>
-        <input
-          type="password"
-          id="keyInput"
-          placeholder="API Key"
-          autocomplete="off"
-        />
-        <div class="error" id="keyError"></div>
-        <button class="btn btn-primary" onclick="submitKey()">
-          Access Dashboard
-        </button>
-      </div>
-    </div>
+    <script src="/program_landings/auth-config.js"></script>
+    <script src="/program_landings/auth.js"></script>
 
     <!-- ── Header ─────────────────────────────────────────────────────────────── -->
     <header>
       <div class="logo">
         <div>
           <h1>HALT Referral Dashboard</h1>
-          <div class="meta">
+          <div class="meta" id="headerMeta">
             Alaska Department of Health — Health and Lifestyle Training
           </div>
         </div>
       </div>
-      <div style="font-size: 0.8rem; opacity: 0.7" id="lastRefreshed"></div>
+      <div class="user-info">
+        <span id="headerState" style="display:none"></span>
+        <div class="user-detail">
+          <strong id="headerEmail"></strong>
+        </div>
+        <div style="font-size: 0.8rem; opacity: 0.7" id="lastRefreshed"></div>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-btn" id="navBtn" aria-haspopup="true" aria-expanded="false" aria-controls="navMenu" onclick="toggleNavMenu()">
+            <span aria-hidden="true" style="font-size:1.1rem;line-height:1;letter-spacing:1px">☰</span>
+            <span class="sr-only">Open menu</span>
+          </button>
+          <div class="nav-dropdown-menu" id="navMenu" role="menu">
+            <a href="/program_landings/admin.html" id="adminNavLink" role="menuitem" style="display:none">Admin</a>
+            <hr class="menu-divider" id="adminNavDivider" style="display:none" />
+            <a href="#" role="menuitem" onclick="event.preventDefault(); Auth.logout()">Sign Out</a>
+          </div>
+        </div>
+      </div>
     </header>
 
     <!-- ── Main ───────────────────────────────────────────────────────────────── -->
@@ -568,7 +82,7 @@
       <!-- Filters -->
       <div class="filter-bar">
         <div class="filter-group">
-          <label>Program</label>
+          <label for="filterProgram">Program</label>
           <select id="filterProgram" onchange="applyFilters()">
             <option value="">All Programs</option>
             <option value="Lose Weight">Lose Weight</option>
@@ -577,7 +91,7 @@
           </select>
         </div>
         <div class="filter-group">
-          <label>Status</label>
+          <label for="filterStatus">Status</label>
           <select id="filterStatus" onchange="applyFilters()">
             <option value="">All Statuses</option>
             <option value="new">New</option>
@@ -588,7 +102,7 @@
           </select>
         </div>
         <div class="filter-group">
-          <label>Search</label>
+          <label for="filterSearch">Search</label>
           <input
             type="text"
             id="filterSearch"
@@ -613,7 +127,7 @@
       <!-- Table -->
       <div class="table-wrap">
         <div class="table-meta">
-          <span class="count" id="rowCount">Loading…</span>
+          <span class="count" id="rowCount" role="status" aria-live="polite">Loading…</span>
         </div>
         <div id="tableContainer">
           <div class="state-msg"><span class="spinner"></span></div>
@@ -627,43 +141,70 @@
         "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
 
       // ── State ─────────────────────────────────────────────────────────────────────
-      let apiKey = "";
       let allReferrals = [];
       let filtered = [];
       let sortCol = "submitted_at";
       let sortDir = "desc";
       let expandedId = null;
       let linkedReferralId = getLinkedId();
+      let _isLoadingReferrals = false;
 
-      // ── API Key ───────────────────────────────────────────────────────────────────
-      window.addEventListener("DOMContentLoaded", () => {
-        const stored = sessionStorage.getItem("haltApiKey");
-        if (stored) {
-          apiKey = stored;
-          hideModal();
-          loadReferrals();
+      // ── Nav dropdown ─────────────────────────────────────────────────────────
+      function toggleNavMenu() {
+        const menu = document.getElementById("navMenu");
+        const btn  = document.getElementById("navBtn");
+        const open = menu.classList.toggle("open");
+        btn.setAttribute("aria-expanded", String(open));
+      }
+      document.addEventListener("click", (e) => {
+        const dropdown = document.querySelector(".nav-dropdown");
+        if (dropdown && !dropdown.contains(e.target)) {
+          document.getElementById("navMenu").classList.remove("open");
+          document.getElementById("navBtn").setAttribute("aria-expanded", "false");
         }
-        document.getElementById("keyInput").addEventListener("keydown", (e) => {
-          if (e.key === "Enter") submitKey();
-        });
       });
 
-      function submitKey() {
-        const val = document.getElementById("keyInput").value.trim();
-        if (!val) {
-          document.getElementById("keyError").textContent =
-            "Please enter the API key.";
-          return;
-        }
-        apiKey = val;
-        sessionStorage.setItem("haltApiKey", apiKey);
-        hideModal();
-        loadReferrals();
+      function _showAdminLinkIfAdmin() {
+        const isAdmin = Auth.isAdmin();
+        document.getElementById("adminNavLink").style.display    = isAdmin ? "block" : "none";
+        document.getElementById("adminNavDivider").style.display = isAdmin ? "block" : "none";
       }
 
-      function hideModal() {
-        document.getElementById("keyOverlay").style.display = "none";
-      }
+      // ── Auth bootstrap ────────────────────────────────────────────────────────────
+      Auth.onReady(() => {
+        document.getElementById("headerEmail").textContent = Auth.getEmail();
+        document.getElementById("headerState").textContent = Auth.getState();
+        _showAdminLinkIfAdmin();
+        loadReferrals();
+      });
+
+      document.addEventListener("halt:authenticated", () => {
+        document.getElementById("headerEmail").textContent = Auth.getEmail();
+        document.getElementById("headerState").textContent = Auth.getState();
+        _showAdminLinkIfAdmin();
+        loadReferrals();
+      });
+
+      document.addEventListener("halt:logout", () => {
+        // Clear all referral data and PII from the DOM before login screen appears.
+        document.getElementById("adminNavLink").style.display    = "none";
+        document.getElementById("adminNavDivider").style.display = "none";
+        document.getElementById("navMenu").classList.remove("open");
+        document.getElementById("navBtn").setAttribute("aria-expanded", "false");
+        allReferrals = [];
+        filtered = [];
+        document.getElementById("headerEmail").textContent = "";
+        document.getElementById("headerState").textContent = "";
+        document.getElementById("lastRefreshed").textContent = "";
+        document.getElementById("tableContainer").innerHTML = "";
+        document.getElementById("statTotal").textContent = "–";
+        document.getElementById("statNew").textContent = "–";
+        document.getElementById("statContacted").textContent = "–";
+        document.getElementById("statEnrolled").textContent = "–";
+        document.getElementById("statOther").textContent = "–";
+        document.getElementById("filterProgram").value = "";
+        document.getElementById("filterStatus").value = "";
+      });
 
       // Return ?id= from the URL (used when linking directly from a notification email)
       function getLinkedId() {
@@ -704,7 +245,7 @@
 
       function renderActiveFilters() {
         const container = document.getElementById("activeFilters");
-        const clearBtn  = document.getElementById("clearFiltersBtn");
+        const clearBtn = document.getElementById("clearFiltersBtn");
         const activeFilters = getActiveFilters();
         const hasLinked = !!linkedReferralId;
         const hasFilters = activeFilters.length > 0;
@@ -728,7 +269,10 @@
         }
 
         chips += activeFilters
-          .map(f => `<span class="filter-chip"><strong>${escHtml(f.label)}:</strong> ${escHtml(f.value)}</span>`)
+          .map(
+            (f) =>
+              `<span class="filter-chip"><strong>${escHtml(f.label)}:</strong> ${escHtml(f.value)}</span>`,
+          )
           .join("");
 
         container.hidden = false;
@@ -740,28 +284,32 @@
 
       // ── Load Referrals ────────────────────────────────────────────────────────────
       async function loadReferrals() {
+        if (_isLoadingReferrals) return;
+        _isLoadingReferrals = true;
         document.getElementById("tableContainer").innerHTML =
           '<div class="state-msg"><span class="spinner"></span></div>';
         document.getElementById("rowCount").textContent = "Loading…";
 
         try {
-          const res = await fetch(`${API_BASE}/referrals`, {
-            headers: { "x-api-key": apiKey },
+          await Auth.ensureValidToken();
+          const fetch_referrals_response = await fetch(`${API_BASE}/referrals`, {
+            headers: { Authorization: `Bearer ${Auth.getToken()}` },
           });
 
-          if (res.status === 401 || res.status === 403) {
-            sessionStorage.removeItem("haltApiKey");
-            document.getElementById("keyError").textContent =
-              "Invalid API key. Please try again.";
-            document.getElementById("keyInput").value = "";
-            document.getElementById("keyOverlay").style.display = "flex";
+          if (fetch_referrals_response.status === 401) {
+            // Token was rejected — force re-login.
+            Auth.logout();
+            return;
+          }
+          if (fetch_referrals_response.status === 403) {
+            // Valid token but missing state assignment — re-login won't help.
             document.getElementById("tableContainer").innerHTML =
-              '<div class="state-msg"><span class="icon">🔒</span>Authentication required.</div>';
+              '<div class="state-msg"><span class="icon">⚠️</span>Your account is not assigned to a state. Contact an administrator.</div>';
             return;
           }
 
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
+          if (!fetch_referrals_response.ok) throw new Error(`HTTP ${fetch_referrals_response.status}`);
+          const data = await fetch_referrals_response.json();
           allReferrals = data.referrals || data.items || [];
           updateStats();
 
@@ -787,6 +335,8 @@
           document.getElementById("tableContainer").innerHTML =
             `<div class="state-msg"><span class="icon">⚠️</span>Failed to load referrals.<br><small>${err.message}</small></div>`;
           document.getElementById("rowCount").textContent = "Error";
+        } finally {
+          _isLoadingReferrals = false;
         }
       }
 
@@ -898,18 +448,19 @@
           return;
         }
 
-        let html = "<table><thead><tr>";
+        let html = `<table aria-label="Referral records"><caption class="sr-only">Referral records</caption><thead><tr>`;
         COLS.forEach((c) => {
           const cls = sortCol === c.key ? " sorted" : "";
           const arrow =
             sortCol === c.key ? (sortDir === "asc" ? "▲" : "▼") : "⇅";
-          html += `<th class="${cls}" onclick="sortBy('${c.key}')">${c.label} <span class="sort-icon">${arrow}</span></th>`;
+          const sortDesc = sortCol === c.key ? (sortDir === "asc" ? ", sorted ascending" : ", sorted descending") : "";
+          html += `<th class="${cls}"><button class="sort-btn" onclick="sortBy('${c.key}')">${c.label} <span class="sort-icon" aria-hidden="true">${arrow}</span><span class="sr-only">${sortDesc}</span></button></th>`;
         });
         html += "<th>Actions</th></tr></thead><tbody>";
 
         filtered.forEach((r) => {
           const expanded = expandedId === r.submission_id;
-          html += `<tr onclick="toggleExpand('${r.submission_id}')" class="${expanded ? "expanded" : ""}">`;
+          html += `<tr onclick="toggleExpand('${r.submission_id}')" onkeydown="if(event.key==='Enter'||event.key===' '){toggleExpand('${r.submission_id}');event.preventDefault();}" tabindex="0" role="row" aria-expanded="${expanded}" class="${expanded ? "expanded" : ""}">`;
           COLS.forEach((c) => {
             if (c.key === "status") html += `<td>${statusBadge(r.status)}</td>`;
             else if (c.key === "landing_page")
@@ -949,7 +500,7 @@
       <div class="detail-field"><div class="field-label">Program of Interest</div><div class="field-value">${escHtml(r.program_of_interest || r.landing_page || "–")}</div></div>
       <div class="detail-field"><div class="field-label">Landing Page</div><div class="field-value">${escHtml(r.landing_page || "–")}</div></div>
       <div class="detail-field"><div class="field-label">Submitted</div><div class="field-value">${escHtml(r.submitted_at || "–")}</div></div>
-      <div class="detail-field"><div class="field-label">Submission ID</div><div class="field-value" style="font-size:.75rem;color:#888;">${escHtml(r.submission_id || "–")}</div></div>
+      <div class="detail-field"><div class="field-label">Submission ID</div><div class="field-value" style="font-size:.75rem;color:#595959;">${escHtml(r.submission_id || "–")}</div></div>
     </div>
     <div class="detail-section">
       <h3>Motivation</h3>
@@ -958,7 +509,7 @@
       </div>
       <h3 style="margin-top:20px;">Update Status</h3>
       <div class="detail-actions">
-        <select class="status-select" id="sel_${r.submission_id}">
+        <select class="status-select" id="sel_${r.submission_id}" aria-label="Status for ${escHtml(r.name || r.submission_id)}">
           ${["new", "contacted", "enrolled", "not_eligible", "no_response"]
             .map(
               (s) =>
@@ -966,8 +517,8 @@
             )
             .join("")}
         </select>
-        <button class="btn btn-save" onclick="saveStatus('${r.submission_id}', event)">Save</button>
-        <span class="save-msg" id="msg_${r.submission_id}">✓ Saved</span>
+        <button class="btn btn-save" onclick="saveStatus('${r.submission_id}', event)" aria-label="Save status for ${escHtml(r.name || r.submission_id)}">Save</button>
+        <span class="save-msg" role="status" id="msg_${r.submission_id}">✓ Saved</span>
       </div>
     </div>
   </div>`;
@@ -987,15 +538,16 @@
         const newStatus = sel.value;
 
         try {
-          const res = await fetch(`${API_BASE}/referrals/${id}`, {
+          await Auth.ensureValidToken();
+          const update_referral_response = await fetch(`${API_BASE}/referrals/${id}`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": apiKey,
+              Authorization: `Bearer ${Auth.getToken()}`,
             },
             body: JSON.stringify({ status: newStatus }),
           });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          if (!update_referral_response.ok) throw new Error(`HTTP ${update_referral_response.status}`);
 
           // Update local data
           const idx = allReferrals.findIndex((r) => r.submission_id === id);

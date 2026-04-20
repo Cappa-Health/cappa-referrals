@@ -26,12 +26,12 @@ All resources live in a single AWS GovCloud region (`us-gov-west-1` or `us-gov-e
 
 ## Prerequisites
 
-| Requirement | Notes |
-|---|---|
-| AWS GovCloud account | IAM user / role with CloudFormation, S3, CloudFront, API Gateway, Lambda, SES, and IAM permissions |
-| AWS CLI configured | `aws configure --profile govcloud` pointing at the GovCloud region |
-| Python 3.12 | For packaging the Lambda function |
-| Verified SES identities | Both the sender and recipient addresses must be verified in SES (see Step 1) |
+| Requirement             | Notes                                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| AWS GovCloud account    | IAM user / role with CloudFormation, S3, CloudFront, API Gateway, Lambda, SES, and IAM permissions |
+| AWS CLI configured      | `aws configure --profile govcloud` pointing at the GovCloud region                                 |
+| Python 3.12             | For packaging the Lambda function                                                                  |
+| Verified SES identities | Both the sender and recipient addresses must be verified in SES (see Step 1)                       |
 
 ---
 
@@ -127,9 +127,22 @@ aws cloudformation describe-stacks \
 ```
 
 Note the values for:
+
 - **`StaticSiteBucketName`** – where you upload the HTML files
 - **`CloudFrontDomain`** – the public URL of your site
 - **`ApiGatewayEndpoint`** – the base URL for the form submission endpoint
+
+Generate the auth config from the deployed stack outputs:
+
+```bash
+python govcloud-deployment/generate_auth_config.py \
+  --stack-name halt-landing-pages \
+  --region us-gov-west-1 \
+  --profile govcloud
+```
+
+This writes `program_landings/auth-config.js` using the deployed `UserPoolClientId`
+and the region you pass on the command line.
 
 ---
 
@@ -152,7 +165,8 @@ var API_URL = "YOUR_API_GATEWAY_URL/program-intake";
 Replace `YOUR_API_GATEWAY_URL` with the value from the CloudFormation output, e.g.:
 
 ```js
-var API_URL = "https://abc123def4.execute-api.us-gov-west-1.amazonaws.com/program-intake";
+var API_URL =
+  "https://abc123def4.execute-api.us-gov-west-1.amazonaws.com/program-intake";
 ```
 
 ---
@@ -174,6 +188,9 @@ aws s3 cp index.html \
 ```
 
 Replace `STATIC_SITE_BUCKET_NAME` with the value from the `StaticSiteBucketName` CloudFormation output.
+
+Make sure `program_landings/auth-config.js` is included in the sync so the
+dashboard and admin pages use the environment-specific Cognito configuration.
 
 ---
 
@@ -233,11 +250,11 @@ program_landings/
 
 ## Environment Variables (Lambda)
 
-| Variable | Description | Example |
-|---|---|---|
-| `SENDER_EMAIL` | SES-verified From address | `no-reply@yourdomain.gov` |
-| `RECIPIENT_EMAIL` | Comma-separated To address(es) | `team@yourdomain.gov` |
-| `ALLOWED_ORIGIN` | CloudFront domain for CORS | `https://d1abc.cloudfront.net` |
+| Variable          | Description                    | Example                        |
+| ----------------- | ------------------------------ | ------------------------------ |
+| `SENDER_EMAIL`    | SES-verified From address      | `no-reply@yourdomain.gov`      |
+| `RECIPIENT_EMAIL` | Comma-separated To address(es) | `team@yourdomain.gov`          |
+| `ALLOWED_ORIGIN`  | CloudFront domain for CORS     | `https://d1abc.cloudfront.net` |
 
 These are set automatically by the CloudFormation template. To update them without redeploying the full stack:
 

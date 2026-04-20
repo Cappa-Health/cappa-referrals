@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+      default-src 'none';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline';
+      connect-src https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com https://cognito-idp.us-gov-west-1.amazonaws.com;
+      img-src 'self' data:;
+      font-src 'self';
+      frame-src 'none';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    "
+    />
+    <title>HALT Admin — Manage Users</title>
+    <link rel="stylesheet" href="/program_landings/dashboard-shared.css" />
+    <link rel="stylesheet" href="/program_landings/admin.css" />
+  </head>
+  <body>
+    <script src="/program_landings/auth-config.js"></script>
+    <script src="/program_landings/auth.js"></script>
+
+    <header>
+      <div>
+        <h1>HALT Admin — Manage Users</h1>
+        <div class="meta">
+          Alaska Department of Health — Health and Lifestyle Training
+        </div>
+      </div>
+      <div class="user-info">
+        <div class="user-detail">
+          <strong id="headerEmail"></strong>
+          <span id="headerState"></span>
+        </div>
+        <div class="nav-dropdown">
+          <button
+            class="nav-dropdown-btn"
+            id="navBtn"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="navMenu"
+            onclick="toggleNavMenu()"
+          >
+            <span
+              aria-hidden="true"
+              style="font-size: 1.1rem; line-height: 1; letter-spacing: 1px"
+              >☰</span
+            >
+            <span class="sr-only">Open menu</span>
+          </button>
+          <div class="nav-dropdown-menu" id="navMenu" role="menu">
+            <a href="/program_landings/dashboard.html" role="menuitem"
+              >Dashboard</a
+            >
+            <hr class="menu-divider" />
+            <a
+              href="#"
+              role="menuitem"
+              onclick="
+                event.preventDefault();
+                Auth.logout();
+              "
+              >Sign Out</a
+            >
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Top row: Create User + Change Password -->
+      <div class="top-row">
+        <!-- Create User -->
+        <div class="card">
+          <div
+            class="card-header open"
+            role="button"
+            tabindex="0"
+            aria-expanded="true"
+            aria-controls="card-body-create"
+            onclick="toggleCard(this)"
+          >
+            <h2>Create New User</h2>
+            <span class="card-chevron open" aria-hidden="true">▼</span>
+          </div>
+          <div class="card-body open" id="card-body-create">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newEmail">Email Address</label>
+                <input
+                  type="email"
+                  id="newEmail"
+                  placeholder="user@example.gov"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-group">
+                <label for="newState">State</label>
+                <select id="newState">
+                  <option value="">— Select —</option>
+                  <option>Alabama</option>
+                  <option>Alaska</option>
+                  <option>Arizona</option>
+                  <option>Arkansas</option>
+                  <option>California</option>
+                  <option>Colorado</option>
+                  <option>Connecticut</option>
+                  <option>Delaware</option>
+                  <option>Florida</option>
+                  <option>Georgia</option>
+                  <option>Hawaii</option>
+                  <option>Idaho</option>
+                  <option>Illinois</option>
+                  <option>Indiana</option>
+                  <option>Iowa</option>
+                  <option>Kansas</option>
+                  <option>Kentucky</option>
+                  <option>Louisiana</option>
+                  <option>Maine</option>
+                  <option>Maryland</option>
+                  <option>Massachusetts</option>
+                  <option>Michigan</option>
+                  <option>Minnesota</option>
+                  <option>Mississippi</option>
+                  <option>Missouri</option>
+                  <option>Montana</option>
+                  <option>Nebraska</option>
+                  <option>Nevada</option>
+                  <option>New Hampshire</option>
+                  <option>New Jersey</option>
+                  <option>New Mexico</option>
+                  <option>New York</option>
+                  <option>North Carolina</option>
+                  <option>North Dakota</option>
+                  <option>Ohio</option>
+                  <option>Oklahoma</option>
+                  <option>Oregon</option>
+                  <option>Pennsylvania</option>
+                  <option>Rhode Island</option>
+                  <option>South Carolina</option>
+                  <option>South Dakota</option>
+                  <option>Tennessee</option>
+                  <option>Texas</option>
+                  <option>Utah</option>
+                  <option>Vermont</option>
+                  <option>Virginia</option>
+                  <option>Washington</option>
+                  <option>West Virginia</option>
+                  <option>Wisconsin</option>
+                  <option>Wyoming</option>
+                </select>
+                <div class="form-hint">
+                  User sees only this state's referrals.
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="checkbox-group">
+                  <input type="checkbox" id="newIsAdmin" />
+                  <label for="newIsAdmin" class="checkbox-copy">
+                    <span>Add user to admin group.</span>
+                  </label>
+                </div>
+                <p
+                  class="form-hint"
+                  style="margin-top: 6px; font-style: italic; color: #7a5200"
+                >
+                  Only Cappa Health employees should be added to the admin
+                  group.
+                </p>
+              </div>
+            </div>
+            <button class="btn-submit" id="createBtn" onclick="createUser()">
+              Create User
+            </button>
+            <div
+              class="feedback"
+              id="createFeedback"
+              role="status"
+              aria-live="polite"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card collapsed">
+          <div
+            class="card-header"
+            role="button"
+            tabindex="0"
+            aria-expanded="false"
+            aria-controls="card-body-password"
+            onclick="toggleCard(this)"
+          >
+            <div>
+              <h2>Change My Password</h2>
+              <div
+                style="
+                  font-size: 0.72rem;
+                  color: #595959;
+                  margin-top: 2px;
+                  font-weight: 400;
+                "
+              >
+                Update your HALT dashboard login password
+              </div>
+            </div>
+            <span class="card-chevron" aria-hidden="true">▼</span>
+          </div>
+          <div class="card-body" id="card-body-password">
+            <div class="form-group">
+              <label for="cpOldPw">Current Password</label>
+              <div class="pw-wrap">
+                <input
+                  type="password"
+                  id="cpOldPw"
+                  autocomplete="current-password"
+                  placeholder="Current password"
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  onclick="togglePw('cpOldPw', this)"
+                  aria-label="Show current password"
+                  aria-pressed="false"
+                >
+                  Show
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cpNewPw1">New Password</label>
+              <div class="pw-wrap">
+                <input
+                  type="password"
+                  id="cpNewPw1"
+                  autocomplete="new-password"
+                  placeholder="Min 12 chars, upper, lower, number, symbol"
+                  oninput="validateCpPw()"
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  onclick="togglePw('cpNewPw1', this)"
+                  aria-label="Show new password"
+                  aria-pressed="false"
+                >
+                  Show
+                </button>
+              </div>
+              <div class="pw-reqs">
+                <span id="cpReqLen">✗ 12+ characters</span>
+                <span id="cpReqUpper">✗ Uppercase</span>
+                <span id="cpReqLower">✗ Lowercase</span>
+                <span id="cpReqNum">✗ Number</span>
+                <span id="cpReqSym">✗ Symbol</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cpNewPw2">Confirm New Password</label>
+              <div class="pw-wrap">
+                <input
+                  type="password"
+                  id="cpNewPw2"
+                  autocomplete="new-password"
+                  placeholder="Confirm new password"
+                  oninput="validateCpPw()"
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  onclick="togglePw('cpNewPw2', this)"
+                  aria-label="Show confirm password"
+                  aria-pressed="false"
+                >
+                  Show
+                </button>
+              </div>
+              <div class="pw-match" id="cpPwMatch">✗ Passwords match</div>
+            </div>
+            <button
+              class="btn-submit"
+              id="cpBtn"
+              onclick="changeMyPassword()"
+              disabled
+            >
+              Change Password
+            </button>
+            <div
+              class="feedback"
+              id="cpFeedback"
+              role="status"
+              aria-live="polite"
+            ></div>
+          </div>
+        </div>
+      </div>
+      <!-- /top-row -->
+
+      <!-- User List -->
+      <div class="card collapsed">
+        <div
+          class="card-header"
+          role="button"
+          tabindex="0"
+          aria-expanded="false"
+          aria-controls="card-body-users"
+          onclick="toggleCard(this)"
+        >
+          <div>
+            <h2>User List</h2>
+            <div
+              style="
+                font-size: 0.72rem;
+                color: #595959;
+                margin-top: 2px;
+                font-weight: 400;
+              "
+            >
+              View, enable, disable, and remove existing users
+            </div>
+          </div>
+          <span class="card-chevron" aria-hidden="true">▼</span>
+        </div>
+        <div class="card-body" id="card-body-users">
+          <div class="user-filters" aria-label="Filter dashboard users">
+            <div class="form-row user-filter-row">
+              <div
+                class="form-group user-filter-search"
+                style="margin-bottom: 0"
+              >
+                <label for="userSearch">Search users</label>
+                <input
+                  type="search"
+                  id="userSearch"
+                  placeholder="Search by email, state, role, or status"
+                  oninput="updateUserFilters()"
+                />
+              </div>
+              <div
+                class="form-group user-filter-status"
+                style="margin-bottom: 0"
+              >
+                <label for="userStatusFilter">Status</label>
+                <select id="userStatusFilter" onchange="updateUserFilters()">
+                  <option value="all">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="disabled">Disabled</option>
+                </select>
+              </div>
+              <div class="user-filter-actions">
+                <button
+                  class="btn-sm"
+                  type="button"
+                  onclick="resetUserFilters()"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+            <div
+              class="user-filter-summary"
+              id="userFilterSummary"
+              role="status"
+              aria-live="polite"
+            ></div>
+          </div>
+          <div class="selected-user-panel" aria-label="Selected user actions">
+            <div class="selected-user-heading">Selected User</div>
+            <div
+              class="selected-user-summary empty"
+              id="selectedUserSummary"
+              role="status"
+              aria-live="polite"
+            >
+              Select a user from the table to manage their account.
+            </div>
+            <div
+              class="selected-user-note"
+              id="selectedUserNote"
+              role="status"
+              aria-live="polite"
+            ></div>
+            <div class="selected-user-actions">
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedEditBtn"
+                onclick="handleSelectedUserEdit()"
+                disabled
+              >
+                Edit
+              </button>
+              <button
+                class="btn-sm btn-disable"
+                type="button"
+                id="selectedToggleBtn"
+                onclick="handleSelectedUserToggle()"
+                disabled
+              >
+                Disable
+              </button>
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedResendBtn"
+                style="background: #fff3cd; color: #7a5200"
+                onclick="handleSelectedUserResendInvite()"
+                disabled
+              >
+                Resend Invite
+              </button>
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedResetPasswordBtn"
+                style="background: #e8f7ee; color: #166534"
+                onclick="handleSelectedUserResetPassword()"
+                disabled
+              >
+                Reset Password
+              </button>
+              <button
+                class="btn-sm"
+                type="button"
+                id="selectedDeleteBtn"
+                style="background: #fde8e8; color: #7a1515"
+                onclick="handleSelectedUserDelete()"
+                disabled
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+          <div id="userListContainer">
+            <div class="loading" role="status" aria-label="Loading users">
+              <span class="spinner" aria-hidden="true"></span
+              ><span class="sr-only">Loading users…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Edit User Modal -->
+    <div
+      id="editModal"
+      class="modal-overlay"
+      style="display: none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="editModalTitle"
+    >
+      <div class="modal-box" style="max-width: 460px">
+        <div class="modal-title" id="editModalTitle">Edit User</div>
+        <div style="margin-bottom: 4px">
+          <div class="form-group">
+            <label for="editState">State</label>
+            <select id="editState"></select>
+            <div class="form-hint">User sees only this state's referrals.</div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0">
+            <div class="checkbox-group" style="padding-top: 8px">
+              <input
+                type="checkbox"
+                id="editIsAdmin"
+                oninput="updateAdminCheckboxHint()"
+              />
+              <label for="editIsAdmin" class="checkbox-copy">
+                <span>Admin group member</span>
+                <span class="form-hint" id="editAdminHint"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div
+          class="feedback"
+          id="editFeedback"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <div class="modal-actions" style="margin-top: 16px">
+          <button class="btn-modal-cancel" onclick="closeEditModal()">
+            Cancel
+          </button>
+          <button class="btn-submit" id="editSaveBtn" onclick="saveEditUser()">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div
+      id="confirmModal"
+      class="modal-overlay"
+      style="display: none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmTitle"
+    >
+      <div class="modal-box">
+        <div class="modal-title" id="confirmTitle">Confirm Action</div>
+        <div class="modal-msg" id="confirmMsg"></div>
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" onclick="closeConfirm()">
+            Cancel
+          </button>
+          <button class="btn-modal-confirm" id="confirmOkBtn">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE =
+        "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
+      const USER_SORT_DEFAULT = { column: "email", direction: "asc" };
+      let _allUsers = [];
+      let _userSort = { ...USER_SORT_DEFAULT };
+      let _selectedUserEmail = "";
+
+      // ── Nav dropdown ─────────────────────────────────────────────────────────
+      function toggleNavMenu() {
+        const menu = document.getElementById("navMenu");
+        const btn = document.getElementById("navBtn");
+        const open = menu.classList.toggle("open");
+        btn.setAttribute("aria-expanded", String(open));
+      }
+      document.addEventListener("click", (e) => {
+        const dropdown = document.querySelector(".nav-dropdown");
+        if (dropdown && !dropdown.contains(e.target)) {
+          document.getElementById("navMenu").classList.remove("open");
+          document
+            .getElementById("navBtn")
+            .setAttribute("aria-expanded", "false");
+        }
+      });
+
+      Auth.onReady(() => {
+        // UX shortcut only — not a security control. All admin API endpoints enforce
+        // authorization server-side and return 403 for non-admin callers regardless
+        // of what the frontend does.
+        if (!Auth.isAdmin()) {
+          window.location.replace("/program_landings/dashboard.html");
+          return;
+        }
+        initUserListActions();
+      });
+
+      document.addEventListener("halt:authenticated", () => {
+        // Same UX shortcut as above — server-side enforcement is the real control.
+        if (!Auth.isAdmin()) {
+          window.location.replace("/program_landings/dashboard.html");
+          return;
+        }
+        document.getElementById("headerEmail").textContent = Auth.getEmail();
+        document.getElementById("headerState").textContent = Auth.getState();
+        loadUsers();
+      });
+
+      document.addEventListener("halt:logout", () => {
+        // Clear all PII and sensitive data from the DOM before login screen appears.
+        document.getElementById("headerEmail").textContent = "";
+        document.getElementById("headerState").textContent = "";
+        document.getElementById("userListContainer").innerHTML = "";
+        document.getElementById("userSearch").value = "";
+        document.getElementById("userStatusFilter").value = "all";
+        document.getElementById("userFilterSummary").textContent = "";
+        _allUsers = [];
+        _userSort = { ...USER_SORT_DEFAULT };
+        _selectedUserEmail = "";
+        updateSelectedUserPanel();
+        // Create user form
+        document.getElementById("newEmail").value = "";
+        document.getElementById("newState").value = "";
+        document.getElementById("newIsAdmin").checked = false;
+        document.getElementById("createFeedback").className = "feedback";
+        document.getElementById("createFeedback").textContent = "";
+        // Change password form
+        document.getElementById("cpOldPw").value = "";
+        document.getElementById("cpNewPw1").value = "";
+        document.getElementById("cpNewPw2").value = "";
+        document.getElementById("cpFeedback").className = "feedback";
+        document.getElementById("cpFeedback").textContent = "";
+        // Close any open modals
+        closeEditModal();
+        closeConfirm();
+      });
+
+      // ── Collapsible cards ─────────────────────────────────────────────────────
+      function toggleCard(header) {
+        const body = header.nextElementSibling;
+        const card = header.closest(".card");
+        const chevron = header.querySelector(".card-chevron");
+        const isOpen = body.classList.contains("open");
+        body.classList.toggle("open", !isOpen);
+        header.classList.toggle("open", !isOpen);
+        chevron.classList.toggle("open", !isOpen);
+        header.setAttribute("aria-expanded", String(!isOpen));
+        card.classList.toggle("collapsed", isOpen);
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (
+          (e.key === "Enter" || e.key === " ") &&
+          e.target.classList.contains("card-header")
+        ) {
+          e.preventDefault();
+          toggleCard(e.target);
+        }
+        if (e.key === "Escape") {
+          if (document.getElementById("editModal").style.display !== "none")
+            closeEditModal();
+          else if (
+            document.getElementById("confirmModal").style.display !== "none"
+          )
+            closeConfirm();
+        }
+      });
+
+      // ── Password visibility toggle ────────────────────────────────────────────
+      function togglePw(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const isHidden = input.type === "password";
+        input.type = isHidden ? "text" : "password";
+        btn.textContent = isHidden ? "Hide" : "Show";
+        const label = btn.getAttribute("aria-label") || "";
+        btn.setAttribute(
+          "aria-label",
+          label.startsWith("Hide")
+            ? label.replace("Hide", "Show")
+            : label.replace("Show", "Hide"),
+        );
+        btn.setAttribute("aria-pressed", isHidden ? "true" : "false");
+      }
+
+      // ── Change Password validation ────────────────────────────────────────────
+      function validateCpPw() {
+        const pw1 = document.getElementById("cpNewPw1").value || "";
+        const pw2 = document.getElementById("cpNewPw2").value || "";
+
+        const checks = {
+          cpReqLen: pw1.length >= 12,
+          cpReqUpper: /[A-Z]/.test(pw1),
+          cpReqLower: /[a-z]/.test(pw1),
+          cpReqNum: /[0-9]/.test(pw1),
+          cpReqSym: /[^A-Za-z0-9]/.test(pw1),
+        };
+
+        Object.entries(checks).forEach(([id, pass]) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const label = el.textContent.slice(2);
+          el.textContent = (pass ? "✓ " : "✗ ") + label;
+          el.style.color = pass ? "#1a7a3c" : "#767676";
+        });
+
+        const allPass = Object.values(checks).every(Boolean);
+        const matches = pw1 && pw1 === pw2;
+        const matchEl = document.getElementById("cpPwMatch");
+        if (matchEl) {
+          matchEl.textContent = matches
+            ? "✓ Passwords match"
+            : "✗ Passwords match";
+          matchEl.style.color = matches ? "#1a7a3c" : "#767676";
+        }
+        document.getElementById("cpBtn").disabled = !(allPass && matches);
+      }
+
+      // ── Change Password ───────────────────────────────────────────────────────
+      async function changeMyPassword() {
+        const oldPw = (document.getElementById("cpOldPw").value || "").trim();
+        const newPw1 = (document.getElementById("cpNewPw1").value || "").trim();
+        const newPw2 = (document.getElementById("cpNewPw2").value || "").trim();
+        const feedback = document.getElementById("cpFeedback");
+
+        feedback.className = "feedback";
+        feedback.textContent = "";
+
+        const btn = document.getElementById("cpBtn");
+        btn.disabled = true;
+        btn.textContent = "Changing…";
+
+        try {
+          await Auth.changePassword(oldPw, newPw1);
+          feedback.className = "feedback success";
+          feedback.textContent = "Password changed successfully.";
+          document.getElementById("cpOldPw").value = "";
+          document.getElementById("cpNewPw1").value = "";
+          document.getElementById("cpNewPw2").value = "";
+          validateCpPw();
+        } catch (err) {
+          feedback.className = "feedback error";
+          if (err.code === "NotAuthorizedException") {
+            feedback.textContent = "Current password is incorrect.";
+          } else if (err.code === "InvalidPasswordException") {
+            feedback.textContent =
+              "New password does not meet requirements: min 12 chars, upper, lower, number, symbol.";
+          } else {
+            feedback.textContent = err.message || "Failed to change password.";
+          }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Change Password";
+        }
+      }
+
+      // ── Create User ───────────────────────────────────────────────────────────
+      async function createUser() {
+        const email = (document.getElementById("newEmail").value || "").trim();
+        const state = document.getElementById("newState").value;
+        const isAdmin = document.getElementById("newIsAdmin").checked;
+        const feedback = document.getElementById("createFeedback");
+
+        feedback.className = "feedback";
+        feedback.textContent = "";
+
+        if (!email || !state) {
+          feedback.className = "feedback error";
+          feedback.textContent = "Email and state are both required.";
+          return;
+        }
+
+        const btn = document.getElementById("createBtn");
+        btn.disabled = true;
+        btn.textContent = "Creating…";
+
+        try {
+          await Auth.ensureValidAccessToken();
+          const create_user_response = await fetch(`${API_BASE}/admin/users`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Auth.getAccessToken()}`,
+            },
+            body: JSON.stringify({ email, state, is_admin: isAdmin }),
+          });
+
+          if (create_user_response.status === 401) {
+            Auth.logout();
+            return;
+          }
+          const data = await create_user_response.json();
+          if (create_user_response.status === 403) {
+            throw new Error(
+              data.error ||
+                "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
+            );
+          }
+          if (!create_user_response.ok)
+            throw new Error(
+              data.error || `HTTP ${create_user_response.status}`,
+            );
+
+          feedback.className = "feedback success";
+          feedback.textContent =
+            "User created. A temporary password has been sent to their email.";
+          document.getElementById("newEmail").value = "";
+          document.getElementById("newState").value = "";
+          document.getElementById("newIsAdmin").checked = false;
+          loadUsers();
+        } catch (err) {
+          feedback.className = "feedback error";
+          feedback.textContent = err.message || "Failed to create user.";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Create User";
+        }
+      }
+
+      // ── Load Users ────────────────────────────────────────────────────────────
+      async function loadUsers() {
+        _allUsers = [];
+        document.getElementById("userFilterSummary").textContent =
+          "Loading users…";
+        document.getElementById("userListContainer").innerHTML =
+          '<div class="loading" role="status" aria-label="Loading users"><span class="spinner" aria-hidden="true"></span><span class="sr-only">Loading users…</span></div>';
+        try {
+          await Auth.ensureValidAccessToken();
+          let nextPaginationToken = "";
+          do {
+            const query = nextPaginationToken
+              ? `?pagination_token=${encodeURIComponent(nextPaginationToken)}`
+              : "";
+            const list_users_response = await fetch(
+              `${API_BASE}/admin/users${query}`,
+              {
+                headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
+              },
+            );
+            if (list_users_response.status === 401) {
+              Auth.logout();
+              return;
+            }
+            if (list_users_response.status === 403) {
+              const data = await list_users_response.json();
+              document.getElementById("userFilterSummary").textContent = "";
+              document.getElementById("userListContainer").innerHTML =
+                `<div class="empty-state">${escHtml(
+                  data.error ||
+                    "Administrator access is required. If you were just added to the admin group, sign out and sign back in.",
+                )}</div>`;
+              return;
+            }
+            if (!list_users_response.ok)
+              throw new Error(`HTTP ${list_users_response.status}`);
+
+            const data = await list_users_response.json();
+            _allUsers.push(...(data.users || []));
+            nextPaginationToken = data.next_pagination_token || "";
+          } while (nextPaginationToken);
+
+          if (
+            _selectedUserEmail &&
+            !_allUsers.some((user) => user.email === _selectedUserEmail)
+          ) {
+            _selectedUserEmail = "";
+          }
+
+          updateUserFilters();
+        } catch (err) {
+          document.getElementById("userFilterSummary").textContent = "";
+          document.getElementById("userListContainer").innerHTML =
+            `<div class="empty-state">Failed to load users. Please refresh and try again.</div>`;
+        }
+      }
+
+      function getUserStatusLabel(user) {
+        if (!user.enabled) return "Disabled";
+        return user.status === "CONFIRMED" ? "Active" : "Pending";
+      }
+
+      function getUserByEmail(email = _selectedUserEmail) {
+        return _allUsers.find((user) => user.email === email) || null;
+      }
+
+      function setSelectedUser(email) {
+        _selectedUserEmail = email || "";
+        updateUserFilters();
+      }
+
+      function updateSelectedUserPanel() {
+        const user = getUserByEmail();
+        const summary = document.getElementById("selectedUserSummary");
+        const note = document.getElementById("selectedUserNote");
+        const editBtn = document.getElementById("selectedEditBtn");
+        const toggleBtn = document.getElementById("selectedToggleBtn");
+        const resendBtn = document.getElementById("selectedResendBtn");
+        const resetBtn = document.getElementById("selectedResetPasswordBtn");
+        const deleteBtn = document.getElementById("selectedDeleteBtn");
+
+        if (!user) {
+          summary.className = "selected-user-summary empty";
+          summary.textContent =
+            "Select a user from the table to manage their account.";
+          note.textContent = "";
+          note.classList.remove("visible");
+          editBtn.disabled = true;
+          toggleBtn.disabled = true;
+          toggleBtn.textContent = "Disable";
+          toggleBtn.className = "btn-sm btn-disable";
+          resendBtn.disabled = true;
+          resetBtn.disabled = true;
+          deleteBtn.disabled = true;
+          deleteBtn.title = "";
+          return;
+        }
+
+        const statusLabel = getUserStatusLabel(user);
+        const isPending =
+          user.enabled && user.status === "FORCE_CHANGE_PASSWORD";
+        const canResetPassword = user.enabled && user.status === "CONFIRMED";
+        const isSelf =
+          user.email.toLowerCase() === (Auth.getEmail() || "").toLowerCase();
+
+        summary.className = "selected-user-summary";
+        summary.textContent = `${user.email} • ${user.state || "No state"} • ${statusLabel}${user.is_admin ? " • Admin" : ""}`;
+        editBtn.disabled = false;
+        toggleBtn.disabled = false;
+        toggleBtn.textContent = user.enabled ? "Disable" : "Enable";
+        toggleBtn.className = user.enabled
+          ? "btn-sm btn-disable"
+          : "btn-sm btn-enable";
+        resendBtn.disabled = !isPending;
+        resetBtn.disabled = !canResetPassword;
+        deleteBtn.disabled = isSelf;
+        note.textContent = isSelf
+          ? "You cannot delete your own account while signed in."
+          : "";
+        note.classList.toggle("visible", isSelf);
+        deleteBtn.title = isSelf
+          ? "You cannot delete your own account while signed in."
+          : "";
+      }
+
+      function getUserStatusFilterValue(user) {
+        if (!user.enabled) return "disabled";
+        return user.status === "CONFIRMED" ? "active" : "pending";
+      }
+
+      function getUserStatusSortValue(user) {
+        const statusValue = getUserStatusFilterValue(user);
+        if (statusValue === "active") return 0;
+        if (statusValue === "pending") return 1;
+        return 2;
+      }
+
+      function compareTextValues(left, right) {
+        return String(left || "").localeCompare(
+          String(right || ""),
+          undefined,
+          {
+            sensitivity: "base",
+          },
+        );
+      }
+
+      function compareDateValues(left, right) {
+        const leftValue = Date.parse(left || "") || 0;
+        const rightValue = Date.parse(right || "") || 0;
+        return leftValue - rightValue;
+      }
+
+      function sortUsers(users) {
+        const direction = _userSort.direction === "desc" ? -1 : 1;
+        return [...users].sort((left, right) => {
+          let result = 0;
+
+          if (_userSort.column === "email") {
+            result = compareTextValues(left.email, right.email);
+          } else if (_userSort.column === "state") {
+            result = compareTextValues(left.state, right.state);
+          } else if (_userSort.column === "status") {
+            result =
+              getUserStatusSortValue(left) - getUserStatusSortValue(right);
+            if (result === 0) {
+              result = compareTextValues(left.status, right.status);
+            }
+          } else if (_userSort.column === "last_modified") {
+            result = compareDateValues(left.last_modified, right.last_modified);
+          }
+
+          if (result === 0) {
+            result = compareTextValues(left.email, right.email);
+          }
+
+          return result * direction;
+        });
+      }
+
+      function getSortIndicator(column) {
+        if (_userSort.column !== column) return "↕";
+        return _userSort.direction === "asc" ? "↑" : "↓";
+      }
+
+      function getSortAriaSort(column) {
+        if (_userSort.column !== column) return "none";
+        return _userSort.direction === "asc" ? "ascending" : "descending";
+      }
+
+      function getSortButtonClass(column) {
+        return _userSort.column === column
+          ? "sort-button active"
+          : "sort-button";
+      }
+
+      function setUserSort(column) {
+        if (_userSort.column === column) {
+          _userSort.direction = _userSort.direction === "asc" ? "desc" : "asc";
+        } else {
+          _userSort = { column, direction: "asc" };
+        }
+        updateUserFilters();
+      }
+
+      function updateUserFilters() {
+        const query = (document.getElementById("userSearch").value || "")
+          .trim()
+          .toLowerCase();
+        const statusFilter = document.getElementById("userStatusFilter").value;
+        const filteredUsers = _allUsers.filter((user) => {
+          if (
+            statusFilter !== "all" &&
+            getUserStatusFilterValue(user) !== statusFilter
+          ) {
+            return false;
+          }
+
+          if (!query) return true;
+
+          const haystack = [
+            user.email,
+            user.state || "",
+            getUserStatusLabel(user),
+            user.status || "",
+            user.is_admin ? "admin" : "user",
+          ]
+            .join(" ")
+            .toLowerCase();
+
+          return haystack.includes(query);
+        });
+
+        if (
+          _selectedUserEmail &&
+          !filteredUsers.some((user) => user.email === _selectedUserEmail)
+        ) {
+          _selectedUserEmail = "";
+        }
+
+        const sortedUsers = sortUsers(filteredUsers);
+        updateSelectedUserPanel();
+
+        renderUsers(sortedUsers, _allUsers.length, {
+          query,
+          statusFilter,
+        });
+      }
+
+      function resetUserFilters() {
+        document.getElementById("userSearch").value = "";
+        document.getElementById("userStatusFilter").value = "all";
+        updateUserFilters();
+      }
+
+      function renderUsers(users, totalUsers = users.length, filters = {}) {
+        const hasActiveFilters = Boolean(
+          filters.query ||
+          "" ||
+          (filters.statusFilter && filters.statusFilter !== "all"),
+        );
+        const summary = document.getElementById("userFilterSummary");
+        if (summary) {
+          summary.textContent = hasActiveFilters
+            ? `Showing ${users.length} of ${totalUsers} users`
+            : `${totalUsers} users`;
+        }
+
+        if (!users.length) {
+          document.getElementById("userListContainer").innerHTML =
+            hasActiveFilters
+              ? '<div class="empty-state">No users match the current filters.</div>'
+              : '<div class="empty-state">No users found.</div>';
+          return;
+        }
+
+        let html = `<fieldset class="user-table-fieldset"><legend class="sr-only">Select a user to manage</legend><div class="user-table-wrap"><table><caption class="sr-only" id="userTableHelp">Dashboard users. Use the selection control in the email column to choose a user for the actions above. Press space on a selected control to clear the selection.</caption><thead><tr>
+          <th scope="col" aria-sort="${getSortAriaSort("email")}"><button type="button" class="${getSortButtonClass("email")}" onclick="setUserSort('email')">Email<span class="sort-indicator" aria-hidden="true">${getSortIndicator("email")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("state")}"><button type="button" class="${getSortButtonClass("state")}" onclick="setUserSort('state')">State<span class="sort-indicator" aria-hidden="true">${getSortIndicator("state")}</span></button></th><th scope="col">Role</th><th scope="col" aria-sort="${getSortAriaSort("status")}"><button type="button" class="${getSortButtonClass("status")}" onclick="setUserSort('status')">Status<span class="sort-indicator" aria-hidden="true">${getSortIndicator("status")}</span></button></th><th scope="col" aria-sort="${getSortAriaSort("last_modified")}"><button type="button" class="${getSortButtonClass("last_modified")}" onclick="setUserSort('last_modified')">Last Modified<span class="sort-indicator" aria-hidden="true">${getSortIndicator("last_modified")}</span></button></th>
+        </tr></thead><tbody>`;
+
+        users.forEach((u) => {
+          const statusClass = u.enabled
+            ? u.status === "CONFIRMED"
+              ? "badge-enabled"
+              : "badge-unconfirmed"
+            : "badge-disabled";
+          const statusLabel = getUserStatusLabel(u);
+
+          const roleBadge =
+            u.is_admin === true
+              ? `<span class="badge-admin">Admin</span>`
+              : `<span style="color:#595959;font-size:0.8rem;">—</span>`;
+
+          const lastMod = formatDate(u.last_modified);
+
+          html += `<tr${u.email === _selectedUserEmail ? (u.is_admin ? ' class="row-admin row-selected"' : ' class="row-selected"') : u.is_admin ? ' class="row-admin"' : ""}>
+            <td><label class="user-select-cell"><input type="radio" name="selectedUser" value="${escHtml(u.email)}" aria-describedby="userTableHelp" aria-label="Select ${escHtml(u.email)}"${u.email === _selectedUserEmail ? " checked" : ""} /><span>${escHtml(u.email)}</span></label></td>
+            <td>${escHtml(u.state || "—")}</td>
+            <td>${roleBadge}</td>
+            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+            <td>${lastMod}</td>
+          </tr>`;
+        });
+
+        html += "</tbody></table></div></fieldset>";
+        document.getElementById("userListContainer").innerHTML = html;
+      }
+
+      function initUserListActions() {
+        const container = document.getElementById("userListContainer");
+        if (!container || container.dataset.actionsBound === "true") return;
+
+        container.dataset.actionsBound = "true";
+        container.addEventListener("click", (event) => {
+          const selectLabel = event.target.closest("label.user-select-cell");
+          if (!selectLabel || !container.contains(selectLabel)) return;
+
+          const radio = selectLabel.querySelector('input[name="selectedUser"]');
+          if (!radio) return;
+
+          if (radio.checked && radio.value === _selectedUserEmail) {
+            event.preventDefault();
+            setSelectedUser("");
+          }
+        });
+
+        container.addEventListener("change", (event) => {
+          const radio = event.target.closest('input[name="selectedUser"]');
+          if (!radio || !container.contains(radio)) return;
+          setSelectedUser(radio.value || "");
+        });
+
+        container.addEventListener("keydown", (event) => {
+          const radio = event.target.closest('input[name="selectedUser"]');
+          if (!radio || !container.contains(radio)) return;
+          if ((event.key === " " || event.key === "Enter") && radio.checked) {
+            event.preventDefault();
+            setSelectedUser("");
+          }
+        });
+      }
+
+      function handleSelectedUserEdit() {
+        const user = getUserByEmail();
+        if (!user) return;
+        openEditModal(user.email, user.state || "", user.is_admin === true);
+      }
+
+      function handleSelectedUserDelete() {
+        const user = getUserByEmail();
+        if (!user) return;
+        confirmAction(
+          `Permanently delete the account for ${user.email}? This cannot be undone.`,
+          "Delete User",
+          () => _doDeleteUser(user.email),
+        );
+      }
+
+      function handleSelectedUserResendInvite() {
+        const user = getUserByEmail();
+        if (
+          !user ||
+          !(user.enabled && user.status === "FORCE_CHANGE_PASSWORD")
+        ) {
+          return;
+        }
+        resendInvite(user.email);
+      }
+
+      function handleSelectedUserResetPassword() {
+        const user = getUserByEmail();
+        if (!user || !(user.enabled && user.status === "CONFIRMED")) return;
+        confirmAction(
+          `Send a password reset email to ${user.email}? They will be prompted to choose a new password.`,
+          "Reset Password",
+          () => resetPassword(user.email),
+        );
+      }
+
+      function handleSelectedUserToggle() {
+        const user = getUserByEmail();
+        if (!user) return;
+        const enable = !user.enabled;
+        confirmAction(
+          enable
+            ? `Enable account for ${user.email}? They will be able to log in again immediately.`
+            : `Disable account for ${user.email}? They will not be able to log in until re-enabled.`,
+          enable ? "Enable User" : "Disable User",
+          () => _doToggleUser(user.email, enable),
+        );
+      }
+
+      // ── Focus trap helpers ────────────────────────────────────────────────────
+      const FOCUSABLE =
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+      function trapFocus(modalEl) {
+        const els = [...modalEl.querySelectorAll(FOCUSABLE)];
+        if (!els.length) return;
+        els[0].focus();
+        modalEl._trap = (e) => {
+          if (e.key !== "Tab") return;
+          const first = els[0],
+            last = els[els.length - 1];
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        };
+        modalEl.addEventListener("keydown", modalEl._trap);
+      }
+
+      function releaseTrap(modalEl, returnFocus) {
+        if (modalEl._trap) {
+          modalEl.removeEventListener("keydown", modalEl._trap);
+          delete modalEl._trap;
+        }
+        if (returnFocus) returnFocus.focus();
+      }
+
+      // ── Confirm modal ─────────────────────────────────────────────────────────
+      let _confirmTrigger = null;
+      function confirmAction(message, title, onConfirm) {
+        _confirmTrigger = document.activeElement;
+        document.getElementById("confirmMsg").textContent = message;
+        document.getElementById("confirmTitle").textContent =
+          title || "Confirm Action";
+        document.getElementById("confirmOkBtn").onclick = () => {
+          closeConfirm();
+          onConfirm();
+        };
+        const modal = document.getElementById("confirmModal");
+        modal.style.display = "flex";
+        trapFocus(modal);
+      }
+      function closeConfirm() {
+        const modal = document.getElementById("confirmModal");
+        modal.style.display = "none";
+        releaseTrap(modal, _confirmTrigger);
+        _confirmTrigger = null;
+      }
+
+      // ── Enable / Disable User ─────────────────────────────────────────────────
+      async function _doToggleUser(email, enable) {
+        try {
+          await Auth.ensureValidAccessToken();
+          const toggle_user_response = await fetch(`${API_BASE}/admin/users`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Auth.getAccessToken()}`,
+            },
+            body: JSON.stringify({ email, enabled: enable }),
+          });
+          if (toggle_user_response.status === 401) {
+            Auth.logout();
+            return;
+          }
+          if (toggle_user_response.status === 403) {
+            const d = await toggle_user_response.json();
+            throw new Error(d.error || "Administrator access is required.");
+          }
+          if (!toggle_user_response.ok) {
+            const d = await toggle_user_response.json();
+            throw new Error(d.error || `HTTP ${toggle_user_response.status}`);
+          }
+          loadUsers();
+        } catch (err) {
+          alert("Failed to update user. Please try again.");
+        }
+      }
+
+      // ── Delete User ───────────────────────────────────────────────────────────
+      async function _doDeleteUser(email) {
+        try {
+          await Auth.ensureValidAccessToken();
+          const delete_user_response = await fetch(
+            `${API_BASE}/admin/users?email=${encodeURIComponent(email)}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${Auth.getAccessToken()}` },
+            },
+          );
+          if (delete_user_response.status === 401) {
+            Auth.logout();
+            return;
+          }
+          if (delete_user_response.status === 403) {
+            const d = await delete_user_response.json();
+            throw new Error(d.error || "Administrator access is required.");
+          }
+          if (!delete_user_response.ok) {
+            const d = await delete_user_response.json();
+            throw new Error(d.error || `HTTP ${delete_user_response.status}`);
+          }
+          loadUsers();
+        } catch (err) {
+          alert("Failed to delete user. Please try again.");
+        }
+      }
+
+      async function getApiErrorMessage(failed_response) {
+        const raw = await failed_response.text();
+        if (!raw) return `HTTP ${failed_response.status}`;
+
+        try {
+          const data = JSON.parse(raw);
+          return data.error || data.message || `HTTP ${failed_response.status}`;
+        } catch {
+          return `${failed_response.status}: ${raw}`;
+        }
+      }
+
+      // ── Resend Invite ─────────────────────────────────────────────────────────
+      async function resendInvite(email) {
+        try {
+          await Auth.ensureValidAccessToken();
+          const resend_invite_response = await fetch(
+            `${API_BASE}/admin/users/resend`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Auth.getAccessToken()}`,
+              },
+              body: JSON.stringify({ email }),
+            },
+          );
+          if (resend_invite_response.status === 401) {
+            Auth.logout();
+            return;
+          }
+          if (!resend_invite_response.ok) {
+            throw new Error(await getApiErrorMessage(resend_invite_response));
+          }
+          alert("Temporary password resent.");
+          loadUsers();
+        } catch (err) {
+          alert("Failed to resend invite. Please try again.");
+        }
+      }
+
+      async function resetPassword(email) {
+        try {
+          await Auth.ensureValidAccessToken();
+          const reset_password_response = await fetch(
+            `${API_BASE}/admin/users/reset-password`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Auth.getAccessToken()}`,
+              },
+              body: JSON.stringify({ email }),
+            },
+          );
+          if (reset_password_response.status === 401) {
+            Auth.logout();
+            return;
+          }
+          if (!reset_password_response.ok) {
+            throw new Error(await getApiErrorMessage(reset_password_response));
+          }
+          alert("Password reset sent.");
+          loadUsers();
+        } catch (err) {
+          alert("Failed to reset password. Please try again.");
+        }
+      }
+
+      // ── Edit User Modal ───────────────────────────────────────────────────────
+      const US_STATES = [
+        "Alabama",
+        "Alaska",
+        "Arizona",
+        "Arkansas",
+        "California",
+        "Colorado",
+        "Connecticut",
+        "Delaware",
+        "Florida",
+        "Georgia",
+        "Hawaii",
+        "Idaho",
+        "Illinois",
+        "Indiana",
+        "Iowa",
+        "Kansas",
+        "Kentucky",
+        "Louisiana",
+        "Maine",
+        "Maryland",
+        "Massachusetts",
+        "Michigan",
+        "Minnesota",
+        "Mississippi",
+        "Missouri",
+        "Montana",
+        "Nebraska",
+        "Nevada",
+        "New Hampshire",
+        "New Jersey",
+        "New Mexico",
+        "New York",
+        "North Carolina",
+        "North Dakota",
+        "Ohio",
+        "Oklahoma",
+        "Oregon",
+        "Pennsylvania",
+        "Rhode Island",
+        "South Carolina",
+        "South Dakota",
+        "Tennessee",
+        "Texas",
+        "Utah",
+        "Vermont",
+        "Virginia",
+        "Washington",
+        "West Virginia",
+        "Wisconsin",
+        "Wyoming",
+      ];
+
+      let _editUserEmail = null;
+      let _editUserOriginalIsAdmin = false;
+      let _editTrigger = null;
+
+      function updateAdminCheckboxHint() {
+        const isChecked = document.getElementById("editIsAdmin").checked;
+        const hint = document.getElementById("editAdminHint");
+        if (_editUserOriginalIsAdmin && isChecked) {
+          hint.textContent =
+            "Currently an admin — uncheck to remove from admin group";
+          hint.style.color = "#1a3a99";
+        } else if (_editUserOriginalIsAdmin && !isChecked) {
+          hint.textContent = "Will be removed from admin group";
+          hint.style.color = "#9b1c1c";
+        } else if (!_editUserOriginalIsAdmin && !isChecked) {
+          hint.textContent = "Not in admin group — check to grant admin access";
+          hint.style.color = "#595959";
+        } else {
+          hint.textContent = "Will be added to admin group";
+          hint.style.color = "#1a7a3c";
+        }
+      }
+
+      function openEditModal(email, state, isAdmin) {
+        _editTrigger = document.activeElement;
+        _editUserEmail = email;
+        _editUserOriginalIsAdmin = isAdmin;
+        document.getElementById("editModalTitle").textContent =
+          `Edit User: ${email}`;
+
+        const sel = document.getElementById("editState");
+        sel.innerHTML =
+          '<option value="">— Select —</option>' +
+          US_STATES.map(
+            (s) =>
+              `<option value="${s}"${s === state ? " selected" : ""}>${s}</option>`,
+          ).join("");
+
+        document.getElementById("editIsAdmin").checked = isAdmin;
+        updateAdminCheckboxHint();
+        const fb = document.getElementById("editFeedback");
+        fb.className = "feedback";
+        fb.textContent = "";
+        const btn = document.getElementById("editSaveBtn");
+        btn.disabled = false;
+        btn.textContent = "Save Changes";
+        const modal = document.getElementById("editModal");
+        modal.style.display = "flex";
+        trapFocus(modal);
+      }
+
+      function closeEditModal() {
+        const modal = document.getElementById("editModal");
+        modal.style.display = "none";
+        releaseTrap(modal, _editTrigger);
+        _editUserEmail = null;
+        _editTrigger = null;
+      }
+
+      async function saveEditUser() {
+        const state = document.getElementById("editState").value;
+        const isAdmin = document.getElementById("editIsAdmin").checked;
+        const feedback = document.getElementById("editFeedback");
+
+        feedback.className = "feedback";
+        feedback.textContent = "";
+
+        if (!state) {
+          feedback.className = "feedback error";
+          feedback.textContent = "Please select a state.";
+          return;
+        }
+
+        const btn = document.getElementById("editSaveBtn");
+        btn.disabled = true;
+        btn.textContent = "Saving…";
+
+        try {
+          await Auth.ensureValidAccessToken();
+          const update_user_response = await fetch(`${API_BASE}/admin/users`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Auth.getAccessToken()}`,
+            },
+            body: JSON.stringify({
+              email: _editUserEmail,
+              state,
+              is_admin: isAdmin,
+            }),
+          });
+          if (update_user_response.status === 401) {
+            Auth.logout();
+            return;
+          }
+          const data = await update_user_response.json();
+          if (!update_user_response.ok)
+            throw new Error(
+              data.error || `HTTP ${update_user_response.status}`,
+            );
+
+          feedback.className = "feedback success";
+          feedback.textContent = "User updated.";
+          setTimeout(() => {
+            closeEditModal();
+            loadUsers();
+          }, 1500);
+        } catch (err) {
+          feedback.className = "feedback error";
+          feedback.textContent = err.message || "Failed to update user.";
+          btn.disabled = false;
+          btn.textContent = "Save Changes";
+        }
+      }
+
+      function formatDate(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return "—";
+        return d.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+    </script>
+  </body>
+</html>
