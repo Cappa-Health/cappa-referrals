@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.1] - 2026-04-20 1st release
+
 ## [2026-04-20] — Alaska Requirement Changes (PR #11)
 
 ### Changed
