@@ -1,3 +1,4 @@
 tmp/
 
 .builder/config/data.json
+govcloud-deployment/lambda/handler.zip
