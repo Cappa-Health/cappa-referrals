@@ -40,6 +40,25 @@ Parameters:
       SES-verified sender address for notification emails.
       Must be verified in SES before use (domain or individual address).
 
+  NotificationEmails:
+    Type: String
+    Description: >
+      Comma-separated list of email addresses that receive new referral notifications.
+      Example: support@halt360.org,ops@example.com
+
+  StaticSiteBucketName:
+    Type: String
+    Description: >
+      S3 bucket name for the static site. Must be globally unique.
+      Typically the site's domain name (e.g. www.haltreferral.org).
+
+  SesConfigurationSet:
+    Type: String
+    Default: ""
+    Description: >
+      Optional SES configuration set name for delivery/bounce tracing.
+      Leave empty to send without a configuration set.
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Resources
 # ─────────────────────────────────────────────────────────────────────────────
@@ -49,7 +68,7 @@ Resources:
   StaticSiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "www.haltreferral.org"
+      BucketName: !Ref StaticSiteBucketName
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: false
@@ -301,6 +320,8 @@ Resources:
           USER_POOL_ID: !Ref DashboardUserPool
           SENDER_EMAIL: !Ref SenderEmail
           ALLOWED_ORIGIN: !Ref AllowedOrigin
+          NOTIFICATION_EMAILS: !Ref NotificationEmails
+          SES_CONFIGURATION_SET: !Ref SesConfigurationSet
       Tags:
         - Key: Project
           Value: !Ref ProjectName

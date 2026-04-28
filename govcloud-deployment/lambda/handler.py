@@ -14,14 +14,14 @@ Routes:
   POST   /admin/users/reset-password – Send a password reset to a confirmed user (requires admin group)
 
 Required environment variables:
-  TABLE_NAME         – DynamoDB table name
-  USER_POOL_ID       – Cognito User Pool ID for admin user management
-  SENDER_EMAIL       – SES-verified sender (e.g. no-reply@haltreferral.org)
-  ALLOWED_ORIGIN     – Site domain for CORS (e.g. https://www.haltreferral.org)
+  TABLE_NAME           – DynamoDB table name
+  USER_POOL_ID         – Cognito User Pool ID for admin user management
+  SENDER_EMAIL         – SES-verified sender (e.g. no-reply@haltreferral.org)
+  ALLOWED_ORIGIN       – Site domain for CORS (e.g. https://www.haltreferral.org)
+  NOTIFICATION_EMAILS  – Comma-separated notification recipients for new referral alerts
 
 Constants:
   ADMIN_GROUP_NAME   – Cognito group name for admin users ("admin")
-  NOTIFICATION_EMAILS – Notification recipients for new referral alerts
 
 Authentication:
   All routes except POST /program-intake are protected by an API Gateway JWT
@@ -53,7 +53,9 @@ dynamodb = boto3.resource("dynamodb")
 ses      = boto3.client("ses")
 cognito  = boto3.client("cognito-idp")
 
-NOTIFICATION_EMAILS = ["support@halt360.org", "jerry@cappahealth.com"]
+NOTIFICATION_EMAILS = [
+    e.strip() for e in os.environ.get("NOTIFICATION_EMAILS", "").split(",") if e.strip()
+]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
