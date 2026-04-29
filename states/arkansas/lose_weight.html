@@ -3,18 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
       default-src 'none';
       script-src 'self' 'unsafe-inline' https://code.jquery.com https://maxcdn.bootstrapcdn.com https://player.vimeo.com;
-      style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com;
-      connect-src https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com;
+      style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://fonts.googleapis.com;
+      connect-src https://*.execute-api.us-gov-west-1.amazonaws.com;
       img-src 'self' data:;
-      font-src 'self' https://maxcdn.bootstrapcdn.com;
+      font-src 'self' https://maxcdn.bootstrapcdn.com https://fonts.gstatic.com;
       frame-src https://player.vimeo.com;
       object-src 'none';
       base-uri 'self';
       form-action 'self';
-    " />
+    "
+    />
     <title>Lose Weight</title>
     <link rel="icon" href="/program_landings/assets/images/favicon.ico" />
     <link
@@ -23,104 +26,74 @@
     />
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400&display=swap" />
     <link rel="stylesheet" href="/program_landings/intake-shared.css" />
   </head>
   <body>
-
-    <main>
+    <main class="landing-main">
       <div class="container">
         <div class="row">
-          <div
-            class="col-xs-12 col-sm-7 col-md-5"
-            style="background-color: #ffffff"
-          >
-            <div style="text-align: left; padding-bottom: 0">
-              <img
-                src="/program_landings/assets/images/alaska-doh-fresh-start.png"
-                class="img-responsive"
-                style="display: inline-block; max-width: 100%; height: 70px"
-                alt="Alaska Department of Health seal and Fresh Start campaign logos"
-              />
-            </div>
-            <h1
-              style="
-                font-size: xx-large;
-                padding-top: 20px;
-                padding-bottom: 10px;
-                margin: 0;
-                text-align: left;
-              "
-            >
+          <div class="col-xs-12">
+            <h1 class="landing-title">
               Ready for a fresh start?
             </h1>
-            <div
-              style="
-                padding-top: 20px;
-                padding-bottom: 30px;
-                font-size: 0.95em;
-                color: black;
-              "
-            >
-              Alaska Department of Health is working with HALT (Health and
-              Lifestyle Training) to help Alaskans join the right program for
-              them to lose weight or prevent diabetes.
+            <div class="para-text">
+              Arkansas' Department of Health is working with Health and
+              Lifestyle Training (HALT) to help Arkansans join the right program
+              for them to lose weight or prevent diabetes.
             </div>
-          </div>
-          <div class="col-xs-12 col-sm-5 col-md-5" style="padding: 15px">
-            <img
-              src="/program_landings/assets/images/alaska-devices.png"
-              class="img-responsive hero-image"
-              style="
-                width: 100%;
-                height: auto;
-                margin: clamp(16px, 5vw, 75px) 0 0 auto;
-              "
-              alt="Phone and laptop showing a weight-loss coaching dashboard"
-            />
+            <div class="para-text">
+              The National DPP lifestyle change program is one of the most
+              effective ways to prevent type 2 diabetes. In the program, you'll
+              learn skills to help you lose weight, become more active, and
+              improve your overall health.
+            </div>
+            <div class="logo-wrapper">
+              <img
+                src="/program_landings/assets/images/arkansas-doh-fresh-start.png"
+                class="img-responsive landing-logo"
+                alt="Arkansas Department of Health seal and Fresh Start campaign logos"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       <div class="container">
         <div class="row">
-          <div class="col-xs-12 col-md-offset-1 col-md-10">
+          <div class="col-xs-12">
             <div class="row">
-              <div style="padding: 15px">
-                <h2 style="font-size: x-large; margin: 0">
-                  Find a weight-loss and diabetes prevention program available
-                  where you live
+              <div class="section-content">
+                <h2 class="section-heading">
+                  Find an available program, no matter where you live
                 </h2>
                 <div>
-                  <p style="padding-top: 15px">
-                    Alaska’s health department supports many great options. Want
-                    to join an online program focused on losing weight AND
+                  <p class="section-p">
+                    Arkansas Department of Health supports many great options.
+                    Want to join an online program focused on losing weight AND
                     preventing diabetes? That’s called a Diabetes Prevention
-                    Program (DPP). If you don’t meet the eligibility
-                    requirements for the DPP, you’re likely eligible for another
-                    option. That’s called a Healthy Lifestyle Program to lose
-                    weight and make other healthy changes. We will match you
-                    with the best program for you. Participants in online
-                    programs track progress and work with assigned coaches using
-                    the mobile app or computer.
+                    Program (DPP). We will match you with the best program for
+                    you.
                   </p>
 
-                  <p style="padding-top: 15px">
+                  <p class="section-p">
                     Click the button below to get started.
                   </p>
                 </div>
                 <button
                   id="get-started"
                   class="btn btn-success"
-                  style="min-height: 44px; width: auto; padding: 10px 24px"
                   type="button"
                   aria-label="Get Started — sign up for a free weight-loss program"
                 >
                   Get Started
                 </button>
+                <br />
                 <div>
-                  <p style="padding-top: 15px">
-                    Alaska Department of Health is able to support hundreds of
-                    Alaskans to join online programs at no cost to them.
+                  <p class="section-p">
+                    The Arkansas Department of Health is able to support
+                    hundreds of Arkansans to join online programs at no cost to
+                    them.
                   </p>
                 </div>
               </div>
@@ -150,33 +123,27 @@
             </div>
 
             <div id="state-based-programs" class="row">
-              <div style="padding: 15px">
-                <h2 style="font-size: x-large; margin: 0">
-                  Find an Alaska-based program near you
+              <div class="section-content">
+                <h2 class="section-heading">
+                  Find an Arkansas-based program near you
                 </h2>
                 <div>
-                  <p style="padding-top: 15px">
+                  <p class="section-p">
                     Are you interested in finding a community-based program near
                     you? Reach out to the following organizations to learn how
                     to enroll in a community-based program focused on diabetes
-                    prevention or healthy lifestyles changes. Many of these
-                    programs are free or low-cost.
+                    prevention and healthy lifestyles changes.
                   </p>
                 </div>
               </div>
             </div>
 
             <div class="row">
-              <div style="padding: 15px">
-                <h3
-                  style="
-                    font-size: clamp(1rem, 3vw, 1.2rem);
-                    margin: 0 0 10px 0;
-                  "
-                >
-                  Community program locations
-                </h3>
-                <div class="panel-group" id="accordion">
+              <div class="section-content">
+                <div class="panel panel-default providers-placeholder">
+                  <p>*Insert Arkansas Program Providers</p>
+                </div>
+                <div class="panel-group" id="accordion" style="display: none">
                   <div class="panel panel-default">
                     <div class="panel-heading" id="headingAnchorage">
                       <h4 class="panel-title">
@@ -620,25 +587,16 @@
             </div>
 
             <div class="row">
-              <div style="padding: 30px">
+              <div class="footer-content">
                 <p>The program list was last updated in June 2025.</p>
-                <p style="padding-top: 15px">
+                <p>
                   Want to learn more about Diabetes Prevention Programs? Visit
                   the
                   <a
-                    href="https://health.alaska.gov/en/services/diabetes-prevention/"
+                    href="https://healthy.arkansas.gov/programs-services/diseases-conditions/diabetes/"
+                    >Arkansas Department of Health webpage</a
                   >
-                    Alaska Department of Health webpage</a
-                  >.
-                </p>
-                <p style="padding-top: 15px">
-                  Visit
-                  <a href="https://health.alaska.gov/en/services/fresh-start/">
-                    Alaska's Fresh Start campaign website
-                  </a>
-                  to explore more programs to meet other health goals. These
-                  goals include managing diabetes and stopping smoking, vaping,
-                  or chewing tobacco.
+                  that explains them.
                 </p>
               </div>
             </div>
@@ -667,16 +625,16 @@
               <span aria-hidden="true">&times;</span>
             </button>
             <h2 class="modal-title" id="modal-title">
-              Welcome to Alaska Department of Health's Diabetes Prevention and
+              Welcome to Arkansas Department of Health's Diabetes Prevention and
               Healthy Lifestyle Programs.
             </h2>
           </div>
           <div class="modal-body">
             <p>
               In partnership with the HALT (Health and Lifestyle Training) team,
-              we offer professionally guided coaching programs to help Alaskan
-              residents live healthier lives. The Alaska Department of Health is
-              able to support hundreds of Alaskans to join online programs.
+              we offer professionally guided coaching programs to help Arkansas
+              residents live healthier lives. The Arkansas Department of Health
+              is able to support hundreds of Arkansans to join online programs.
               Please provide your contact information, and a team member will
               follow up with program details and your potential start date.
             </p>
@@ -737,9 +695,9 @@
               <p>
                 All information you enter on an application form is
                 confidential. It will not be shared with anyone outside the
-                health program, including with State of Alaska staff. After you
-                enroll, Alaska public health staff may receive some information
-                strictly to evaluate and improve the program.
+                health program, including with State of Arkansas staff. After
+                you enroll, Arkansas public health staff may receive some
+                information strictly to evaluate and improve the program.
                 <strong
                   >None of this information includes details that could be used
                   to identify you or other specific program
@@ -755,7 +713,7 @@
               <input
                 type="hidden"
                 name="program_intake[state]"
-                value="Alaska"
+                value="Arkansas"
               />
 
               <p class="modal-support">
