@@ -56,6 +56,7 @@ cognito  = boto3.client("cognito-idp")
 NOTIFICATION_EMAILS = [
     e.strip() for e in os.environ.get("NOTIFICATION_EMAILS", "").split(",") if e.strip()
 ]
+SES_CONFIGURATION_SET = os.environ.get("SES_CONFIGURATION_SET", "").strip()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -385,18 +386,22 @@ def _send_notification(submission_id: str, program: str, state: str) -> None:
 </body>
 </html>"""
 
-    try:
-        ses.send_email(
-            Source=sender,
-            Destination={"ToAddresses": NOTIFICATION_EMAILS},
-            Message={
-                "Subject": {"Data": subject,   "Charset": "UTF-8"},
-                "Body": {
-                    "Text": {"Data": text_body, "Charset": "UTF-8"},
-                    "Html": {"Data": html_body,  "Charset": "UTF-8"},
-                },
+    send_kwargs = {
+        "Source":      sender,
+        "Destination": {"ToAddresses": NOTIFICATION_EMAILS},
+        "Message": {
+            "Subject": {"Data": subject,    "Charset": "UTF-8"},
+            "Body": {
+                "Text": {"Data": text_body, "Charset": "UTF-8"},
+                "Html": {"Data": html_body, "Charset": "UTF-8"},
             },
-        )
+        },
+    }
+    if SES_CONFIGURATION_SET:
+        send_kwargs["ConfigurationSetName"] = SES_CONFIGURATION_SET
+
+    try:
+        ses.send_email(**send_kwargs)
         logger.info("Notification sent for submission %s", submission_id)
     except ClientError as exc:
         logger.error("Failed to send notification email: %s", exc)
