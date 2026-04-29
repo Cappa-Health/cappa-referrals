@@ -29,9 +29,16 @@
     <header>
       <div>
         <h1>HALT Admin — Manage Users</h1>
-        <div class="meta">
-          Alaska Department of Health — Health and Lifestyle Training
-        </div>
+        <div class="meta" id="headerMeta"></div>
+        <script>
+          (function () {
+            var cfg = window.HALT_AUTH_CONFIG || {};
+            var meta = cfg.agencyName && cfg.programFullName
+              ? cfg.agencyName + " \u2014 " + cfg.programFullName
+              : "";
+            document.getElementById("headerMeta").textContent = meta;
+          })();
+        </script>
       </div>
       <div class="user-info">
         <div class="user-detail">
