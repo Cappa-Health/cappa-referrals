@@ -62,11 +62,10 @@ NOTIFICATION_EMAILS = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _cors_headers() -> dict:
+    # CORS headers are handled by API Gateway's CorsConfiguration.
+    # Returning them here would cause duplicates that Safari rejects.
     return {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin":  os.environ.get("ALLOWED_ORIGIN", ""),
-        "Access-Control-Allow-Headers": "Content-Type,Authorization",
-        "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     }
 
 

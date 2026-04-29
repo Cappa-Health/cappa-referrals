@@ -241,6 +241,13 @@ Resources:
       RefreshTokenValidity: 30
       PreventUserExistenceErrors: ENABLED
 
+  DashboardAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: admin
+      UserPoolId: !Ref DashboardUserPool
+      Description: "HALT Referral Dashboard administrators"
+
   # ── Lambda Execution Role ─────────────────────────────────────────────────
 
   LambdaExecutionRole:
