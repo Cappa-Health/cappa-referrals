@@ -41,7 +41,10 @@ def load_env_file(state: str) -> dict:
         if "=" not in line:
             continue
         key, _, value = line.partition("=")
-        env_vars[key.strip()] = value.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+            value = value[1:-1]
+        env_vars[key.strip()] = value
     return env_vars
 
 
@@ -64,6 +67,8 @@ def render_auth_config(env_vars: dict, output_path: Path) -> None:
         cognito_region=env_vars["AWS_REGION"],
         cognito_client_id=env_vars["COGNITO_CLIENT_ID"],
         api_gateway_url=env_vars["API_GATEWAY_URL"].rstrip("/"),
+        agency_name=env_vars.get("AGENCY_NAME", ""),
+        program_full_name=env_vars.get("PROGRAM_FULL_NAME", ""),
     )
     output_path.write_text(rendered)
     print(f"  rendered → {output_path.relative_to(REPO_ROOT)}")
