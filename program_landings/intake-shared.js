@@ -10,7 +10,7 @@ document.getElementById("get-started").addEventListener("click", function () {
   window.jQuery("#inquiry-form").modal("show");
 });
 
-// ── Sync aria-hidden with modal visibility ─────────────────────────────
+// ── Sync aria-hidden with modal visibility; reset form on close ────────
 window
   .jQuery("#inquiry-form")
   .on("show.bs.modal", function () {
@@ -18,6 +18,10 @@ window
   })
   .on("hidden.bs.modal", function () {
     window.jQuery(this).attr("aria-hidden", "true");
+    var successMsg = document.getElementById("form-success-msg");
+    if (successMsg) successMsg.parentNode.removeChild(successMsg);
+    var form = document.getElementById("intake-form");
+    if (form) form.style.display = "";
   });
 
 // ── Submit form via fetch → API Gateway → Lambda → SES ───────────────
@@ -63,13 +67,16 @@ window
       })
         .then(function (response) {
           if (response.ok) {
-            // Replace form with success message
-            form.innerHTML =
-              '<div class="alert alert-success" role="alert">' +
+            var successMsg = document.createElement("div");
+            successMsg.id = "form-success-msg";
+            successMsg.className = "alert alert-success";
+            successMsg.setAttribute("role", "alert");
+            successMsg.innerHTML =
               "<strong>Thank you!</strong> We received your information and a " +
               "team member will follow up with program details and your " +
-              "potential start date." +
-              "</div>";
+              "potential start date.";
+            form.parentNode.insertBefore(successMsg, form);
+            form.style.display = "none";
           } else {
             throw new Error("Server returned " + response.status);
           }

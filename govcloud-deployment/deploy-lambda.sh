@@ -50,4 +50,37 @@ aws lambda update-function-code \
   --query '{FunctionName:FunctionName,CodeSize:CodeSize,LastModified:LastModified}' \
   --output table
 
+echo "==> Waiting for code update to complete..."
+aws lambda wait function-updated \
+  --function-name "$LAMBDA_FUNCTION_NAME" \
+  --region "$AWS_REGION" \
+  --profile "$AWS_PROFILE"
+
+echo "==> Updating environment variables..."
+ENV_JSON=$(python3 -c "
+import json, sys
+print(json.dumps({'Variables': {
+    'TABLE_NAME':             sys.argv[1],
+    'USER_POOL_ID':           sys.argv[2],
+    'SENDER_EMAIL':           sys.argv[3],
+    'ALLOWED_ORIGIN':         sys.argv[4],
+    'NOTIFICATION_EMAILS':    sys.argv[5],
+    'SES_CONFIGURATION_SET':  sys.argv[6],
+}}))" \
+  "$DYNAMODB_TABLE_NAME" \
+  "$COGNITO_USER_POOL_ID" \
+  "$BRAND_EMAIL_SENDER" \
+  "$BRAND_URL" \
+  "$NOTIFICATION_EMAILS" \
+  "$SES_CONFIGURATION_SET"
+)
+
+aws lambda update-function-configuration \
+  --function-name "$LAMBDA_FUNCTION_NAME" \
+  --environment "$ENV_JSON" \
+  --region "$AWS_REGION" \
+  --profile "$AWS_PROFILE" \
+  --query '{FunctionName:FunctionName,LastModified:LastModified}' \
+  --output table
+
 echo "==> Done. $LAMBDA_FUNCTION_NAME is updated."
