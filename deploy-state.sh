@@ -31,6 +31,7 @@ STATE_DIR="states/${STATE}"
 # ── Build ──────────────────────────────────────────────────────────────────────
 
 echo "==> Building ${DIST_DIR}..."
+mkdir -p "${DIST_DIR}"
 
 # Shared files
 rsync -a --delete program_landings/ "${DIST_DIR}/"
