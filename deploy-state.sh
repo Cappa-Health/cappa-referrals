@@ -42,6 +42,17 @@ cp "${STATE_DIR}"/*.html "${DIST_DIR}/"
 rsync -a "${STATE_DIR}/assets/" "${DIST_DIR}/assets/"
 rsync -a "${STATE_DIR}/public/"  "${DIST_DIR}/public/"
 
+# Inject API Gateway URL into CSP connect-src placeholders
+echo "==> Injecting API Gateway URL into CSP..."
+find "${DIST_DIR}/" -name "*.html" | while read -r f; do
+  python3 -c "
+import sys
+content = open(sys.argv[1]).read()
+content = content.replace('%%API_GATEWAY_URL%%', sys.argv[2])
+open(sys.argv[1], 'w').write(content)
+" "$f" "${API_GATEWAY_URL}"
+done
+
 # Regenerate auth-config.js from the deployed CloudFormation stack
 echo "==> Regenerating auth-config.js from stack: ${CLOUDFORMATION_STACK_NAME}..."
 python3 govcloud-deployment/generate_auth_config.py \

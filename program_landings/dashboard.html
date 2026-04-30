@@ -7,7 +7,7 @@
       default-src 'none';
       script-src 'self' 'unsafe-inline';
       style-src 'self' 'unsafe-inline';
-      connect-src https://*.execute-api.us-gov-west-1.amazonaws.com https://cognito-idp.us-gov-west-1.amazonaws.com;
+      connect-src %%API_GATEWAY_URL%% https://cognito-idp.us-gov-west-1.amazonaws.com;
       img-src 'self' data:;
       font-src 'self';
       frame-src 'none';
