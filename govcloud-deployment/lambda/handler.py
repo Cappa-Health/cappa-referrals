@@ -318,6 +318,10 @@ def _handle_update_referral(event: dict, path: str) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _send_notification(submission_id: str, program: str, state: str) -> None:
+    if not NOTIFICATION_EMAILS:
+        logger.warning("NOTIFICATION_EMAILS not set — skipping notification")
+        return
+
     sender     = os.environ.get("SENDER_EMAIL", "")
     if not sender:
         logger.warning("SENDER_EMAIL not set — skipping notification")
