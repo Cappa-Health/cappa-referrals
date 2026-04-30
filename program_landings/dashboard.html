@@ -144,7 +144,10 @@
 
     <script>
       // ── Config ────────────────────────────────────────────────────────────────────
-      const API_BASE = window.HALT_AUTH_CONFIG.apiBaseUrl;
+      const API_BASE = (window.HALT_AUTH_CONFIG && window.HALT_AUTH_CONFIG.apiBaseUrl) || "";
+      if (!API_BASE) {
+        console.error("HALT_AUTH_CONFIG.apiBaseUrl is not defined — dashboard cannot load.");
+      }
 
       // ── State ─────────────────────────────────────────────────────────────────────
       let allReferrals = [];

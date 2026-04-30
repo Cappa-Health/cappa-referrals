@@ -525,7 +525,10 @@
     </div>
 
     <script>
-      const API_BASE = window.HALT_AUTH_CONFIG.apiBaseUrl;
+      const API_BASE = (window.HALT_AUTH_CONFIG && window.HALT_AUTH_CONFIG.apiBaseUrl) || "";
+      if (!API_BASE) {
+        console.error("HALT_AUTH_CONFIG.apiBaseUrl is not defined — admin page cannot load.");
+      }
       const USER_SORT_DEFAULT = { column: "email", direction: "asc" };
       let _allUsers = [];
       let _userSort = { ...USER_SORT_DEFAULT };
