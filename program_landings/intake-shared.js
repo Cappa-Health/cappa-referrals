@@ -21,7 +21,15 @@ window
     var successMsg = document.getElementById("form-success-msg");
     if (successMsg) successMsg.parentNode.removeChild(successMsg);
     var form = document.getElementById("intake-form");
-    if (form) form.style.display = "";
+    if (form) {
+      form.style.display = "";
+      form.reset();
+      var submitBtn = form.querySelector('input[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.value = "Submit";
+      }
+    }
   });
 
 // ── Submit form via fetch → API Gateway → Lambda → SES ───────────────
