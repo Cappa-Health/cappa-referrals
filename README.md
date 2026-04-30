@@ -5,7 +5,7 @@
 ## 1. Load the state's env vars
 
 ```bash
-source env/env.arkansas   # or env.alaska, env.dev
+source env/env.arkansas   # or env/env.alaska, env/env.dev
 ```
 
 ## 2. Package and upload Lambda ZIP
