@@ -94,6 +94,17 @@ def copy_shared_files(destination: Path) -> None:
     print(f"  copied   program_landings/ (shared files) → {destination.relative_to(REPO_ROOT)}/")
 
 
+def inject_csp_placeholder(output_dir: Path, api_gateway_url: str) -> None:
+    for html_file in output_dir.rglob("*.html"):
+        content = html_file.read_text(encoding="utf-8")
+        if "%%API_GATEWAY_URL%%" in content:
+            html_file.write_text(
+                content.replace("%%API_GATEWAY_URL%%", api_gateway_url),
+                encoding="utf-8",
+            )
+    print(f"  injected %%API_GATEWAY_URL%% → {api_gateway_url}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build per-state dist/ deployable.")
     parser.add_argument("--state", required=True, help="State name matching env/env.<state>")
@@ -117,6 +128,7 @@ def main() -> None:
     render_auth_config(env_vars, output_dir / "auth-config.js")
     copy_tree(REPO_ROOT / "states" / state, output_dir)
     copy_shared_files(output_dir)
+    inject_csp_placeholder(output_dir, env_vars["API_GATEWAY_URL"].rstrip("/"))
 
     print(f"\nBuild complete: dist/{state}/program_landings/")
 

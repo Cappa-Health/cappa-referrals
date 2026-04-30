@@ -56,10 +56,12 @@ done
 # Regenerate auth-config.js from the deployed CloudFormation stack
 echo "==> Regenerating auth-config.js from stack: ${CLOUDFORMATION_STACK_NAME}..."
 python3 govcloud-deployment/generate_auth_config.py \
-  --stack-name "${CLOUDFORMATION_STACK_NAME}" \
-  --region     "${AWS_REGION}" \
-  --profile    "${AWS_PROFILE}" \
-  --output     "${DIST_DIR}/auth-config.js"
+  --stack-name       "${CLOUDFORMATION_STACK_NAME}" \
+  --region           "${AWS_REGION}" \
+  --profile          "${AWS_PROFILE}" \
+  --output           "${DIST_DIR}/auth-config.js" \
+  --agency-name      "${AGENCY_NAME:-}" \
+  --program-full-name "${PROGRAM_FULL_NAME:-}"
 
 # ── Sync to S3 ─────────────────────────────────────────────────────────────────
 
