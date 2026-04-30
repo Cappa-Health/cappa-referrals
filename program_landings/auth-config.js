@@ -1,5 +1,6 @@
 window.HALT_AUTH_CONFIG = Object.freeze({
   cognitoRegion: "us-gov-west-1",
-  userPoolClient: "6kht95c982kkdrloqfdhsveaol",
-  intakeApiUrl: "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com/program-intake",
+  userPoolClient: "54sse43leqcns8reuvjmokpcjq",
+  intakeApiUrl: "https://r71pb7ej1d.execute-api.us-gov-west-1.amazonaws.com/program-intake",
+  apiBaseUrl: "https://r71pb7ej1d.execute-api.us-gov-west-1.amazonaws.com",
 });
