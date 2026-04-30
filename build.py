@@ -34,7 +34,7 @@ def load_env_file(state: str) -> dict:
         sys.exit(f"Error: env file not found: {env_file}")
 
     env_vars = {}
-    for line in env_file.read_text().splitlines():
+    for line in env_file.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -70,7 +70,7 @@ def render_auth_config(env_vars: dict, output_path: Path) -> None:
         agency_name=env_vars.get("AGENCY_NAME", ""),
         program_full_name=env_vars.get("PROGRAM_FULL_NAME", ""),
     )
-    output_path.write_text(rendered)
+    output_path.write_text(rendered, encoding="utf-8")
     print(f"  rendered → {output_path.relative_to(REPO_ROOT)}")
 
 
