@@ -20,6 +20,8 @@ window
     window.jQuery(this).attr("aria-hidden", "true");
     var successMsg = document.getElementById("form-success-msg");
     if (successMsg) successMsg.parentNode.removeChild(successMsg);
+    var errorMsg = document.getElementById("form-error-msg");
+    if (errorMsg) errorMsg.parentNode.removeChild(errorMsg);
     var form = document.getElementById("intake-form");
     if (form) {
       form.style.display = "";
