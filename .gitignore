@@ -1,4 +1,7 @@
 tmp/
+dist/
 
 .builder/config/data.json
+program_landings/auth-config.js
 govcloud-deployment/lambda/handler.zip
+govcloud-deployment/lambda/package/

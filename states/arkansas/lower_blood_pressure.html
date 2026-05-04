@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+      default-src 'none';
+      script-src 'self' 'unsafe-inline' https://code.jquery.com https://maxcdn.bootstrapcdn.com https://player.vimeo.com;
+      style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://fonts.googleapis.com;
+      connect-src %%API_GATEWAY_URL%%;
+      img-src 'self' data:;
+      font-src 'self' https://maxcdn.bootstrapcdn.com https://fonts.gstatic.com;
+      frame-src https://player.vimeo.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    "
+    />
+    <title>Lower Blood Pressure</title>
+    <link rel="icon" href="/program_landings/assets/images/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400&display=swap" />
+    <link rel="stylesheet" href="/program_landings/intake-shared.css" />
+  </head>
+  <body>
+    <main class="landing-main">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12">
+            <h1 class="landing-title">Ready for a fresh start?</h1>
+            <div class="para-text">
+              Arkansas Department of Health is working with Health and
+              Lifestyle Training (HALT) to help Arkansans join the right program
+              for them to lose weight or prevent diabetes.
+            </div>
+            <div class="para-text">
+              The National DPP lifestyle change program is one of the most
+              effective ways to prevent type 2 diabetes. In the program, you'll
+              learn skills to help you lose weight, become more active, and
+              improve your overall health.
+            </div>
+            <div class="logo-wrapper">
+              <img
+                src="/program_landings/assets/images/arkansas-doh-fresh-start.png"
+                class="img-responsive landing-logo"
+                alt="Arkansas Department of Health seal and Fresh Start campaign logos"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12">
+            <div class="row">
+              <div class="section-content">
+                <h2 class="section-heading">
+                  Find an available program, no matter where you live
+                </h2>
+                <div>
+                  <p class="section-p">
+                    Arkansas Department of Health supports many great options.
+                    Want to join an online program focused on losing weight AND
+                    preventing diabetes? That's called a Diabetes Prevention
+                    Program (DPP). We will match you with the best program for
+                    you.
+                  </p>
+                  <p class="section-p">
+                    Click the button below to get started.
+                  </p>
+                </div>
+                <button
+                  id="get-started"
+                  class="btn btn-success"
+                  type="button"
+                  aria-label="Get Started — sign up for a free blood pressure program"
+                >
+                  Get Started
+                </button>
+                <br />
+                <div>
+                  <p class="section-p">
+                    The Arkansas Department of Health is able to support
+                    hundreds of Arkansans to join online programs at no cost to
+                    them.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div
+                class="col-md-12 embed-responsive embed-responsive-16by9"
+                style="
+                  text-align: center;
+                  padding: 15px;
+                  max-width: 100%;
+                  min-height: 260px;
+                "
+              >
+                <iframe
+                  src="https://player.vimeo.com/video/1089120239?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+                  class="landing-video embed-responsive-item"
+                  width="100%"
+                  height="100%"
+                  allow="autoplay; fullscreen"
+                  allowfullscreen
+                  title="Lower blood pressure program overview"
+                ></iframe>
+              </div>
+              <script src="https://player.vimeo.com/api/player.js"></script>
+            </div>
+
+            <div id="state-based-programs" class="row">
+              <div class="section-content">
+                <h2 class="section-heading">
+                  Find an Arkansas-based program near you
+                </h2>
+                <div>
+                  <p class="section-p">
+                    Are you interested in finding a community-based program near
+                    you? Reach out to the following organizations to learn how
+                    to enroll in a community-based program focused on diabetes
+                    prevention and healthy lifestyles changes.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="section-content">
+                <div class="panel panel-default providers-placeholder">
+                  <p>*Insert Arkansas Program Providers</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="footer-content">
+                <p>The program list was last updated in June 2025.</p>
+                <p>
+                  Want to learn more about Diabetes Prevention Programs? Visit
+                  the
+                  <a
+                    href="https://healthy.arkansas.gov/programs-services/diseases-conditions/diabetes/"
+                    >Arkansas Department of Health webpage</a
+                  >
+                  that explains them.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      class="modal fade"
+      id="inquiry-form"
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="modal-title"
+      tabindex="-1"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button
+              class="close"
+              aria-label="Close"
+              data-dismiss="modal"
+              type="button"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h2 class="modal-title" id="modal-title">
+              Welcome to Arkansas Department of Health's Self-Measured Blood
+              Pressure Program.
+            </h2>
+          </div>
+          <div class="modal-body">
+            <p>
+              In partnership with the HALT (Health and Lifestyle Training) team,
+              we offer professionally guided coaching programs to help Arkansas
+              residents live healthier lives. The Arkansas Department of Health
+              is able to support hundreds of Arkansans to join online programs.
+              Please provide your contact information, and a team member will
+              follow up with program details and your potential start date.
+            </p>
+
+            <form
+              id="intake-form"
+              action="/program-intake"
+              accept-charset="UTF-8"
+              method="post"
+            >
+              <label for="program_intake_name">Full name:</label>
+              <input
+                type="text"
+                name="program_intake[name]"
+                id="program_intake_name"
+                autocomplete="name"
+              />
+
+              <label for="program_intake_email">Email address:</label>
+              <input
+                type="email"
+                name="program_intake[email]"
+                id="program_intake_email"
+                autocomplete="email"
+              />
+
+              <label for="program_intake_phone">Phone number:</label>
+              <input
+                type="tel"
+                name="program_intake[phone]"
+                id="program_intake_phone"
+                autocomplete="tel"
+              />
+
+              <label for="program_intake_zipcode">ZIP code:</label>
+              <input
+                type="text"
+                name="program_intake[zipcode]"
+                id="program_intake_zipcode"
+                autocomplete="postal-code"
+              />
+
+              <label for="program_intake_motivation"
+                >Reason or motivation to join program:</label
+              >
+              <input
+                type="text"
+                name="program_intake[motivation]"
+                id="program_intake_motivation"
+              />
+
+              <p>
+                You will be contacted by one of our team members to provide
+                details and complete your registration. We look forward to
+                working with you!
+              </p>
+
+              <p>
+                All information you enter on an application form is
+                confidential. It will not be shared with anyone outside the
+                health program, including with State of Arkansas staff. After
+                you enroll, Arkansas public health staff may receive some
+                information strictly to evaluate and improve the program.
+                <strong
+                  >None of this information includes details that could be used
+                  to identify you or other specific program
+                  participants.</strong
+                >
+              </p>
+
+              <input
+                type="hidden"
+                name="program_intake[landing_page]"
+                value="Lower Blood Pressure"
+              />
+              <input
+                type="hidden"
+                name="program_intake[state]"
+                value="Arkansas"
+              />
+
+              <p class="modal-support">
+                Questions? Email
+                <a href="mailto:support@HALT360.org">support@HALT360.org</a>
+              </p>
+
+              <input type="submit" value="Submit" class="btn btn-success" />
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/program_landings/auth-config.js"></script>
+    <script src="/program_landings/intake-shared.js"></script>
+  </body>
+</html>

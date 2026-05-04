@@ -14,14 +14,14 @@ Routes:
   POST   /admin/users/reset-password – Send a password reset to a confirmed user (requires admin group)
 
 Required environment variables:
-  TABLE_NAME         – DynamoDB table name
-  USER_POOL_ID       – Cognito User Pool ID for admin user management
-  SENDER_EMAIL       – SES-verified sender (e.g. no-reply@haltreferral.org)
-  ALLOWED_ORIGIN     – Site domain for CORS (e.g. https://www.haltreferral.org)
+  TABLE_NAME           – DynamoDB table name
+  USER_POOL_ID         – Cognito User Pool ID for admin user management
+  SENDER_EMAIL         – SES-verified sender (e.g. no-reply@haltreferral.org)
+  ALLOWED_ORIGIN       – Site domain for CORS (e.g. https://www.haltreferral.org)
+  NOTIFICATION_EMAILS  – Comma-separated notification recipients for new referral alerts
 
 Constants:
   ADMIN_GROUP_NAME   – Cognito group name for admin users ("admin")
-  NOTIFICATION_EMAILS – Notification recipients for new referral alerts
 
 Authentication:
   All routes except POST /program-intake are protected by an API Gateway JWT
@@ -53,18 +53,20 @@ dynamodb = boto3.resource("dynamodb")
 ses      = boto3.client("ses")
 cognito  = boto3.client("cognito-idp")
 
-NOTIFICATION_EMAILS = ["support@halt360.org", "jerry@cappahealth.com"]
+NOTIFICATION_EMAILS = [
+    e.strip() for e in os.environ.get("NOTIFICATION_EMAILS", "").split(",") if e.strip()
+]
+SES_CONFIGURATION_SET = os.environ.get("SES_CONFIGURATION_SET", "").strip()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _cors_headers() -> dict:
+    # CORS headers are handled by API Gateway's CorsConfiguration.
+    # Returning them here would cause duplicates that Safari rejects.
     return {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin":  os.environ.get("ALLOWED_ORIGIN", ""),
-        "Access-Control-Allow-Headers": "Content-Type,Authorization",
-        "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     }
 
 
@@ -316,6 +318,10 @@ def _handle_update_referral(event: dict, path: str) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _send_notification(submission_id: str, program: str, state: str) -> None:
+    if not NOTIFICATION_EMAILS:
+        logger.warning("NOTIFICATION_EMAILS not set — skipping notification")
+        return
+
     sender     = os.environ.get("SENDER_EMAIL", "")
     if not sender:
         logger.warning("SENDER_EMAIL not set — skipping notification")
@@ -384,18 +390,22 @@ def _send_notification(submission_id: str, program: str, state: str) -> None:
 </body>
 </html>"""
 
-    try:
-        ses.send_email(
-            Source=sender,
-            Destination={"ToAddresses": NOTIFICATION_EMAILS},
-            Message={
-                "Subject": {"Data": subject,   "Charset": "UTF-8"},
-                "Body": {
-                    "Text": {"Data": text_body, "Charset": "UTF-8"},
-                    "Html": {"Data": html_body,  "Charset": "UTF-8"},
-                },
+    send_kwargs = {
+        "Source":      sender,
+        "Destination": {"ToAddresses": NOTIFICATION_EMAILS},
+        "Message": {
+            "Subject": {"Data": subject,    "Charset": "UTF-8"},
+            "Body": {
+                "Text": {"Data": text_body, "Charset": "UTF-8"},
+                "Html": {"Data": html_body, "Charset": "UTF-8"},
             },
-        )
+        },
+    }
+    if SES_CONFIGURATION_SET:
+        send_kwargs["ConfigurationSetName"] = SES_CONFIGURATION_SET
+
+    try:
+        ses.send_email(**send_kwargs)
         logger.info("Notification sent for submission %s", submission_id)
     except ClientError as exc:
         logger.error("Failed to send notification email: %s", exc)

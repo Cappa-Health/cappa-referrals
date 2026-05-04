@@ -22,6 +22,8 @@ def _parse_args() -> argparse.Namespace:
         default="program_landings/auth-config.js",
         help="Path to the generated auth config file",
     )
+    parser.add_argument("--agency-name", default="", help="Agency name (e.g. Arkansas Department of Health)")
+    parser.add_argument("--program-full-name", default="", help="Full program name")
     return parser.parse_args()
 
 
@@ -65,12 +67,22 @@ def _load_stack_outputs(stack_name: str, region: str, profile: str | None) -> di
     }
 
 
-def _render_config(region: str, user_pool_client_id: str, intake_api_url: str) -> str:
+def _render_config(
+    region: str,
+    user_pool_client_id: str,
+    intake_api_url: str,
+    api_base_url: str,
+    agency_name: str,
+    program_full_name: str,
+) -> str:
     return (
         "window.HALT_AUTH_CONFIG = Object.freeze({\n"
         f'  cognitoRegion: {json.dumps(region)},\n'
         f'  userPoolClient: {json.dumps(user_pool_client_id)},\n'
+        f'  apiBaseUrl: {json.dumps(api_base_url)},\n'
         f'  intakeApiUrl: {json.dumps(intake_api_url)},\n'
+        f'  agencyName: {json.dumps(agency_name)},\n'
+        f'  programFullName: {json.dumps(program_full_name)},\n'
         "});\n"
     )
 
@@ -88,12 +100,20 @@ def main() -> int:
     if not api_gateway_endpoint:
         print("CloudFormation output ApiGatewayEndpoint was not found.", file=sys.stderr)
         return 1
-    intake_api_url = api_gateway_endpoint.rstrip("/") + "/program-intake"
+    api_base_url = api_gateway_endpoint.rstrip("/")
+    intake_api_url = api_base_url + "/program-intake"
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        _render_config(args.region, user_pool_client_id, intake_api_url),
+        _render_config(
+            args.region,
+            user_pool_client_id,
+            intake_api_url,
+            api_base_url,
+            args.agency_name,
+            args.program_full_name,
+        ),
         encoding="utf-8",
     )
     print(f"Wrote {output_path}")

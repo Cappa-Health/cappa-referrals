@@ -1,0 +1,8 @@
+window.HALT_AUTH_CONFIG = Object.freeze({
+  cognitoRegion: {{ cognito_region | tojson }},
+  userPoolClient: {{ cognito_client_id | tojson }},
+  apiBaseUrl: {{ api_gateway_url | tojson }},
+  intakeApiUrl: {{ (api_gateway_url + "/program-intake") | tojson }},
+  agencyName: {{ agency_name | tojson }},
+  programFullName: {{ program_full_name | tojson }},
+});

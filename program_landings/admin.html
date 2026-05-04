@@ -9,7 +9,7 @@
       default-src 'none';
       script-src 'self' 'unsafe-inline';
       style-src 'self' 'unsafe-inline';
-      connect-src https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com https://cognito-idp.us-gov-west-1.amazonaws.com;
+      connect-src %%API_GATEWAY_URL%% https://cognito-idp.us-gov-west-1.amazonaws.com;
       img-src 'self' data:;
       font-src 'self';
       frame-src 'none';
@@ -29,9 +29,16 @@
     <header>
       <div>
         <h1>HALT Admin — Manage Users</h1>
-        <div class="meta">
-          Alaska Department of Health — Health and Lifestyle Training
-        </div>
+        <div class="meta" id="headerMeta"></div>
+        <script>
+          (function () {
+            var cfg = window.HALT_AUTH_CONFIG || {};
+            var meta = cfg.agencyName && cfg.programFullName
+              ? cfg.agencyName + " \u2014 " + cfg.programFullName
+              : "";
+            document.getElementById("headerMeta").textContent = meta;
+          })();
+        </script>
       </div>
       <div class="user-info">
         <div class="user-detail">
@@ -518,8 +525,10 @@
     </div>
 
     <script>
-      const API_BASE =
-        "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
+      const API_BASE = (window.HALT_AUTH_CONFIG && window.HALT_AUTH_CONFIG.apiBaseUrl) || "";
+      if (!API_BASE) {
+        console.error("HALT_AUTH_CONFIG.apiBaseUrl is not defined — admin page cannot load.");
+      }
       const USER_SORT_DEFAULT = { column: "email", direction: "asc" };
       let _allUsers = [];
       let _userSort = { ...USER_SORT_DEFAULT };

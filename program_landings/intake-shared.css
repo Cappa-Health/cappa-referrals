@@ -62,6 +62,9 @@ input:focus,
   border: 2px solid #ffffff !important;
   opacity: 1 !important;
   box-shadow: 0 0 0 2px #f2f2f2;
+  min-height: 44px;
+  width: auto;
+  padding: 10px 24px;
 }
 
 #get-started:hover,
@@ -146,3 +149,38 @@ input:focus,
     display: none;
   }
 }
+
+/* ── Landing page layout ── */
+.landing-main       { padding: 1in; }
+.logo-wrapper       { padding-bottom: 0; text-align: center; }
+.landing-logo       { width: 50%; height: auto; display: block; margin: 0 auto; }
+.section-content    { padding: 15px; }
+.footer-content     { padding: 30px; }
+.providers-placeholder { background-color: #f5f5f5; padding: 15px; }
+
+/* ── Typography ── */
+.landing-title {
+  font-family: 'Lato', sans-serif;
+  font-weight: 400;
+  font-size: 36pt;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  margin: 0;
+  text-align: left;
+}
+
+p,
+.para-text {
+  font-family: 'Lato', sans-serif;
+  font-weight: 400;
+  font-size: 10pt;
+}
+
+.para-text {
+  padding-top: 0;
+  padding-bottom: 1em;
+  color: black;
+}
+
+.section-heading { font-family: 'Lato', sans-serif; font-weight: 400; font-size: 24pt; margin: 0; }
+.section-p       { padding-top: 15px; }

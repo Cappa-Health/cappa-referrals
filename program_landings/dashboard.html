@@ -7,7 +7,7 @@
       default-src 'none';
       script-src 'self' 'unsafe-inline';
       style-src 'self' 'unsafe-inline';
-      connect-src https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com https://cognito-idp.us-gov-west-1.amazonaws.com;
+      connect-src %%API_GATEWAY_URL%% https://cognito-idp.us-gov-west-1.amazonaws.com;
       img-src 'self' data:;
       font-src 'self';
       frame-src 'none';
@@ -28,9 +28,16 @@
       <div class="logo">
         <div>
           <h1>HALT Referral Dashboard</h1>
-          <div class="meta" id="headerMeta">
-            Alaska Department of Health — Health and Lifestyle Training
-          </div>
+          <div class="meta" id="headerMeta"></div>
+          <script>
+            (function () {
+              var cfg = window.HALT_AUTH_CONFIG || {};
+              var meta = cfg.agencyName && cfg.programFullName
+                ? cfg.agencyName + " \u2014 " + cfg.programFullName
+                : "";
+              document.getElementById("headerMeta").textContent = meta;
+            })();
+          </script>
         </div>
       </div>
       <div class="user-info">
@@ -137,8 +144,10 @@
 
     <script>
       // ── Config ────────────────────────────────────────────────────────────────────
-      const API_BASE =
-        "https://zyzjhux1z7.execute-api.us-gov-west-1.amazonaws.com";
+      const API_BASE = (window.HALT_AUTH_CONFIG && window.HALT_AUTH_CONFIG.apiBaseUrl) || "";
+      if (!API_BASE) {
+        console.error("HALT_AUTH_CONFIG.apiBaseUrl is not defined — dashboard cannot load.");
+      }
 
       // ── State ─────────────────────────────────────────────────────────────────────
       let allReferrals = [];
@@ -493,7 +502,7 @@
       <div class="detail-field"><div class="field-label">Email</div><div class="field-value">${escHtml(r.email || "–")}</div></div>
       <div class="detail-field"><div class="field-label">Phone</div><div class="field-value">${escHtml(r.phone || "–")}</div></div>
       <div class="detail-field"><div class="field-label">ZIP Code</div><div class="field-value">${escHtml(r.zipcode || "–")}</div></div>
-      <div class="detail-field"><div class="field-label">State</div><div class="field-value">${escHtml(r.state || "Alaska")}</div></div>
+      <div class="detail-field"><div class="field-label">State</div><div class="field-value">${escHtml(r.state || "–")}</div></div>
     </div>
     <div class="detail-section">
       <h3>Referral Details</h3>
