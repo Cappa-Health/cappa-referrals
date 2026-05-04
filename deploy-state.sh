@@ -40,8 +40,8 @@ rsync -a --delete program_landings/ "${DIST_DIR}/"
 cp "${STATE_DIR}"/*.html "${DIST_DIR}/"
 
 # State-specific assets and public folders
-rsync -a "${STATE_DIR}/assets/" "${DIST_DIR}/assets/"
-rsync -a "${STATE_DIR}/public/"  "${DIST_DIR}/public/"
+[[ -d "${STATE_DIR}/assets/" ]] && rsync -a "${STATE_DIR}/assets/" "${DIST_DIR}/assets/"
+[[ -d "${STATE_DIR}/public/"  ]] && rsync -a "${STATE_DIR}/public/"  "${DIST_DIR}/public/"
 
 # Inject API Gateway URL into CSP connect-src placeholders
 echo "==> Injecting API Gateway URL into CSP..."

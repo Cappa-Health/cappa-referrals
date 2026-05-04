@@ -9,7 +9,7 @@ Usage:
 
 Steps:
     1. Load env/env.<state>
-    2. Validate COGNITO_CLIENT_ID and API_GATEWAY_URL are non-empty
+    2. Validate COGNITO_CLIENT_ID, API_GATEWAY_URL, and AWS_REGION are non-empty
     3. Clear dist/<state>/ if it exists
     4. Render templates/auth-config.js.j2 → dist/<state>/program_landings/auth-config.js
     5. Copy states/<state>/ tree → dist/<state>/program_landings/
@@ -25,7 +25,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 REPO_ROOT = Path(__file__).parent
-REQUIRED_VARS = ["COGNITO_CLIENT_ID", "API_GATEWAY_URL"]
+REQUIRED_VARS = ["COGNITO_CLIENT_ID", "API_GATEWAY_URL", "AWS_REGION"]
 
 
 def load_env_file(state: str) -> dict:
